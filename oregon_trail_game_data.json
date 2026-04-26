@@ -1,0 +1,3731 @@
+{
+  "meta": {
+    "title": "Pink Oregon Trail",
+    "designer": "Gabriella Kasdaglis (Gabby)",
+    "version": "2.0",
+    "trail_lengths": {
+      "short": {
+        "spaces": 25,
+        "estimated_minutes": 15,
+        "real_miles_represented": "approx 80 mi/space"
+      },
+      "extended": {
+        "spaces": 50,
+        "estimated_minutes": 40,
+        "real_miles_represented": "approx 40 mi/space"
+      }
+    },
+    "team_size": 7,
+    "team_must_be_distinct_professions": true,
+    "modes": [
+      "single",
+      "cooperative",
+      "competitive"
+    ],
+    "max_competitive_wagons": 4,
+    "calendar": {
+      "start_date": "April 15, 1848",
+      "days_per_turn": {
+        "short": 7,
+        "extended": 4
+      },
+      "winter_warning_day": 130,
+      "winter_deadline_day": 165,
+      "historical_note": "The real Oregon Trail had brutal time pressure. Wagon trains that didn't reach Oregon by mid-October risked being trapped by mountain snow. The Donner Party in 1846 left too late \u2014 they were trapped in the Sierra Nevada and only half survived."
+    },
+    "difficulty_notes": {
+      "default_pace": "Steady",
+      "default_ration": "Meager",
+      "philosophy": "The game should feel real. Players should sometimes lose. Resources should feel scarce. The winter clock should create real urgency. A game where everyone always wins teaches nothing.",
+      "tuning_constants": {
+        "EVENT_CHANCE": 0.55,
+        "CHOICE_CHANCE": 0.3,
+        "QUIET_DAY_CHANCE": 0.15,
+        "MORALE_CRISIS_THRESHOLD": 1,
+        "STARVATION_THRESHOLD": 0
+      }
+    },
+    "notes": "v2.0: Major consolidated update. Added coupled-resource simulation system with member state machine (healthy/weakened/sick/injured/dying). Added bandit ambush quiz finale at trail's end. Added scripted historical graves and hidden historical figures. Added leaderboard seed with 15 benchmark scores. Added teacher mode rubric, what-if counterfactual mode, and dispatch letters from forts. Expanded historical facts pool to 23 facts with quiz overlays and social studies categories (historical/political/economic/social/scientific). All previous v1.4 systems (narratives, stochastic layer, surprise events) preserved and integrated.",
+    "stochastic_system": {
+      "philosophy": "Real pioneers did not see probability tables before making choices. They knew the river was high, the team was tired, the trail looked rough \u2014 and they decided. The game models this. Choice screens show qualitative risk and team advantages, never exact numbers. Outcomes sample from hidden distributions. Sometimes the dice fall well. Sometimes they don't. Profession bonuses shift the distribution but rarely eliminate risk entirely.",
+      "choice_display_mode": "qualitative",
+      "risk_levels": {
+        "low": {
+          "qualitative": "Probably safe",
+          "color": "#4A7C3A"
+        },
+        "medium": {
+          "qualitative": "Some risk",
+          "color": "#BA7517"
+        },
+        "high": {
+          "qualitative": "Risky",
+          "color": "#A32D2D"
+        },
+        "unknown": {
+          "qualitative": "Outcome unclear",
+          "color": "#5F5E5A"
+        }
+      },
+      "outcome_variance": {
+        "supplies_loss": {
+          "distribution": "triangular",
+          "spread": 1,
+          "min_floor": 0
+        },
+        "supplies_gain": {
+          "distribution": "triangular",
+          "spread": 1,
+          "min_floor": 0
+        },
+        "food_loss": {
+          "distribution": "triangular",
+          "spread": 1,
+          "min_floor": 0
+        },
+        "food_gain": {
+          "distribution": "triangular",
+          "spread": 1,
+          "min_floor": 0
+        },
+        "morale": {
+          "distribution": "fixed",
+          "spread": 0
+        },
+        "health": {
+          "distribution": "fixed",
+          "spread": 0
+        },
+        "money": {
+          "distribution": "triangular",
+          "spread": 1,
+          "min_floor": 0
+        }
+      },
+      "percentage_jitter": 0.1,
+      "profession_residual_risk": {
+        "philosophy": "Even with the right profession on the team, real pioneers sometimes lost. Doctor cannot save every cholera victim. Carpenter cannot patch every breakdown.",
+        "death_residual_chance": 0.03,
+        "supply_loss_residual_chance": 0.1,
+        "delay_residual_chance": 0.15
+      },
+      "momentum_system": {
+        "enabled": true,
+        "luck_counter_range": [
+          -5,
+          5
+        ],
+        "starting_value": 0,
+        "luck_per_bad_outcome": -1,
+        "luck_per_good_outcome": 1,
+        "luck_per_member_loss": -2,
+        "luck_per_great_outcome": 2,
+        "luck_decay_per_turn": 0.2,
+        "luck_reset_at_forts": true,
+        "max_probability_shift_per_luck": 0.03
+      },
+      "surprise_event_chance_per_turn": 0.08,
+      "near_miss_threshold": 0.1
+    },
+    "simulation_system": {
+      "philosophy": "Resources are not independent counters. They form a coupled dynamical system where each resource affects the others, member states, and the wagon's effective capabilities. The historical 1-in-10 death rate emerges from system feedback, not from scripted scarcity.",
+      "member_states": {
+        "healthy": {
+          "description": "Full strength. Profession modifier active. Normal food/water consumption.",
+          "food_consumption_multiplier": 1.0,
+          "water_consumption_multiplier": 1.0,
+          "movement_contribution": 0,
+          "profession_modifier_active": true,
+          "death_chance_per_turn": 0.0,
+          "audio": null
+        },
+        "weakened": {
+          "description": "Tired, slow, but still functional. Profession modifier still active but with -20% effectiveness.",
+          "food_consumption_multiplier": 1.0,
+          "water_consumption_multiplier": 1.0,
+          "movement_contribution": 0,
+          "profession_modifier_active": true,
+          "profession_modifier_strength": 0.8,
+          "death_chance_per_turn": 0.0,
+          "audio": "tired_breathing"
+        },
+        "sick": {
+          "description": "Coughing, fever. Profession modifier disabled. Doubled water consumption. Slows the wagon.",
+          "food_consumption_multiplier": 0.7,
+          "water_consumption_multiplier": 2.0,
+          "movement_contribution": -1,
+          "profession_modifier_active": false,
+          "death_chance_per_turn": 0.08,
+          "audio": "coughing_sneezing"
+        },
+        "injured": {
+          "description": "Wounded. Profession modifier disabled. Slows the wagon. Heals slowly with rest or Doctor.",
+          "food_consumption_multiplier": 1.0,
+          "water_consumption_multiplier": 1.0,
+          "movement_contribution": -1,
+          "profession_modifier_active": false,
+          "death_chance_per_turn": 0.04,
+          "audio": "groans"
+        },
+        "dying": {
+          "description": "Critical. High chance of death per turn unless healed.",
+          "food_consumption_multiplier": 0.5,
+          "water_consumption_multiplier": 1.5,
+          "movement_contribution": -2,
+          "profession_modifier_active": false,
+          "death_chance_per_turn": 0.3,
+          "audio": "oof_oof_oof"
+        }
+      },
+      "state_transitions": {
+        "philosophy": "Members transition between states based on resource conditions and event outcomes. Transitions check at the end of every turn.",
+        "rules": [
+          {
+            "trigger": "food <= 0 for 1 turn",
+            "from_state": "healthy",
+            "to_state": "weakened",
+            "probability": 0.5
+          },
+          {
+            "trigger": "food <= 0 for 2 consecutive turns",
+            "from_state": "weakened",
+            "to_state": "sick",
+            "probability": 0.4
+          },
+          {
+            "trigger": "food <= 0 for 3+ consecutive turns",
+            "from_state": "sick",
+            "to_state": "dying",
+            "probability": 0.5
+          },
+          {
+            "trigger": "water <= 0 for 1 turn",
+            "from_state": "healthy",
+            "to_state": "weakened",
+            "probability": 0.7
+          },
+          {
+            "trigger": "water <= 0 for 2 consecutive turns",
+            "from_state": "weakened",
+            "to_state": "sick",
+            "probability": 0.6
+          },
+          {
+            "trigger": "water <= 0 for 3+ consecutive turns",
+            "from_state": "any_living",
+            "to_state": "dying",
+            "probability": 0.7
+          },
+          {
+            "trigger": "supplies <= 0 for 2 consecutive turns",
+            "from_state": "healthy",
+            "to_state": "weakened",
+            "probability": 0.3,
+            "note": "Without basic supplies, life on the trail breaks down"
+          },
+          {
+            "trigger": "morale <= 1 for 2 consecutive turns",
+            "from_state": "healthy",
+            "to_state": "weakened",
+            "probability": 0.2,
+            "note": "Despair has physical consequences"
+          },
+          {
+            "trigger": "exhaustion (Grueling pace 3+ turns)",
+            "from_state": "healthy",
+            "to_state": "weakened",
+            "probability": 0.3,
+            "applies_per_member": true
+          },
+          {
+            "trigger": "Doctor on team treats sick member",
+            "from_state": "sick",
+            "to_state": "weakened",
+            "probability": 0.6,
+            "applies_per_turn_per_doctor": true
+          },
+          {
+            "trigger": "Doctor on team treats injured member",
+            "from_state": "injured",
+            "to_state": "weakened",
+            "probability": 0.5,
+            "applies_per_turn_per_doctor": true
+          },
+          {
+            "trigger": "Doctor on team treats dying member",
+            "from_state": "dying",
+            "to_state": "sick",
+            "probability": 0.4,
+            "applies_per_turn_per_doctor": true
+          },
+          {
+            "trigger": "Rest action with adequate food + water",
+            "from_state": "weakened",
+            "to_state": "healthy",
+            "probability": 0.7
+          },
+          {
+            "trigger": "Rest action with adequate food + water",
+            "from_state": "sick",
+            "to_state": "weakened",
+            "probability": 0.4
+          },
+          {
+            "trigger": "natural recovery (fed and watered for 3+ turns)",
+            "from_state": "weakened",
+            "to_state": "healthy",
+            "probability": 0.3
+          }
+        ]
+      },
+      "resource_consumption_per_turn": {
+        "food_per_alive_member": 0.5,
+        "water_per_alive_member": 0.7,
+        "supplies_per_turn_base": 0.2,
+        "ration_modifier_multiplier": true,
+        "note": "Total food consumed per turn = (alive members * 0.5 * ration_multiplier * sum_of_state_multipliers). With 7 healthy members on Meager rations: 3.5 food. On Bare Bones: 0 food (intentional starvation). On Filling: 7 food (burns fast)."
+      },
+      "resource_threshold_effects": {
+        "philosophy": "Beyond zero is not the only critical level. Approaching empty has consequences too.",
+        "food": {
+          "below_3": "Members may shift to weakened state at start of next turn (10% chance per healthy member)",
+          "below_1": "Doubled state-transition chances",
+          "at_0": "Per state transition rules above",
+          "below_0": "Cannot go below 0 \u2014 clamp to 0 and apply starvation rules"
+        },
+        "water": {
+          "below_2": "Members may shift to weakened (15% chance per healthy member)",
+          "below_1": "Doubled state-transition chances",
+          "at_0": "Per state transition rules above",
+          "note": "Water effects are stronger than food because dehydration kills faster than starvation in real life."
+        },
+        "morale": {
+          "below_3": "10% chance per turn that one member abandons the wagon (treated as a 'lost' member with special narrative)",
+          "below_1": "Argument event: 25% chance per turn the wagon delays a day (camp infighting)",
+          "above_8": "+1 movement on Push On (high morale, the team pushes hard)"
+        },
+        "health": {
+          "philosophy": "Health is now the WAGON's collective health, NOT an alive/dead binary. Used as a status indicator that affects pace and event severity.",
+          "below_3": "Wagon takes -1 movement modifier (slow and battered)",
+          "at_0": "Catastrophic failure: 50% chance to lose 1 random member outright, restore to 4. This is now a fallback only \u2014 most deaths come through state transitions, not health-zero."
+        }
+      },
+      "death_rate_targets": {
+        "philosophy": "These are the targets for a balanced game across many plays. Tune the constants above if observed rates drift far from these.",
+        "wagons_reaching_oregon": [
+          0.35,
+          0.45
+        ],
+        "wagons_with_at_least_one_member_lost": [
+          0.55,
+          0.7
+        ],
+        "wagons_eliminated_entirely": [
+          0.1,
+          0.15
+        ],
+        "average_members_lost_per_journey": [
+          1.5,
+          2.5
+        ],
+        "note": "On a 7-member team, losing 1-3 members is the historical norm. Losing zero is rare. Losing all 7 is rarer still."
+      },
+      "path_divergence": {
+        "philosophy": "Two teams playing the same game with different professions and choices should end up in visibly different states. The system should reward divergent strategies.",
+        "divergence_drivers": [
+          "Pace+Ration combinations create different resource trajectories",
+          "Profession choices create different protective coverage (some events save you, some don't)",
+          "Member states cascade \u2014 losing your Doctor early changes what subsequent events do to you",
+          "Stochastic outcomes mean identical events have different consequences",
+          "Surprise events fire rarely and add path-unique stories",
+          "Quiz performance at the bandit ambush creates win/loss divergence at the climax"
+        ],
+        "anti_convergence_rules": [
+          "No mid-game 'rubber-banding' that helps losing teams catch up",
+          "No automatic resource floor (resources can hit 0 and stay there)",
+          "Forts are the ONLY major recovery point \u2014 and they cost money/days",
+          "Doctor recovery is probabilistic, not guaranteed \u2014 sick members may die"
+        ]
+      }
+    }
+  },
+  "professions": [
+    {
+      "name": "Doctor",
+      "skills": [
+        "Less chance of getting sick",
+        "Can heal"
+      ]
+    },
+    {
+      "name": "Hunter",
+      "skills": [
+        "Able to get food",
+        "finds animals quicker"
+      ]
+    },
+    {
+      "name": "Carpenter",
+      "skills": [
+        "Can repair things",
+        "reduce time loss when smth breaks"
+      ]
+    },
+    {
+      "name": "Blacksmith",
+      "skills": [
+        "Repairs last longer",
+        "Has better supplies for fixing stuff"
+      ]
+    },
+    {
+      "name": "Guide",
+      "skills": [
+        "Finds the way",
+        "Chooses safer paths"
+      ]
+    },
+    {
+      "name": "Farmer",
+      "skills": [
+        "Finds safe food",
+        "Plants food"
+      ]
+    },
+    {
+      "name": "Scout",
+      "skills": [
+        "Finds the way on the trail",
+        "Knows how to get there"
+      ]
+    },
+    {
+      "name": "Cook",
+      "skills": [
+        "Makes food to eat",
+        "Food last longer"
+      ]
+    },
+    {
+      "name": "Trapper",
+      "skills": [
+        "Finds small animals",
+        "Gains extra supplies from animals"
+      ]
+    },
+    {
+      "name": "Merchant",
+      "skills": [
+        "Gets better prices when trading",
+        "Sells items for more value"
+      ]
+    },
+    {
+      "name": "Seamstress",
+      "skills": [
+        "Fixes clothing",
+        "Fixes damaged fabric"
+      ]
+    },
+    {
+      "name": "Cowboy",
+      "skills": [
+        "Keep horse/ox from getting lost",
+        "Better speed when traveling"
+      ]
+    },
+    {
+      "name": "Musician",
+      "skills": [
+        "Entertainment",
+        "Keeps everyone happy"
+      ]
+    },
+    {
+      "name": "Artist",
+      "skills": [
+        "Documents everything",
+        "Entertains people"
+      ]
+    },
+    {
+      "name": "Language Teacher",
+      "skills": [
+        "Knows different languages",
+        "Can speak to the Native Americans"
+      ]
+    },
+    {
+      "name": "Politician",
+      "skills": [
+        "Can negotiate with people",
+        "Avoid/make conflict"
+      ]
+    },
+    {
+      "name": "Banker",
+      "skills": [
+        "More money",
+        "Gives small amounts of money to the crew"
+      ]
+    },
+    {
+      "name": "Actor",
+      "skills": [
+        "Keep people happy not bored",
+        "Entertains people"
+      ]
+    },
+    {
+      "name": "Fashion Designer",
+      "skills": [
+        "Knows how to dress",
+        "Can style people good"
+      ]
+    },
+    {
+      "name": "Magician",
+      "skills": [
+        "Reduces panic",
+        "Keeps everyone happy"
+      ]
+    },
+    {
+      "name": "Influencer",
+      "skills": [
+        "Interesting to talk to",
+        "Entertainment"
+      ]
+    },
+    {
+      "name": "Food Critic",
+      "skills": [
+        "Knows about food",
+        "Detects if the food is spoiled before eaten"
+      ]
+    },
+    {
+      "name": "Priest",
+      "skills": [
+        "Jesus is with them/protecting",
+        "Has a crucifix"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "Cholera Outbreak",
+      "flavor": "Cholera killed thousands along rivers",
+      "outcomes": [
+        "Lose 1 member",
+        "Delay,move back 1 space"
+      ],
+      "modifiers": [
+        {
+          "profession": "Doctor",
+          "effect": "no death,delay"
+        },
+        {
+          "profession": "Cook",
+          "effect": "no spread,delay"
+        }
+      ],
+      "category": "sickness",
+      "intro": "A creeping sickness sweeps through camp before dawn.",
+      "narratives": {
+        "default": "By dawn, fever burns. By noon, {lost_member} the {lost_profession} cannot stand. By dusk, they are gone. We dig a grave at the side of the trail and carve their name into a stone. The wagon train continues \u2014 it must \u2014 but a part of us stays here.",
+        "Doctor": "{Doctor} works through the dark hours \u2014 boiling water, mixing tinctures, holding cool cloths to fevered foreheads. By morning, the worst has passed. We lose a day to nursing the sick. But we are all here. {Doctor} gave us back to ourselves.",
+        "Cook": "{Cook} smells it before anyone falls ill \u2014 the bad water from the last camp. They burn every soiled cloth, boil every drop, and forbid anyone from drinking the river. The fever comes but does not spread. We are weakened, but whole."
+      }
+    },
+    {
+      "name": "River Crossing Disaster",
+      "flavor": "The wagon tipped and took half our supplies",
+      "outcomes": [
+        "Lose 3 supplies",
+        "50% lose member"
+      ],
+      "modifiers": [
+        {
+          "profession": "Carpenter",
+          "effect": "nothing lost"
+        },
+        {
+          "profession": "Scout",
+          "effect": "No death risk"
+        },
+        {
+          "profession": "Merchant",
+          "effect": "pay to avoid"
+        }
+      ],
+      "category": "water",
+      "intro": "The river runs faster than it looked.",
+      "narratives": {
+        "default": "The oxen panic mid-current. The wagon LURCHES sideways. We watch helplessly as bundles of supplies tumble into the brown water and float away downstream. {lost_member} the {lost_profession} is swept off the wagon. We fish them out cold and white but breathing.",
+        "Carpenter": "{Carpenter} sealed every seam with tar before we tried the crossing. The wagon rides high in the current \u2014 our supplies stay dry. We come up the far bank with everything we started with and one good story.",
+        "Scout": "{Scout} reads the river like a map \u2014 pointing out the safest line, the slack water below the bend, the gravel bar that breaks the current. We cross slow but we cross whole. No one is lost.",
+        "Merchant": "{Merchant} hails a passing wagon train with two ferries. After some haggling, our coins buy our way across \u2014 dry, safe, and slightly poorer. Better than the alternative."
+      }
+    },
+    {
+      "name": "Broken Wagon Wheel",
+      "flavor": "A wheel broke-we are stopped",
+      "outcomes": [
+        "Delay, Move back 1 space"
+      ],
+      "modifiers": [
+        {
+          "profession": "Carpenter",
+          "effect": "no delay"
+        },
+        {
+          "profession": "Blacksmith",
+          "effect": "reduce delay"
+        }
+      ],
+      "category": "wagonDamage",
+      "intro": "Half a mile after a stretch of rocky trail, an alarming CRACK.",
+      "narratives": {
+        "default": "The right rear wheel splinters. The wagon jerks to a halt at an angle. Without a fix, we go nowhere. We make camp in the dust and wait for morning, hoping someone in our party can sort it out.",
+        "Carpenter": "{Carpenter} steps down without a word, takes one look at the wheel, and reaches for the toolbox. By dusk, three new spokes are set, the rim is reseated, and the wheel turns true. We lose two hours, not two days. {Carpenter} is the reason we move tomorrow.",
+        "Blacksmith": "{Blacksmith} examines the iron tire band, which has split. Builds a small forge from rocks and embers. Hammers the band whole, fits it back to a fresh wheel from our spares. Slow work, but solid work. The wagon will hold to Oregon."
+      }
+    },
+    {
+      "name": "Oxen Collapse",
+      "flavor": "Our ox fell.We cannot move fast now.",
+      "outcomes": [
+        "Move back 1 space"
+      ],
+      "modifiers": [
+        {
+          "profession": "Cowboy",
+          "effect": "prevent slowdown"
+        }
+      ],
+      "category": "wildlife",
+      "intro": "The lead ox staggers. Slows. And falls.",
+      "narratives": {
+        "default": "The ox is finished. We unhitch the others and try to move on, but the wagon drags. The whole train slows. We've lost real time today and we feel it.",
+        "Cowboy": "{Cowboy} crouches by the ox, runs a hand along its neck, says something quiet. Lifts the yoke off, brings water in a hat. The ox stands shakily but it stands. {Cowboy} keeps it on its feet and us on our trail."
+      }
+    },
+    {
+      "name": "Food spoilage",
+      "flavor": "The food has turned bad.",
+      "outcomes": [
+        "Lose 3 food"
+      ],
+      "modifiers": [
+        {
+          "profession": "Food Critic",
+          "effect": "no loss"
+        },
+        {
+          "profession": "Cook",
+          "effect": "reduce loss to 1"
+        }
+      ],
+      "category": "sickness",
+      "intro": "The food has turned bad.",
+      "narratives": {
+        "default": "Maggots in the salt pork. The flour is sour. We lose three pounds of provisions to the dirt and watch the wagon master's face grow tight as he counts what's left.",
+        "Food Critic": "{Food_Critic} smells trouble at supper and stops everyone before a bite is taken. We lose only what was already gone. The rest is sealed in fresh wax and packed deeper in the wagon.",
+        "Cook": "{Cook} salvages most of it \u2014 pulls the good from the bad, salts what can be salted, dries strips of meat over the fire. We lose only one pound. The rest will hold to Fort Laramie."
+      }
+    },
+    {
+      "name": "Successful Hunt",
+      "flavor": "We brought down a buffalo-meat for days.",
+      "outcomes": [
+        "Gain 5 food"
+      ],
+      "modifiers": [
+        {
+          "profession": "Hunter",
+          "effect": "Gain +3 extra"
+        }
+      ],
+      "category": "wildlife",
+      "intro": "A herd of buffalo, dark and slow, on the prairie.",
+      "narratives": {
+        "default": "Someone in our party manages a shot. A young calf falls. Not the feast we hoped for, but enough meat for two days of cold dinners. Better than nothing.",
+        "Hunter": "{Hunter} crawls through the grass for an hour, picks the wind, and drops a full-grown buffalo with one shot. The whole train eats hot meat tonight. There are songs around the fire. Even the children stop fidgeting."
+      }
+    },
+    {
+      "name": "Failed hunt",
+      "flavor": "Nothing today. We go hungry.",
+      "outcomes": [
+        "Lose 1 food",
+        "Morale loss"
+      ],
+      "modifiers": [
+        {
+          "profession": "Hunter",
+          "effect": "prevent loss"
+        }
+      ],
+      "category": "wildlife",
+      "intro": "Hours pass with the rifle. Nothing.",
+      "narratives": {
+        "default": "Whoever drew the hunting straw came back empty-handed. The team grumbles. Stomachs growl. Tomorrow we eat less, walk farther, and hope.",
+        "Hunter": "{Hunter} hunts all day and sees only one rabbit at sundown \u2014 a lean kill, but a kill. We will not eat well tonight, but we will eat. {Hunter}'s patience saved us from going hungry."
+      }
+    },
+    {
+      "name": "Severe storm",
+      "flavor": "The storm tore through camp.",
+      "outcomes": [
+        "Lose 2 supplies",
+        "Delay,move back 1 space"
+      ],
+      "modifiers": [
+        {
+          "profession": "Scout",
+          "effect": "reduce damage"
+        }
+      ],
+      "category": "weather",
+      "intro": "The clouds turn black before noon. The wind comes hard.",
+      "narratives": {
+        "default": "Lightning splits the sky. The canvas tears. Two barrels are blown clean off the wagon and roll across the plain \u2014 gone. The team huddles soaked and shaken until the worst passes.",
+        "Scout": "{Scout} reads the sky an hour before the rain \u2014 points to a hollow under the bluff. We make camp early and the worst of the storm passes us by. Wet, but whole. The bluff saved us."
+      }
+    },
+    {
+      "name": "Snake bite",
+      "flavor": "He was bitten-swelling fast.",
+      "outcomes": [
+        "50% lose member"
+      ],
+      "modifiers": [
+        {
+          "profession": "Doctor",
+          "effect": "prevent death"
+        }
+      ],
+      "category": "wildlife",
+      "intro": "A scream from the brush. {random_member} is struck.",
+      "narratives": {
+        "default": "We lay {lost_member} the {lost_profession} on the ground. The leg swells black. By dusk they are unconscious. By midnight they are gone. The wagon train pauses for a brief funeral and continues \u2014 it must.",
+        "Doctor": "{Doctor} sees the bite, sees the snake's marks, knows it's not the worst kind. Cuts, sucks, ties off above the wound. By morning the swelling drops. The bitten member walks slow for a week but walks."
+      }
+    },
+    {
+      "name": "Thief in camp",
+      "flavor": "We woke to missing supplies.",
+      "outcomes": [
+        "Lose 3 resources"
+      ],
+      "modifiers": [
+        {
+          "profession": "Scout",
+          "effect": "prevent theif"
+        },
+        {
+          "profession": "Cowboy",
+          "effect": "Reduce loss"
+        }
+      ],
+      "category": "trail"
+    },
+    {
+      "name": "Contaminated water",
+      "flavor": "The water made us ill.",
+      "outcomes": [
+        "Lose health by 1",
+        "Move back 1 space"
+      ],
+      "modifiers": [
+        {
+          "profession": "Cook",
+          "effect": "prevent illness"
+        }
+      ],
+      "category": "sickness",
+      "intro": "Half the camp drinks from the still pool by the trail.",
+      "narratives": {
+        "default": "By midnight, six are sick. We lose a day waiting for them to recover. The whole team weakens.",
+        "Cook": "{Cook} dips a finger, smells, refuses to draw water from the still pool \u2014 points to the running creek a quarter mile up. No one drinks the bad water. No one falls sick."
+      }
+    },
+    {
+      "name": "Lost trail",
+      "flavor": "We cannot find the path.",
+      "outcomes": [
+        "Delay,move back 2 spaces"
+      ],
+      "modifiers": [
+        {
+          "profession": "Guide",
+          "effect": "No delay"
+        },
+        {
+          "profession": "Scout",
+          "effect": "No delay"
+        }
+      ],
+      "category": "trail",
+      "intro": "The wagon ruts vanish in the rocks ahead.",
+      "narratives": {
+        "default": "We backtrack three times. We argue. We light the lantern early and make a cold camp where we shouldn't. Two days lost.",
+        "Guide": "{Guide} reads the land like a book \u2014 points to a worn passage between two outcrops we'd missed. We're back on the right line within an hour. No time lost.",
+        "Scout": "{Scout} climbs the high rock and sees the trail re-emerging in the valley below. We descend a steep slope, find the ruts again, and continue. Half a day saved."
+      }
+    },
+    {
+      "name": "Stampede",
+      "flavor": "The animals ran wild.",
+      "outcomes": [
+        "Lose 2 supplies"
+      ],
+      "modifiers": [
+        {
+          "profession": "Cowboy",
+          "effect": "prevent loss"
+        }
+      ],
+      "category": "wildlife",
+      "intro": "A noise like thunder. The earth shakes. Buffalo are running.",
+      "narratives": {
+        "default": "The herd splits around our wagons but two oxen panic and bolt. We catch them by nightfall but two crates were trampled flat. Salt and flour scattered to the wind.",
+        "Cowboy": "{Cowboy} is on the lead ox before anyone realizes what's happening \u2014 shouting, slapping reins, holding the team steady. Not a thing is lost. The herd parts and is gone."
+      }
+    },
+    {
+      "name": "Injury accident",
+      "flavor": "He fell beneath the wagon.",
+      "outcomes": [
+        "Delay",
+        "Morale loss"
+      ],
+      "modifiers": [
+        {
+          "profession": "Doctor",
+          "effect": "No delay"
+        }
+      ],
+      "category": "wagonDamage",
+      "intro": "{random_member} falls beneath the wagon as it lurches over a rut.",
+      "narratives": {
+        "default": "A leg is crushed. We splint it as best we can and lose three days while it heals. The team is grim.",
+        "Doctor": "{Doctor} sets the leg cleanly, splints it tight, and has the patient walking on crutches by sundown. The wagon doesn't even slow."
+      }
+    },
+    {
+      "name": "Wagon fire",
+      "flavor": "Fire took what we had.",
+      "outcomes": [
+        "Lose 4 supplies"
+      ],
+      "modifiers": [
+        {
+          "profession": "Carpenter",
+          "effect": "reduce loss"
+        }
+      ],
+      "category": "wagonDamage",
+      "intro": "A spark from the cooking fire catches the canvas.",
+      "narratives": {
+        "default": "Flames take the cover before we can throw water. We lose the canvas, four blankets, and a barrel of flour. The night sky is too cold for what's left of our bedding.",
+        "Carpenter": "{Carpenter} is up the wagon side with wet sacks before any of us understand what's happening. The fire is out before it spreads past the rear bow. We lose a corner of canvas and one blanket. Nothing more."
+      }
+    },
+    {
+      "name": "Mountain pass snow in",
+      "flavor": "Snow blocks the way.",
+      "outcomes": [
+        "Move back 2 spaces"
+      ],
+      "modifiers": [
+        {
+          "profession": "Guide",
+          "effect": "reduce delay"
+        }
+      ],
+      "category": "weather",
+      "intro": "We crest the pass at dawn and find it choked with snow.",
+      "narratives": {
+        "default": "We turn back and seek a lower route \u2014 two days of doubling back. The team is exhausted and hungry by the time we find a way through.",
+        "Guide": "{Guide} knows another pass \u2014 lower, longer, but open. We add half a day instead of two. We sleep cold but we keep moving."
+      }
+    },
+    {
+      "name": "Starvation",
+      "flavor": "We ration the last crumbs.",
+      "outcomes": [
+        "Lose health each turn"
+      ],
+      "modifiers": [
+        {
+          "profession": "Hunter",
+          "effect": "Stop effect"
+        },
+        {
+          "profession": "Farmer",
+          "effect": "stop effect"
+        }
+      ],
+      "category": "sickness",
+      "intro": "We ration the last crumbs.",
+      "narratives": {
+        "default": "Each morning the wagon feels lighter and our legs feel heavier. The children stop asking for second helpings. By the third day, no one talks at all.",
+        "Hunter": "{Hunter} disappears at first light and returns at dusk, two days running, with rabbits and a small deer. We stretch the meat with wild greens. We are weakened but we live.",
+        "Farmer": "{Farmer} forages along every creek bed \u2014 wild onions, lamb's quarter, sour berries, even the inner bark of cottonwood. Not feasts, but food. We make it through."
+      }
+    },
+    {
+      "name": "Fort arrival",
+      "flavor": "A fort at last-supplies and rest.",
+      "outcomes": [
+        "Gain resources",
+        "heal"
+      ],
+      "modifiers": [
+        {
+          "profession": "Merchant",
+          "effect": "Better trade"
+        }
+      ],
+      "category": "fort",
+      "intro": "The fort rises from the plain \u2014 log walls, a flag, smoke from chimneys.",
+      "narratives": {
+        "default": "We resupply at the trader's prices. The team gets a hot meal and a soft place to sleep. Hope returns to the camp.",
+        "Merchant": "{Merchant} bargains with the trader for an hour. We come away with twice the supplies for the same coin. The trader shakes their head as we pull out \u2014 they've never seen anyone haggle like that."
+      }
+    },
+    {
+      "name": "Trade opportunity",
+      "flavor": "They offer goods for trade.",
+      "outcomes": [
+        "Exchange resources"
+      ],
+      "modifiers": [
+        {
+          "profession": "Merchant",
+          "effect": "Best outcome"
+        }
+      ],
+      "category": "people",
+      "intro": "A wagon train heading east stops alongside ours. Bartering begins.",
+      "narratives": {
+        "default": "We trade what we don't need for what we do. Both sides feel slightly cheated, which is the sign of a fair trade.",
+        "Merchant": "{Merchant} runs the negotiation like a riverboat captain. We come away with everything we wanted and a small bag of coffee they hadn't planned to part with. The other train's leader laughs and shakes their head."
+      }
+    },
+    {
+      "name": "Native American Aid",
+      "flavor": "They showed us the way.",
+      "outcomes": [
+        "Gain food",
+        "Skip delay"
+      ],
+      "modifiers": [
+        {
+          "profession": "Language Teacher",
+          "effect": "Extra benefit"
+        }
+      ],
+      "category": "people",
+      "intro": "A Pawnee family has made camp ahead of us. They wave us over.",
+      "narratives": {
+        "default": "They share dried buffalo and corn cakes. The children stare at our wagon and ours stare back. We part ways with full bellies and gentle hearts. The myths we were told back east were wrong.",
+        "Language Teacher": "{Language_Teacher} speaks a few halting words of Pawnee \u2014 enough to make the family laugh. They feed us, fill our water barrels, and draw us a map showing a route around bad ground. {Language_Teacher} just changed our journey."
+      }
+    },
+    {
+      "name": "Heat wave",
+      "flavor": "Heat drains us.",
+      "outcomes": [
+        "Lose water"
+      ],
+      "modifiers": [
+        {
+          "profession": "Cook",
+          "effect": "Reduces loss"
+        }
+      ],
+      "category": "weather",
+      "intro": "The sun comes up and does not go down.",
+      "narratives": {
+        "default": "By noon the canvas is too hot to touch. The water in the barrels turns warm and sour. We rest under the wagons and lose half a day.",
+        "Cook": "{Cook} rigs a cloth shade over the water barrels and digs a shallow pit to keep the supplies cool. We lose less than we feared."
+      }
+    },
+    {
+      "name": "Cold night",
+      "flavor": "Frost bites hard.",
+      "outcomes": [
+        "Morale loss"
+      ],
+      "modifiers": [
+        {
+          "profession": "Seamstress",
+          "effect": "prevents"
+        }
+      ],
+      "category": "weather",
+      "intro": "Frost on the canvas at dawn.",
+      "narratives": {
+        "default": "The cold cuts through every blanket. By morning two of the children are coughing. The team's spirits are low.",
+        "Seamstress": "{Seamstress} works late by lamp-light, patching the worst of the canvas tears and stitching extra wool inside the children's coats. We sleep warm enough."
+      }
+    },
+    {
+      "name": "Broken axle",
+      "flavor": "",
+      "outcomes": [
+        "Delay"
+      ],
+      "modifiers": [
+        {
+          "profession": "Carpenter",
+          "effect": "fixes it"
+        }
+      ],
+      "category": "wagonDamage",
+      "intro": "A loud snap as we cross a deep rut.",
+      "narratives": {
+        "default": "The rear axle has split. We make camp on the spot, chop saplings, and try to fashion a replacement. We lose two days.",
+        "Carpenter": "{Carpenter} unfastens the axle, finds straight oak in the spare lumber, and has a new axle shaped and mounted by sundown. We lose half a day."
+      }
+    },
+    {
+      "name": "Wagon stuck in mud",
+      "flavor": "",
+      "outcomes": [
+        "Delay"
+      ],
+      "modifiers": [
+        {
+          "profession": "Cowboy",
+          "effect": "reduces"
+        }
+      ],
+      "category": "trail",
+      "intro": "The wheels sink to the hub.",
+      "narratives": {
+        "default": "We unload everything, lay branches under the wheels, and the whole train pushes. We free the wagon by dusk, exhausted and muddy.",
+        "Cowboy": "{Cowboy} unhitches, repositions the team to pull from a different angle, slaps the lead ox, and shouts the right word. The wagon comes free in twenty minutes. We barely lose an hour."
+      }
+    },
+    {
+      "name": "Food contamination",
+      "flavor": "",
+      "outcomes": [
+        "Lose food"
+      ],
+      "modifiers": [
+        {
+          "profession": "Food Critic",
+          "effect": "prevents"
+        }
+      ],
+      "category": "sickness",
+      "intro": "Rats in the flour. Mold in the bacon.",
+      "narratives": {
+        "default": "We cull what's spoiled and lose a fair share. The team rations carefully for the next week.",
+        "Food Critic": "{Food_Critic} catches the spoilage at the first whiff. We lose only the worst, save the rest, and re-pack everything in tight wraps."
+      }
+    },
+    {
+      "name": "Hunting injury",
+      "flavor": "",
+      "outcomes": [
+        "Lose health"
+      ],
+      "modifiers": [
+        {
+          "profession": "Doctor",
+          "effect": "heals"
+        }
+      ],
+      "category": "wildlife",
+      "intro": "A bear, surprised at the creek, charges our hunter.",
+      "narratives": {
+        "default": "{lost_member} the {lost_profession} is mauled badly. The bear runs. We carry our wounded back to camp but they do not survive the night.",
+        "Doctor": "{Doctor} cleans the wounds, stitches what can be stitched, drips willow bark tea past their lips through the night. By morning the fever breaks. They will scar but they will live."
+      }
+    },
+    {
+      "name": "Bandit encounter",
+      "flavor": "",
+      "outcomes": [
+        "Lose money"
+      ],
+      "modifiers": [
+        {
+          "profession": "Politician",
+          "effect": "Negotiates"
+        }
+      ],
+      "category": "people",
+      "intro": "Three riders, faces wrapped, approach the camp at dusk.",
+      "narratives": {
+        "default": "They take what coin we have and leave. No one is hurt but the team's morale is broken for days.",
+        "Politician": "{Politician} steps forward, hands open, voice calm. Talks for ten long minutes. The bandits leave with two cups of coffee and an apple, no coin. {Politician} has a gift the rest of us don't."
+      }
+    },
+    {
+      "name": "River shortcut success",
+      "flavor": "",
+      "outcomes": [
+        "Move forward 2 spaces"
+      ],
+      "modifiers": [
+        {
+          "profession": "Scout",
+          "effect": "ensures success"
+        }
+      ],
+      "category": "water",
+      "intro": "A narrow ford no one else has tried.",
+      "narratives": {
+        "default": "We make it across in forty minutes. The trail beyond is dry and clear. Two days saved, somehow.",
+        "Scout": "{Scout} found this crossing \u2014 read the water, judged the depth, and led us through without a foot getting wet. {Scout} just earned their keep for the whole journey."
+      }
+    },
+    {
+      "name": "River shortcut failure",
+      "flavor": "",
+      "outcomes": [
+        "Lose supplies"
+      ],
+      "modifiers": [
+        {
+          "profession": "Guide",
+          "effect": "Reduces risk"
+        }
+      ],
+      "category": "water",
+      "intro": "The shortcut looked promising. The current was deeper than it looked.",
+      "narratives": {
+        "default": "We lose two crates of supplies in the rapids. The team makes the far bank wet, cold, and humbled.",
+        "Guide": "{Guide} pulls us back from the worst of it just in time \u2014 we ford a quarter mile downstream where the river spreads thin. We lose nothing. {Guide} just saved this wagon."
+      }
+    },
+    {
+      "name": "Lost supplies",
+      "flavor": "",
+      "outcomes": [
+        "Lose random resources"
+      ],
+      "modifiers": [
+        {
+          "profession": "Scout",
+          "effect": "prevents"
+        }
+      ],
+      "category": "wagonDamage",
+      "intro": "We unpack at noon and find a barrel missing.",
+      "narratives": {
+        "default": "It must have fallen from the wagon hours back. By the time we walk back, it's gone \u2014 picked clean by who-knows-what. We lose what's lost.",
+        "Scout": "{Scout} backtracks for an hour and finds the barrel right where it bounced off \u2014 no harm done. We lose only an hour."
+      }
+    },
+    {
+      "name": "Camp illness",
+      "flavor": "",
+      "outcomes": [
+        "Lose health"
+      ],
+      "modifiers": [
+        {
+          "profession": "Doctor",
+          "effect": "prevents"
+        }
+      ],
+      "category": "sickness",
+      "intro": "Half the camp wakes coughing.",
+      "narratives": {
+        "default": "We rest a day. The cough lingers a week. The team is weakened and slow.",
+        "Doctor": "{Doctor} dispenses willow bark tea, brews chest poultices, and orders the worst-off into the wagon to ride for three days. By the end of the week the cough is gone."
+      }
+    },
+    {
+      "name": "Entertainment night",
+      "flavor": "",
+      "outcomes": [
+        "Gain morale"
+      ],
+      "modifiers": [
+        {
+          "profession": "Musician",
+          "effect": "boost"
+        },
+        {
+          "profession": "Actor",
+          "effect": "Boost"
+        }
+      ],
+      "category": "campfire",
+      "intro": "A clear night, a warm fire, and tired bones.",
+      "narratives": {
+        "default": "Someone in our party tells a story. It's not great but it's a story, and after weeks on the trail, that's enough. The fire dies low. We sleep deep.",
+        "Musician": "{Musician} plays the fiddle long into the night. Kids dance around the fire. Even the dour ones smile. The whole camp wakes the next morning lighter than they have in weeks.",
+        "Actor": "{Actor} acts out the story of our journey so far \u2014 every disaster, every triumph, every grumpy oxen \u2014 and the camp laughs until the fire is embers. There's a place for foolery on the trail. {Actor} has it."
+      }
+    },
+    {
+      "name": "Argument in camp",
+      "flavor": "",
+      "outcomes": [
+        "Morale loss"
+      ],
+      "modifiers": [
+        {
+          "profession": "Influencer",
+          "effect": "fixes it"
+        },
+        {
+          "profession": "Magician",
+          "effect": "fixes it"
+        }
+      ],
+      "category": "people",
+      "intro": "Two voices rise around the cook fire. Then five. Then everyone.",
+      "narratives": {
+        "default": "The fight is about nothing \u2014 rationing, pace, who took whose blanket. By morning no one is speaking. The team moves slow and silent for days.",
+        "Influencer": "{Influencer} steps into the middle, makes a joke at exactly the right moment, somehow gets everyone laughing. The fight ends in friendship. The trail is long. We need each other.",
+        "Magician": "{Magician} does a card trick \u2014 a little stage business with a coin and a kerchief. The crowd that gathers is the same crowd that was fighting. By the time the trick is over, the argument is forgotten."
+      }
+    },
+    {
+      "name": "Rain damage",
+      "flavor": "None",
+      "outcomes": [
+        "Lose supplies"
+      ],
+      "modifiers": [
+        {
+          "profession": "Carpenter",
+          "effect": "reduces"
+        }
+      ],
+      "category": "weather",
+      "intro": "Three days of rain. The canvas leaks.",
+      "narratives": {
+        "default": "Two sacks of flour are ruined. The bedding is soaked. The whole camp smells like wet wool for a week.",
+        "Carpenter": "{Carpenter} re-tars the seams between rains, re-pitches the canvas tight. Our supplies stay dry. Our bedding gets damp but never soaked. We come through the storm whole."
+      }
+    },
+    {
+      "name": "Trail shortcut found",
+      "flavor": "",
+      "outcomes": [
+        "Move forward 2 spaces"
+      ],
+      "modifiers": [
+        {
+          "profession": "Guide",
+          "effect": "ensures"
+        }
+      ],
+      "category": "trail",
+      "intro": "A faint track leading off through the sage.",
+      "narratives": {
+        "default": "We try it. It works. Two days saved, somehow. The wagon master gives quiet thanks.",
+        "Guide": "{Guide} confirms the shortcut goes through \u2014 has heard of it from a returning party at the last fort. We take it without doubt and save two solid days. {Guide}'s knowledge is gold."
+      }
+    },
+    {
+      "name": "Final push energy",
+      "flavor": "",
+      "outcomes": [
+        "Move forward 3 spaces"
+      ],
+      "modifiers": [
+        {
+          "profession": null,
+          "effect": "High morale required"
+        }
+      ],
+      "category": "campfire",
+      "intro": "The valley is in sight. Oregon is close.",
+      "narratives": {
+        "default": "Everyone walks faster. Even the oxen seem to feel it. We make extra miles today. We make extra miles tomorrow. We are almost there.",
+        "Musician": "{Musician} plays a marching tune. The team sings along, ragged but real. The miles fly. Oregon is RIGHT THERE."
+      }
+    },
+    {
+      "name": "Buffalo Herd Encounter",
+      "category": "wildlife",
+      "intro": "A vast brown sea of bison stretches to the horizon. Dust rises like smoke. The earth hums.",
+      "flavor": "Buffalo herds once stretched to the horizon \u2014 millions strong. A single bull could feed a wagon for two weeks.",
+      "outcomes": [
+        "Gain 6 food",
+        "Gain 1 morale"
+      ],
+      "modifiers": [
+        {
+          "profession": "Hunter",
+          "effect": "extra +4 food"
+        },
+        {
+          "profession": "Trapper",
+          "effect": "extra +2 food"
+        },
+        {
+          "profession": "Cowboy",
+          "effect": "extra +1 morale"
+        }
+      ],
+      "narratives": {
+        "default": "We take what we can \u2014 one calf, three sacks of meat hauled back to camp. The whole train eats well for a week.",
+        "Hunter": "{Hunter} crawls a half-mile through grass with the wind in their face, picks the largest bull, and drops it with a single shot. Four hundred pounds of meat. The whole train eats hot and full for two weeks.",
+        "Trapper": "{Trapper} fans out alongside, picks a young one, brings it down clean. Two animals, twice the meat. We're set until the next fort.",
+        "Cowboy": "{Cowboy} rides into the herd at the gallop, cuts a young bull from the edge, and holds it for the rifle. The whole camp watches and cheers."
+      }
+    },
+    {
+      "name": "Childbirth on the Trail",
+      "category": "people",
+      "intro": "A cry in the night. {random_member} is in labor.",
+      "flavor": "Many children were born along the Oregon Trail. Some pioneer families had two more by the time they reached Oregon than when they left.",
+      "outcomes": [
+        "Delay,move back 1 space",
+        "Gain 2 morale"
+      ],
+      "modifiers": [
+        {
+          "profession": "Doctor",
+          "effect": "no delay, mother and baby healthy"
+        },
+        {
+          "profession": "Seamstress",
+          "effect": "good outcome"
+        }
+      ],
+      "narratives": {
+        "default": "The whole camp stays up. By dawn there is a baby \u2014 small, red, wailing. We lose a day to rest. The team is tired but joyful. A new pioneer was born under prairie stars.",
+        "Doctor": "{Doctor} stays with the laboring mother through the long night \u2014 calm, certain, sure. Mother and baby come through strong. We lose only a few hours of travel. The camp celebrates with a feast.",
+        "Seamstress": "{Seamstress} brings clean cloths, warm water, and patient hands. The birth goes well. Mother and child are sleeping by midnight."
+      }
+    },
+    {
+      "name": "Wolves at the Camp",
+      "category": "wildlife",
+      "intro": "Yellow eyes in the dark, just past the firelight. A low growl. Then another.",
+      "flavor": "Wolves were a real fear at night camps. They rarely attacked people but could panic livestock and steal supplies.",
+      "outcomes": [
+        "50% lose 1 oxen (= move back 1 space)",
+        "Lose 1 morale"
+      ],
+      "modifiers": [
+        {
+          "profession": "Cowboy",
+          "effect": "no loss"
+        },
+        {
+          "profession": "Hunter",
+          "effect": "no loss, gain 1 morale"
+        },
+        {
+          "profession": "Trapper",
+          "effect": "no loss"
+        }
+      ],
+      "narratives": {
+        "default": "Two oxen are bitten. One does not survive the night. The morning camp is shaken \u2014 wolves are not the storybook monsters, but they are not nothing.",
+        "Cowboy": "{Cowboy} lights torches, fires warning shots, and rides the perimeter for hours. The wolves circle once and slink off into the dark. Not a single ox is touched.",
+        "Hunter": "{Hunter} takes the lead wolf with a long shot from the firelight. The pack scatters. Camp morale is high \u2014 there's even talk of a wolf pelt.",
+        "Trapper": "{Trapper} sets snares around the perimeter at dusk. The wolves catch the scent and move on. Quiet, professional, no fuss."
+      }
+    },
+    {
+      "name": "Pawnee Family Shares Camp",
+      "category": "people",
+      "intro": "Four families have made camp ahead of you. They wave you over and set out food.",
+      "flavor": "The Pawnee, Shoshone, Cayuse, and other tribes routinely shared food and routes with emigrants. The myth of constant conflict is just that \u2014 a myth.",
+      "outcomes": [
+        "Gain 3 food",
+        "Gain 2 morale"
+      ],
+      "modifiers": [
+        {
+          "profession": "Language Teacher",
+          "effect": "extra gains"
+        },
+        {
+          "profession": "Politician",
+          "effect": "extra morale"
+        }
+      ],
+      "narratives": {
+        "default": "They share dried buffalo and corn cakes. The children stare at our wagon and ours stare back. We trade a tin of sugar for a bundle of pemmican. We part ways with full bellies. The myths we were told were wrong.",
+        "Language Teacher": "{Language_Teacher} speaks a few halting words of Pawnee \u2014 enough to make the family laugh. They feed us, fill our water barrels, and draw a map showing a route around bad ground we'd have hit in two days. {Language_Teacher} just changed our journey.",
+        "Politician": "{Politician} sits with the elder for an hour, speaking through gestures and patience. Real warmth grows between the camps. We leave with extra dried meat, fresh water, and a friend."
+      }
+    },
+    {
+      "name": "Lightning Strike",
+      "category": "weather",
+      "intro": "A flash, a deafening crack \u2014 a tree splits in half a hundred feet from camp.",
+      "flavor": "Plains thunderstorms were terrifying. Lightning killed pioneers and panicked livestock more than once.",
+      "outcomes": [
+        "50% lose 1 supplies",
+        "Morale loss"
+      ],
+      "modifiers": [
+        {
+          "profession": "Scout",
+          "effect": "no loss"
+        },
+        {
+          "profession": "Priest",
+          "effect": "no morale loss"
+        }
+      ],
+      "narratives": {
+        "default": "The sky split open right above camp. One barrel struck and shattered. The team is shaken \u2014 the youngest will not stop crying.",
+        "Scout": "{Scout} reads the storm an hour before it hits and moves the wagons under a low ridge. The lightning passes overhead but does no harm. The team sleeps shaken but whole.",
+        "Priest": "{Priest} gathers the camp and prays through the storm in a low, steady voice. By the time the thunder fades, the children are quiet. Faith holds the team."
+      }
+    },
+    {
+      "name": "Wild Berry Patch",
+      "category": "wildlife",
+      "intro": "A bend in the creek. Brambles thick with dark, ripe berries.",
+      "flavor": "Wild berries were one of the great gifts of the trail \u2014 a sweet break from salt pork and hardtack.",
+      "outcomes": [
+        "Gain 2 food",
+        "Gain 1 morale"
+      ],
+      "modifiers": [
+        {
+          "profession": "Farmer",
+          "effect": "extra +2 food"
+        },
+        {
+          "profession": "Food Critic",
+          "effect": "no spoiled berries, +1 extra morale"
+        }
+      ],
+      "narratives": {
+        "default": "We pick what we can carry. The kids' faces and hands are stained purple by sundown. Tonight there's berry cobbler. Small joys.",
+        "Farmer": "{Farmer} knows which berries are good, which leaves are worth picking, which roots can be dried for later. We come away with twice what anyone else would have gathered.",
+        "Food Critic": "{Food_Critic} taste-tests every variety, throws out the bad, dries the good. Tonight: cobbler. Tomorrow: berry preserves. The whole team eats like royalty."
+      }
+    },
+    {
+      "name": "Stranded Wagon",
+      "category": "people",
+      "intro": "A wagon by the trail, tilted, abandoned. Or so it seems. A small face peeks from the canvas.",
+      "flavor": "Wagon trains often helped each other \u2014 and sometimes saved each other.",
+      "outcomes": [
+        "Lose 1 food",
+        "Lose 1 supplies",
+        "Gain 2 morale"
+      ],
+      "modifiers": [
+        {
+          "profession": "Carpenter",
+          "effect": "wagon repaired, no loss, +1 morale"
+        },
+        {
+          "profession": "Doctor",
+          "effect": "no loss, family saved"
+        }
+      ],
+      "narratives": {
+        "default": "We give them food and a blanket and continue. Doing the right thing costs us \u2014 but the team rests easier knowing we didn't pass them by.",
+        "Carpenter": "{Carpenter} unhitches, gets under the wagon, fixes the broken axle in two hours. The stranded family weeps with gratitude. We share a meal and continue. Both wagons west.",
+        "Doctor": "{Doctor} treats their sick child through the night. By morning the fever has broken. We share supplies, share stories, and ride on together for two days. We didn't lose anything. We gained a friendship."
+      }
+    },
+    {
+      "name": "Dust Storm",
+      "category": "weather",
+      "intro": "The horizon turns brown. A wall of dust, a hundred feet tall, rolling toward the camp.",
+      "flavor": "Plains dust storms could blot out the sun for hours and bury supplies in inches of grit.",
+      "outcomes": [
+        "Lose 1 water",
+        "Delay,move back 1 space"
+      ],
+      "modifiers": [
+        {
+          "profession": "Scout",
+          "effect": "no delay"
+        },
+        {
+          "profession": "Cook",
+          "effect": "no water loss"
+        }
+      ],
+      "narratives": {
+        "default": "We hunker under the wagons. Sand in our teeth, in our eyes, in everything. By the time it passes, the trail is gone under drifts of dust. We lose half a day.",
+        "Scout": "{Scout} sees it coming and rides the team into a shallow draw. The storm howls past us. We're back on the trail within an hour. {Scout} just saved a day.",
+        "Cook": "{Cook} seals the water barrels with wax and cloth before the dust arrives. Not a drop is lost \u2014 and the team has clean water through the storm and after."
+      }
+    },
+    {
+      "name": "Sunday Service",
+      "category": "campfire",
+      "intro": "The seventh day. The wagon master calls a halt.",
+      "flavor": "Most pioneer wagon trains rested and worshipped on Sundays \u2014 both for faith and for the oxen.",
+      "outcomes": [
+        "Gain 1 morale",
+        "Gain 1 health"
+      ],
+      "modifiers": [
+        {
+          "profession": "Priest",
+          "effect": "extra +2 morale"
+        },
+        {
+          "profession": "Musician",
+          "effect": "extra +1 morale"
+        }
+      ],
+      "narratives": {
+        "default": "We rest. We mend clothes, water the oxen, write in our journals. The pause does us good. The week ahead feels possible again.",
+        "Priest": "{Priest} reads scripture under the open sky, leads the camp in hymns. Even the doubters bow their heads. Something quiet and good settles over the whole camp. The week ahead doesn't feel quite so heavy.",
+        "Musician": "{Musician} leads the hymns \u2014 voice and fiddle together, the kind of harmony you remember years later. Even the gruffest pioneer is wiping their eyes by the end."
+      }
+    },
+    {
+      "name": "Lost Child",
+      "category": "people",
+      "intro": "The youngest is missing. The whole camp is searching as the light fails.",
+      "flavor": "Children sometimes wandered off at noon stops. Most were found. Some weren't.",
+      "outcomes": [
+        "Delay,move back 1 space",
+        "Lose 1 morale"
+      ],
+      "modifiers": [
+        {
+          "profession": "Scout",
+          "effect": "no delay, child found"
+        },
+        {
+          "profession": "Hunter",
+          "effect": "no delay, child found"
+        },
+        {
+          "profession": "Cowboy",
+          "effect": "no delay, child found"
+        }
+      ],
+      "narratives": {
+        "default": "We search until the moon is high. The child is found at last in a thicket, scratched and crying but alive. We hold them tight all night. We move slow the next morning.",
+        "Scout": "{Scout} reads the tracks like a book \u2014 small footprints leading off into the grass. Finds the child asleep in a thicket within twenty minutes. The whole camp breathes again.",
+        "Hunter": "{Hunter} knows the land like an animal \u2014 circles back to where the child was last seen, traces the wandering, finds them by a creek bed inside an hour. Crisis averted.",
+        "Cowboy": "{Cowboy} mounts up immediately, rides a wide arc around camp at full gallop, and spots the child at the edge of a draw. Home before sundown."
+      }
+    },
+    {
+      "name": "Oxen Exhaustion",
+      "category": "wildlife",
+      "intro": "The team is failing. Heads down, sides heaving, every step a struggle.",
+      "flavor": "Oxen could only walk so many miles a day. Push them too hard and they died \u2014 and a wagon without oxen was a tomb.",
+      "outcomes": [
+        "Delay",
+        "Lose 1 supplies"
+      ],
+      "modifiers": [
+        {
+          "profession": "Cowboy",
+          "effect": "no delay, no loss"
+        },
+        {
+          "profession": "Farmer",
+          "effect": "no loss"
+        }
+      ],
+      "narratives": {
+        "default": "We have to halt and let them rest two days. We lose ground we can't get back. The trail master grows quiet \u2014 he's seen this before.",
+        "Cowboy": "{Cowboy} adjusts the yoke, redistributes the load, rotates the lead pair. The team perks up within hours. We barely lose half a day.",
+        "Farmer": "{Farmer} forages along the trail edge \u2014 bringing back armloads of fresh grass, clover, wild oats. The oxen eat better than they have in weeks. They're plodding strong by tomorrow."
+      }
+    },
+    {
+      "name": "Gold Rush Rumors",
+      "category": "people",
+      "intro": "A rider comes from the south with wild eyes. Gold. California. Riches for the taking.",
+      "flavor": "The 1848 California Gold Rush pulled many Oregon-bound emigrants south. Some struck rich. Most did not.",
+      "outcomes": [
+        "Lose 2 morale"
+      ],
+      "modifiers": [
+        {
+          "profession": "Politician",
+          "effect": "no morale loss, team unified on Oregon"
+        },
+        {
+          "profession": "Priest",
+          "effect": "no morale loss, faith holds"
+        },
+        {
+          "profession": "Banker",
+          "effect": "no morale loss, team trusts the math"
+        }
+      ],
+      "narratives": {
+        "default": "Half the camp wants to head south. Arguments rage past midnight. By morning we continue toward Oregon, but the team is fractured. Some will desert at the next trading post.",
+        "Politician": "{Politician} gathers everyone under the night sky and gives a speech that nobody quite remembers but everyone feels. Oregon is the destination. The team holds together. The trail master grins.",
+        "Priest": "{Priest} reminds the camp why we left \u2014 not for gold, but for land, family, a new start. The fever cools. By morning, no one wants to turn south. Faith is heavier than rumor.",
+        "Banker": "{Banker} runs the numbers out loud \u2014 the cost of detour, the odds of striking gold, the tax on shipped bullion. By the end nobody believes the rumors anymore. Oregon it is."
+      }
+    },
+    {
+      "name": "Letter from Home",
+      "category": "fort",
+      "intro": "A letter, somehow, miraculously, finds the wagon at the trading post.",
+      "flavor": "Mail on the trail was rare and precious. A letter from home could change a pioneer's whole month.",
+      "outcomes": [
+        "Gain 3 morale"
+      ],
+      "modifiers": [],
+      "narratives": {
+        "default": "Someone sits by the fire reading it aloud. There's news of a niece, a wedding, a death, a new church. We laugh and we cry. The wagon train continues, lighter."
+      }
+    },
+    {
+      "name": "Wagon Race Challenge",
+      "category": "people",
+      "intro": "Another wagon train pulls alongside ours. Their leader rides over with a grin. \"Race you to the next ridge?\"",
+      "flavor": "Wagon trains sometimes raced for fun, for honor, for a shared meal. Sometimes the racing broke things.",
+      "outcomes": [
+        "Move +2",
+        "50% lose 2 supplies"
+      ],
+      "modifiers": [
+        {
+          "profession": "Cowboy",
+          "effect": "no supply loss"
+        },
+        {
+          "profession": "Carpenter",
+          "effect": "no supply loss"
+        }
+      ],
+      "narratives": {
+        "default": "We win by a hair. The other wagon master buys us coffee at the next fire. We lose a barrel that bounced off in the chase, but we gained a story we'll tell our grandchildren.",
+        "Cowboy": "{Cowboy} drives the team like a man possessed but without losing control. We pull ahead by a half-mile and lose nothing. The other wagon master doffs his hat.",
+        "Carpenter": "{Carpenter} re-strapped every barrel before the race. We tear over the ridge whole and intact. The other wagon master wants {Carpenter} for his own train."
+      }
+    },
+    {
+      "name": "Snake in the Wagon",
+      "category": "wildlife",
+      "intro": "A scream from the wagon at first light. A rattler, coiled in the bedding.",
+      "flavor": "Rattlesnakes routinely sheltered in pioneer wagons overnight. Most encounters ended without injury \u2014 but not all.",
+      "outcomes": [
+        "50% lose 1 member",
+        "Lose 1 morale"
+      ],
+      "modifiers": [
+        {
+          "profession": "Doctor",
+          "effect": "no death even if bite happens"
+        },
+        {
+          "profession": "Trapper",
+          "effect": "snake removed safely"
+        },
+        {
+          "profession": "Hunter",
+          "effect": "snake killed cleanly"
+        }
+      ],
+      "narratives": {
+        "default": "{lost_member} the {lost_profession} is bitten before anyone fully wakes. The leg swells. By dusk, they are gone. We bury them by the trail.",
+        "Doctor": "{Doctor} acts before the swelling spreads \u2014 cuts, draws, ties off, applies poultice. The team member sweats through the night but wakes alive. They walk slow for a week but they walk.",
+        "Trapper": "{Trapper} hooks the snake with a forked stick, walks it off into the brush, releases it. No one is bitten. The whole camp is wide awake but safe.",
+        "Hunter": "{Hunter} comes in with a heavy stick, dispatches the snake in a single swift motion. The wagon is searched twice over. Safe."
+      }
+    },
+    {
+      "name": "Toothache Becomes Infected",
+      "category": "sickness",
+      "intro": "{random_member} has been hiding the toothache for days. Now their face is swollen.",
+      "flavor": "A simple toothache, untreated on the trail, could become deadly within a week.",
+      "outcomes": [
+        "Delay,move back 1 space",
+        "50% lose 1 member"
+      ],
+      "modifiers": [
+        {
+          "profession": "Doctor",
+          "effect": "tooth pulled, no delay, no death"
+        },
+        {
+          "profession": "Blacksmith",
+          "effect": "tooth pulled, half delay"
+        }
+      ],
+      "narratives": {
+        "default": "There's nothing we can do but wait. Three days the suffering continues. They lose strength. By the fourth day, the worst happens. We bury them quietly.",
+        "Doctor": "{Doctor} pulls the tooth with steady hands and the right tools. There's a brief, awful moment, and then relief. By morning the patient is sleeping comfortably. Crisis past.",
+        "Blacksmith": "{Blacksmith} has pulled teeth before \u2014 back home, for cousins, for friends. The pliers are not delicate but they work. The patient recovers slowly but recovers."
+      }
+    },
+    {
+      "name": "Found Cache of Supplies",
+      "category": "trail",
+      "intro": "An abandoned wagon by the trail, its load scattered.",
+      "flavor": "Pioneers often had to lighten their wagons by abandoning supplies on the trail. Other emigrants found gold in their leavings.",
+      "outcomes": [
+        "Gain 3 supplies",
+        "Gain 2 food"
+      ],
+      "modifiers": [
+        {
+          "profession": "Merchant",
+          "effect": "extra gains"
+        },
+        {
+          "profession": "Food Critic",
+          "effect": "extra food found in good condition"
+        }
+      ],
+      "narratives": {
+        "default": "We sift through what's left \u2014 a sack of flour, a bolt of canvas, three good pots, a child's wooden toy. We take what's useful and continue. A small windfall on a hard road.",
+        "Merchant": "{Merchant} sees value where others see junk. Rebraids the abandoned canvas, salvages every ounce of usable goods. We come away significantly richer than we expected.",
+        "Food Critic": "{Food_Critic} sniffs every barrel and bag. Throws out the spoiled. Salvages the rest. We find a sealed cask of dried apples that's perfectly good. A real prize."
+      }
+    },
+    {
+      "name": "Homesickness",
+      "category": "campfire",
+      "intro": "The team is quiet around the fire. No one looks at anyone else. Eyes are wet.",
+      "flavor": "Homesickness was a real and serious affliction on the trail. Some emigrants turned back. Some despaired. The team's spirit was as critical as its supplies.",
+      "outcomes": [
+        "Lose 2 morale"
+      ],
+      "modifiers": [
+        {
+          "profession": "Musician",
+          "effect": "morale held"
+        },
+        {
+          "profession": "Actor",
+          "effect": "morale held"
+        },
+        {
+          "profession": "Priest",
+          "effect": "morale gained instead"
+        },
+        {
+          "profession": "Influencer",
+          "effect": "morale held"
+        }
+      ],
+      "narratives": {
+        "default": "The team grows distant. People stop talking at meals. Two of the children ask, in quiet voices, when they can go home. We keep going. There is no going back.",
+        "Musician": "{Musician} starts a quiet tune by the fire \u2014 a song from back east, the kind everyone knows. One by one the team joins in. By the end of the song, eyes are dry and the camp feels like home again.",
+        "Actor": "{Actor} tells stories \u2014 about home, about strangers we'll meet, about the houses we'll build. Stories that give the future a shape. By morning, the team is looking forward instead of back.",
+        "Priest": "{Priest} reminds us that home is not a place but the people we love. We pray together. We weep together. By dawn, the sadness has turned to resolve. The trail goes on.",
+        "Influencer": "{Influencer} tells the funniest, brightest stories anyone has ever heard around a fire. The team laughs until tears stream \u2014 different tears than the homesick ones. Morale rebounds."
+      }
+    }
+  ],
+  "choices": [
+    {
+      "name": "River crossing decision",
+      "scenario": "The river is wide and fast",
+      "option_a": {
+        "label": "Cross the river",
+        "outcome": "Move +1 50% lose 2 supplies 25% lose 1 member"
+      },
+      "option_b": {
+        "label": "Wait for a ferry",
+        "outcome": "Stay in the same place,but stay safe"
+      },
+      "modifiers": [
+        {
+          "profession": "Scout",
+          "effect": "no death risk"
+        },
+        {
+          "profession": "Carpenter",
+          "effect": "no supply loss"
+        },
+        {
+          "profession": "Guide",
+          "effect": "crosses safely"
+        }
+      ]
+    },
+    {
+      "name": "Help a family",
+      "scenario": "A starving family asks for food",
+      "option_a": {
+        "label": "Help them",
+        "outcome": "Lose 2 food;gain morale"
+      },
+      "option_b": {
+        "label": "ignore them",
+        "outcome": "No resource loss;lose morale"
+      },
+      "modifiers": [
+        {
+          "profession": "Politician",
+          "effect": "adds morale"
+        },
+        {
+          "profession": "Influencer",
+          "effect": "prevents morale loss"
+        }
+      ]
+    },
+    {
+      "name": "Hunting trip",
+      "scenario": "You need food",
+      "option_a": {
+        "label": "Hunt aggressively",
+        "outcome": "Gain 4 food,40%injury risk"
+      },
+      "option_b": {
+        "label": "Hunt cautiously",
+        "outcome": "Gain 2 food;safe"
+      },
+      "modifiers": [
+        {
+          "profession": "Hunter",
+          "effect": "no injury risk"
+        },
+        {
+          "profession": "Doctor",
+          "effect": "heals injury"
+        }
+      ]
+    },
+    {
+      "name": "Mountain shortcut",
+      "scenario": "A thin shortcut may save time",
+      "option_a": {
+        "label": "Take shortcut",
+        "outcome": "Move +2 or lose 2 supplies"
+      },
+      "option_b": {
+        "label": "Stay on main trial",
+        "outcome": "Move+1; safe"
+      },
+      "modifiers": [
+        {
+          "profession": "Guide",
+          "effect": "guarentees success"
+        },
+        {
+          "profession": "Scout",
+          "effect": "reduces risk"
+        }
+      ]
+    },
+    {
+      "name": "Trading post",
+      "scenario": "You reach a fort or trading post",
+      "option_a": {
+        "label": "Buy supplies",
+        "outcome": "Lose 2 money;gain 3 food or supplies"
+      },
+      "option_b": {
+        "label": "Save money",
+        "outcome": "No change"
+      },
+      "modifiers": [
+        {
+          "profession": "Merchant",
+          "effect": "doubles gain"
+        },
+        {
+          "profession": "Banker",
+          "effect": "reduces cost"
+        }
+      ]
+    },
+    {
+      "name": "Camp setup",
+      "scenario": "Night approaches",
+      "option_a": {
+        "label": "Build strong camp",
+        "outcome": "lose 1 supply;protected from next event damage"
+      },
+      "option_b": {
+        "label": "skip setup",
+        "outcome": "gain 1 supply;next event is worse"
+      },
+      "modifiers": [
+        {
+          "profession": "Carpenter",
+          "effect": "removes cost"
+        },
+        {
+          "profession": "Scout",
+          "effect": "reduces penalty"
+        }
+      ]
+    },
+    {
+      "name": "Illness response",
+      "scenario": "A team member is sick",
+      "option_a": {
+        "label": "Stop to treat",
+        "outcome": "Go back 1 space;prevent death"
+      },
+      "option_b": {
+        "label": "keep moving",
+        "outcome": "No delay 50% lose 1 member"
+      },
+      "modifiers": [
+        {
+          "profession": "Doctor",
+          "effect": "removes delay"
+        },
+        {
+          "profession": "Cook",
+          "effect": "reduces illness risk"
+        }
+      ]
+    },
+    {
+      "name": "Animal trouble",
+      "scenario": "The animals are restless",
+      "option_a": {
+        "label": "Calm them",
+        "outcome": "No effect;safe"
+      },
+      "option_b": {
+        "label": "Push forward",
+        "outcome": "Move +1 40% lose supplies"
+      },
+      "modifiers": [
+        {
+          "profession": "Cowboy",
+          "effect": "prevents supply loss"
+        }
+      ]
+    },
+    {
+      "name": "Storm incoming",
+      "scenario": "A storm is coming",
+      "option_a": {
+        "label": "Prepare",
+        "outcome": "Lose 1 supply;no damage"
+      },
+      "option_b": {
+        "label": "Keep moving",
+        "outcome": "Move +1;Lose supplies"
+      },
+      "modifiers": [
+        {
+          "profession": "Scout",
+          "effect": "reduces damage"
+        },
+        {
+          "profession": "Carpenter",
+          "effect": "prevents supply loss"
+        }
+      ]
+    },
+    {
+      "name": "Stranger encounter",
+      "scenario": "A stranger comes to camp",
+      "option_a": {
+        "label": "Trust them",
+        "outcome": "Gain morale;30% lose supplies"
+      },
+      "option_b": {
+        "label": "Turn them away",
+        "outcome": "No change"
+      },
+      "modifiers": [
+        {
+          "profession": "Politician",
+          "effect": "removes risk"
+        },
+        {
+          "profession": "Influencer",
+          "effect": "adds morale"
+        }
+      ]
+    },
+    {
+      "name": "Food rationing",
+      "scenario": "Food is running low",
+      "option_a": {
+        "label": "Ration strictly",
+        "outcome": "Food last longer; lose morale"
+      },
+      "option_b": {
+        "label": "Eat normal",
+        "outcome": "No morale loss;food runs out faster"
+      },
+      "modifiers": [
+        {
+          "profession": "Cook",
+          "effect": "prevents morale loss"
+        },
+        {
+          "profession": "Food Critic",
+          "effect": "reduces waste"
+        }
+      ]
+    },
+    {
+      "name": "Final push",
+      "scenario": "You are close to the destination",
+      "option_a": {
+        "label": "Push hard",
+        "outcome": "Move +2; lose health"
+      },
+      "option_b": {
+        "label": "Go steady",
+        "outcome": "Move +1;safe"
+      },
+      "modifiers": [
+        {
+          "profession": null,
+          "effect": "High morale prevents health loss"
+        },
+        {
+          "profession": null,
+          "effect": "Musician boost morale"
+        },
+        {
+          "profession": null,
+          "effect": "Actor boost morale"
+        }
+      ]
+    },
+    {
+      "name": "River drink",
+      "scenario": "You find a water source",
+      "option_a": {
+        "label": "Drink immediately",
+        "outcome": "Gain water;30%illness risk"
+      },
+      "option_b": {
+        "label": "Boil the water",
+        "outcome": "Move back 1 space; safe"
+      },
+      "modifiers": [
+        {
+          "profession": null,
+          "effect": "Cook removes the illness risk"
+        }
+      ]
+    },
+    {
+      "name": "Storyteller night",
+      "scenario": "Spirits are low after a hard day",
+      "option_a": {
+        "label": "Tell stories",
+        "outcome": "Gain morale"
+      },
+      "option_b": {
+        "label": "Go to sleep",
+        "outcome": "No change"
+      },
+      "modifiers": [
+        {
+          "profession": null,
+          "effect": "Actor doubles morale gain"
+        },
+        {
+          "profession": null,
+          "effect": "None"
+        }
+      ]
+    },
+    {
+      "name": "Wagon race",
+      "scenario": "Another group challenges you",
+      "option_a": {
+        "label": "Race them",
+        "outcome": "Move +2;risk supply loss"
+      },
+      "option_b": {
+        "label": "Ignore them",
+        "outcome": "No change"
+      },
+      "modifiers": [
+        {
+          "profession": null,
+          "effect": "Cowboy prevents supply loss"
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "name": "Food",
+      "description": "Used to feed the team each turn",
+      "start": 10,
+      "min": 0,
+      "max": 20,
+      "gain_sources": "Hunting,trading,events",
+      "loss_sources": "Spoilage,rationing,events",
+      "notes": "If 0-lose health each turn"
+    },
+    {
+      "name": "Water",
+      "description": "Required for survival,especially in heat",
+      "start": 8,
+      "min": 0,
+      "max": 20,
+      "gain_sources": "Rivers,trade,events",
+      "loss_sources": "Heat,bad water,events",
+      "notes": "If 0-immediate health loss"
+    },
+    {
+      "name": "Supplies",
+      "description": "Tools,materials,repairs",
+      "start": 6,
+      "min": 0,
+      "max": 15,
+      "gain_sources": "Trade,scavenging,events",
+      "loss_sources": "Breakdowns,storms,repairs",
+      "notes": "Used to avoid delays or losses"
+    },
+    {
+      "name": "Money",
+      "description": "Used for trading and ferry crossing",
+      "start": 5,
+      "min": 0,
+      "max": 20,
+      "gain_sources": "Trade,events",
+      "loss_sources": "Spending,theft",
+      "notes": "Enables safer choices"
+    },
+    {
+      "name": "Health",
+      "description": "Overall condition of team",
+      "start": 10,
+      "min": 0,
+      "max": 10,
+      "gain_sources": "Rest,forts,events",
+      "loss_sources": "Illness,injury,starvation",
+      "notes": "If 0-Lose a team member"
+    },
+    {
+      "name": "Morale",
+      "description": "Team spirit and cooperation",
+      "start": 5,
+      "min": 0,
+      "max": 10,
+      "gain_sources": "Music,rest,helping others",
+      "loss_sources": "Conflict, starvation,stress",
+      "notes": "Low morale increases risk in events"
+    },
+    {
+      "name": "Movement",
+      "description": "Distance traveled per space",
+      "start": 1,
+      "min": 0,
+      "max": 3,
+      "gain_sources": "choice,good events",
+      "loss_sources": "Injury,broken gear",
+      "notes": "Usually 1 per space, can be boosted"
+    }
+  ],
+  "scoring": [
+    {
+      "category": "Finish game",
+      "points": 10
+    },
+    {
+      "category": "Each health left",
+      "points": 1
+    },
+    {
+      "category": "Each supply left",
+      "points": 2
+    },
+    {
+      "category": "Each team member left",
+      "points": 3
+    },
+    {
+      "category": "Best survivor story",
+      "points": 5
+    },
+    {
+      "category": "each money left",
+      "points": 4
+    }
+  ],
+  "trails": {
+    "short": [
+      {
+        "n": 1,
+        "name": "Independence, Missouri",
+        "type": "start",
+        "info": "April, 1848. The 'jumping-off place' is bursting with thousands of wagons and oxen and dreams. The whole country smells of mud, livestock, and fresh-cut wood. Today you sign your name in the ledger and turn your wagon west. There is no road. There is only the trail others have made before you. Behind you is everything you have ever known. Ahead lies 2,000 miles of America."
+      },
+      {
+        "n": 2,
+        "name": "Kansas Prairie",
+        "type": "travel",
+        "info": "The grass is shoulder-high in places. The wagon train stretches behind you to the horizon."
+      },
+      {
+        "n": 3,
+        "name": "Kansas River Crossing",
+        "type": "river",
+        "info": "Your first real river. The Kansas runs wide and brown, swirling with spring melt. Some wagons line up for the ferry. Others \u2014 those with thinner pockets \u2014 wade in and pray. Will you ford the current, seal your wagon and float, or pay coin for safe passage?"
+      },
+      {
+        "n": 4,
+        "name": "Big Blue River",
+        "type": "river",
+        "info": "No ferry here. No choice but to cross under your own power. The Big Blue is named for its color but today it runs muddy and fast. You can ford it or seal your wagon and float. Choose wrong and supplies \u2014 or people \u2014 go downstream."
+      },
+      {
+        "n": 5,
+        "name": "Fort Kearney",
+        "type": "fort",
+        "info": "The first fort. A square of log walls in a sea of grass, built in 1848 to protect the trail. Soldiers in blue. A blacksmith's hammer ringing. A trader with bolts of cloth and barrels of flour. This may be your last chance to mail a letter home for a year. Maybe forever."
+      },
+      {
+        "n": 6,
+        "name": "Platte River Valley",
+        "type": "travel",
+        "info": "The Platte River runs beside the trail for hundreds of miles. Pioneers said it was 'a mile wide and an inch deep' \u2014 too thick to drink, too thin to plow."
+      },
+      {
+        "n": 7,
+        "name": "The Great Plains",
+        "type": "travel",
+        "info": "Endless grass in every direction. No tree in sight. The sky is bigger here than you have ever seen the sky."
+      },
+      {
+        "n": 8,
+        "name": "Chimney Rock",
+        "type": "landmark",
+        "info": "After weeks of flat prairie, a stone spire rises from the earth \u2014 325 feet of pale rock pointing at the sky. Pioneers wrote about Chimney Rock in their journals more than any other landmark on the trail. Seeing it means you have come a long way. It also means the easy part is ending."
+      },
+      {
+        "n": 9,
+        "name": "Scotts Bluff",
+        "type": "landmark",
+        "info": "Towering bluffs that look like the ramparts of a buried castle. The Lakota people held this place sacred long before any wagon train passed by. The trail must wind around them \u2014 straight through is impossible."
+      },
+      {
+        "n": 10,
+        "name": "Fort Laramie",
+        "type": "fort",
+        "info": "The biggest fort on the trail. Once a fur-trading post, now an army outpost \u2014 a real town in the wilderness with a sutler's store, a bakery, and other travelers heading every direction. Repair your wagon. Trade for fresh oxen. Listen for news of the trail ahead \u2014 there are always rumors."
+      },
+      {
+        "n": 11,
+        "name": "Mountain Foothills",
+        "type": "travel",
+        "info": "The land starts to rise. The air gets thinner. The oxen breathe harder."
+      },
+      {
+        "n": 12,
+        "name": "Independence Rock",
+        "type": "landmark",
+        "info": "The 'Great Register of the Desert.' A granite dome the size of a football field, covered in carved names. Five thousand pioneers have signed this rock \u2014 and you might too. Reach it by July 4th and you are on schedule for Oregon. Reach it later, and the mountains will catch you in the snow."
+      },
+      {
+        "n": 13,
+        "name": "Devil's Gate",
+        "type": "landmark",
+        "info": "A narrow gorge carved 370 feet deep through solid rock by the Sweetwater River. The wagon trail must go around \u2014 no wagon can fit through. But you can climb up and look. It is one of the most beautiful and frightening places on the trail."
+      },
+      {
+        "n": 14,
+        "name": "South Pass",
+        "type": "landmark",
+        "info": "You have crossed the Continental Divide. From this moment forward, every river flows toward the Pacific. The pass is so gentle and gradual that you almost miss it \u2014 yet you have just walked over the spine of America. You are in Oregon Country now."
+      },
+      {
+        "n": 15,
+        "name": "Green River Crossing",
+        "type": "river",
+        "info": "Swift, deep, and dangerous. Three to five ferries operate here in peak season because so many people drown trying to ford. The river runs cold from mountain snow. The choice is yours, but think hard."
+      },
+      {
+        "n": 16,
+        "name": "Soda Springs",
+        "type": "landmark",
+        "info": "Naturally carbonated mineral water, bubbling up from the ground. Pioneers wrote about it with wonder \u2014 water that fizzed in your cup like nature's own soda pop. The team's spirits lift. You are going to make it."
+      },
+      {
+        "n": 17,
+        "name": "Fort Hall",
+        "type": "fort",
+        "info": "A British trading post built by an American. Last major resupply before the Snake River country, the most punishing stretch of trail. Buy what you need now. There will be no more chances for a long, hard while."
+      },
+      {
+        "n": 18,
+        "name": "Snake River Crossing",
+        "type": "river",
+        "info": "The most treacherous river on the trail. The Snake runs cold and fast through deep canyons. Many wagons have been lost here. Shoshone guides know the safe places to cross \u2014 they will help, usually in exchange for trade goods. Choose carefully."
+      },
+      {
+        "n": 19,
+        "name": "Snake River Plain",
+        "type": "travel",
+        "info": "Dry, hot, dusty country. The river runs in a canyon hundreds of feet below \u2014 you can hear it but you cannot reach it. Water is the problem now, not food."
+      },
+      {
+        "n": 20,
+        "name": "Fort Boise",
+        "type": "fort",
+        "info": "Last fort before the Blue Mountains. Hudson's Bay Company runs this one. The traders here have seen wagons arrive in every condition \u2014 and some not arrive at all. Stock up. The mountains are next."
+      },
+      {
+        "n": 21,
+        "name": "Blue Mountains",
+        "type": "travel",
+        "info": "Steep, forested mountains. The trail climbs and falls and climbs again. Wagons sometimes have to be lowered down rock faces with ropes. The oxen stagger. Every step uses everything they have."
+      },
+      {
+        "n": 22,
+        "name": "Whitman Mission",
+        "type": "landmark",
+        "info": "Marcus and Narcissa Whitman built this mission in 1836 to serve emigrants and the Cayuse people. A waypoint near journey's end \u2014 a chance to rest before the final push. The garden here grows real vegetables. The first you have seen in months."
+      },
+      {
+        "n": 23,
+        "name": "The Dalles",
+        "type": "landmark",
+        "info": "Where the trail meets the Columbia River. From here, you can raft your wagon down the river \u2014 fast but very dangerous \u2014 or pay the toll for the Barlow Road around Mount Hood. There is no easy way to Oregon City. There never has been."
+      },
+      {
+        "n": 24,
+        "name": "Columbia River",
+        "type": "river",
+        "info": "The final water. Your wagon, lashed to a raft, on a wild river \u2014 or the Barlow Road, slow and steep but safer. The end is in sight. Don't lose it now."
+      },
+      {
+        "n": 25,
+        "name": "Oregon City",
+        "type": "finish",
+        "info": "You made it. The Willamette Valley stretches before you \u2014 green hills, fresh streams, soil so rich you could grow anything. The journey is over. The new life begins. You came 2,000 miles to stand here. Take a breath. You will never forget this day."
+      }
+    ],
+    "extended": [
+      {
+        "n": 1,
+        "name": "Independence, Missouri",
+        "type": "start",
+        "info": "Starting point. April 1848. Your team is ready, your wagon loaded with 2,000 pounds of supplies."
+      },
+      {
+        "n": 2,
+        "name": "Westport Landing",
+        "type": "travel"
+      },
+      {
+        "n": 3,
+        "name": "Shawnee Mission",
+        "type": "landmark",
+        "info": "A school and trading post run by Methodist missionaries serving the Shawnee. Last sight of any town for hundreds of miles."
+      },
+      {
+        "n": 4,
+        "name": "Wakarusa River",
+        "type": "travel"
+      },
+      {
+        "n": 5,
+        "name": "Kansas River Crossing",
+        "type": "river",
+        "info": "Your first major river. Will you ford, float, or pay the ferry?"
+      },
+      {
+        "n": 6,
+        "name": "Alcove Spring",
+        "type": "landmark",
+        "info": "A picturesque camping site with sweet, cold water. Tempting to linger \u2014 but the season is short."
+      },
+      {
+        "n": 7,
+        "name": "Big Blue River",
+        "type": "river",
+        "info": "No ferry available. You must ford or caulk and float."
+      },
+      {
+        "n": 8,
+        "name": "Rock Creek Station",
+        "type": "travel"
+      },
+      {
+        "n": 9,
+        "name": "Little Blue River Valley",
+        "type": "travel"
+      },
+      {
+        "n": 10,
+        "name": "Fort Kearney",
+        "type": "fort",
+        "info": "First major fort on the trail (1848). Resupply, repair, send letters home."
+      },
+      {
+        "n": 11,
+        "name": "Platte River Valley",
+        "type": "travel"
+      },
+      {
+        "n": 12,
+        "name": "Buffalo Country",
+        "type": "travel",
+        "info": "Vast herds once stretched to the horizon. A successful hunt could feed your team for weeks."
+      },
+      {
+        "n": 13,
+        "name": "South Platte Crossing",
+        "type": "river",
+        "info": "Wide and shallow but with quicksand bottoms. Cross carefully."
+      },
+      {
+        "n": 14,
+        "name": "Ash Hollow",
+        "type": "landmark",
+        "info": "A green oasis in dry country. Many emigrants buried their dead here."
+      },
+      {
+        "n": 15,
+        "name": "Courthouse and Jail Rocks",
+        "type": "landmark",
+        "info": "Towering rock formations that look like a courthouse and a jail. Travelers used them to gauge progress."
+      },
+      {
+        "n": 16,
+        "name": "Chimney Rock",
+        "type": "landmark",
+        "info": "A 325-foot natural spire \u2014 the most-mentioned landmark in pioneer journals."
+      },
+      {
+        "n": 17,
+        "name": "Scotts Bluff",
+        "type": "landmark",
+        "info": "Massive bluffs marking the Wyoming border. Sacred to the Lakota."
+      },
+      {
+        "n": 18,
+        "name": "Fort Laramie",
+        "type": "fort",
+        "info": "Major fur-trade post turned army fort. Trade, repair, news."
+      },
+      {
+        "n": 19,
+        "name": "Register Cliff",
+        "type": "landmark",
+        "info": "Where emigrants carved their names into soft sandstone. Some signatures from 1843 are still visible."
+      },
+      {
+        "n": 20,
+        "name": "North Platte Valley",
+        "type": "travel"
+      },
+      {
+        "n": 21,
+        "name": "Casper",
+        "type": "travel"
+      },
+      {
+        "n": 22,
+        "name": "Independence Rock",
+        "type": "landmark",
+        "info": "The Great Register of the Desert. If you reach this by July 4th, you'll make Oregon before winter."
+      },
+      {
+        "n": 23,
+        "name": "Devil's Gate",
+        "type": "landmark",
+        "info": "A dramatic 370-foot gorge carved by the Sweetwater River."
+      },
+      {
+        "n": 24,
+        "name": "Sweetwater River",
+        "type": "travel",
+        "info": "You'll cross this river up to nine times. Calm water, good camping."
+      },
+      {
+        "n": 25,
+        "name": "Ice Slough",
+        "type": "landmark",
+        "info": "A peat bog where ice could be found just below the surface even in summer."
+      },
+      {
+        "n": 26,
+        "name": "South Pass",
+        "type": "landmark",
+        "info": "The Continental Divide. So gentle most travelers didn't notice. Now you're in Oregon Country."
+      },
+      {
+        "n": 27,
+        "name": "Pacific Springs",
+        "type": "travel",
+        "info": "The first spring where water flows west toward the Pacific."
+      },
+      {
+        "n": 28,
+        "name": "Big Sandy Creek",
+        "type": "river",
+        "info": "A short crossing but a vital one \u2014 leads to the Green River."
+      },
+      {
+        "n": 29,
+        "name": "Green River Crossing",
+        "type": "river",
+        "info": "Treacherous in summer. Three to five ferries operated here."
+      },
+      {
+        "n": 30,
+        "name": "Fort Bridger",
+        "type": "fort",
+        "info": "Trading post built by mountain man Jim Bridger in 1843. Trail splits here for California."
+      },
+      {
+        "n": 31,
+        "name": "Bear River Valley",
+        "type": "travel"
+      },
+      {
+        "n": 32,
+        "name": "Soda Springs",
+        "type": "landmark",
+        "info": "Naturally carbonated mineral springs. A wonder of the trail."
+      },
+      {
+        "n": 33,
+        "name": "Fort Hall",
+        "type": "fort",
+        "info": "Built 1834. Last major resupply before the Snake River country."
+      },
+      {
+        "n": 34,
+        "name": "American Falls",
+        "type": "landmark"
+      },
+      {
+        "n": 35,
+        "name": "Snake River Country",
+        "type": "travel",
+        "info": "Hot, dry, and difficult. Water is scarce despite the river running through deep canyons."
+      },
+      {
+        "n": 36,
+        "name": "Massacre Rocks",
+        "type": "landmark"
+      },
+      {
+        "n": 37,
+        "name": "Three Island Crossing",
+        "type": "river",
+        "info": "Considered the safest Snake River crossing \u2014 three islands break the current."
+      },
+      {
+        "n": 38,
+        "name": "Hot Springs",
+        "type": "landmark",
+        "info": "Natural hot springs near the trail. A welcome rest."
+      },
+      {
+        "n": 39,
+        "name": "Snake River Crossing",
+        "type": "river",
+        "info": "Shoshone guides may help cross in exchange for trade goods."
+      },
+      {
+        "n": 40,
+        "name": "Fort Boise",
+        "type": "fort",
+        "info": "Last fort before the Blue Mountains. Hudson's Bay Company post."
+      },
+      {
+        "n": 41,
+        "name": "Burnt River Canyon",
+        "type": "travel",
+        "info": "Steep and rocky. Hard on wagons and oxen alike."
+      },
+      {
+        "n": 42,
+        "name": "Powder River",
+        "type": "travel"
+      },
+      {
+        "n": 43,
+        "name": "Grande Ronde Valley",
+        "type": "landmark",
+        "info": "A beautiful green valley \u2014 a brief reward before the Blue Mountains."
+      },
+      {
+        "n": 44,
+        "name": "Blue Mountains",
+        "type": "travel",
+        "info": "Steep forested climbs. Wagons sometimes had to be lowered by ropes."
+      },
+      {
+        "n": 45,
+        "name": "Whitman Mission",
+        "type": "landmark",
+        "info": "Mission of Marcus and Narcissa Whitman. A waypoint near journey's end."
+      },
+      {
+        "n": 46,
+        "name": "Walla Walla Valley",
+        "type": "travel"
+      },
+      {
+        "n": 47,
+        "name": "Umatilla River",
+        "type": "travel"
+      },
+      {
+        "n": 48,
+        "name": "The Dalles",
+        "type": "landmark",
+        "info": "Where the trail meets the Columbia. Decision time: raft the river, or take the Barlow Road around Mt. Hood?"
+      },
+      {
+        "n": 49,
+        "name": "Columbia River",
+        "type": "river",
+        "info": "Raft your wagon down the rapids, or pay the toll for the Barlow Road."
+      },
+      {
+        "n": 50,
+        "name": "Oregon City",
+        "type": "finish",
+        "info": "Journey's end. You've crossed 2,000 miles to reach the Willamette Valley."
+      }
+    ]
+  },
+  "pace_options": [
+    {
+      "name": "Steady",
+      "movement_modifier": 0,
+      "health_per_turn": 0,
+      "morale_per_turn": 0,
+      "description": "Normal traveling pace, about 15 miles per day. Conservative and safe."
+    },
+    {
+      "name": "Strenuous",
+      "movement_modifier": 1,
+      "health_per_turn": -1,
+      "morale_per_turn": 0,
+      "description": "Push the oxen harder, 18-20 miles per day. Tiring but covers more ground."
+    },
+    {
+      "name": "Grueling",
+      "movement_modifier": 2,
+      "health_per_turn": -1,
+      "morale_per_turn": -1,
+      "description": "Maximum speed. 20+ miles per day. Real risk of exhaustion and illness."
+    }
+  ],
+  "ration_options": [
+    {
+      "name": "Filling",
+      "food_per_turn": 2,
+      "health_per_turn": 1,
+      "morale_per_turn": 1,
+      "description": "Eat well. Strong morale and recovery, but food disappears fast."
+    },
+    {
+      "name": "Meager",
+      "food_per_turn": 1,
+      "health_per_turn": 0,
+      "morale_per_turn": 0,
+      "description": "Standard rations. Sustainable for the long haul."
+    },
+    {
+      "name": "Bare Bones",
+      "food_per_turn": 0,
+      "health_per_turn": -1,
+      "morale_per_turn": -1,
+      "description": "Survival rations. Stretches food, but the team will weaken."
+    }
+  ],
+  "turn_actions": [
+    {
+      "name": "Push On",
+      "description": "Roll dice and advance down the trail. The default action.",
+      "skips_movement": false,
+      "default": true
+    },
+    {
+      "name": "Hunt",
+      "description": "Spend the day hunting. Skip movement. Roll for food: gain 1d4 food normally, +3 if Hunter on team, +2 if Trapper on team.",
+      "skips_movement": true,
+      "food_yield_dice": "1d4",
+      "profession_bonuses": {
+        "Hunter": 3,
+        "Trapper": 2
+      }
+    },
+    {
+      "name": "Rest",
+      "description": "Spend the day camped. Skip movement. Restore +2 Health and +1 Morale. +1 extra Health if Doctor on team.",
+      "skips_movement": true,
+      "effects": {
+        "health": 2,
+        "morale": 1
+      },
+      "profession_bonuses": {
+        "Doctor": {
+          "health": 1
+        }
+      }
+    },
+    {
+      "name": "Forage",
+      "description": "Search nearby land for wild food and water. Skip movement. Gain 1d3 food, +2 if Farmer on team, +1 water if Scout on team.",
+      "skips_movement": true,
+      "food_yield_dice": "1d3",
+      "profession_bonuses": {
+        "Farmer": 2,
+        "Scout_water": 1
+      }
+    }
+  ],
+  "fort_options": [
+    {
+      "name": "Buy Supplies",
+      "description": "Trade money for goods. 2 Money = 3 Supplies, or 2 Money = 4 Food, or 2 Money = 4 Water.",
+      "cost": {
+        "money": 2
+      },
+      "benefit_choices": [
+        {
+          "resource": "supplies",
+          "amount": 3
+        },
+        {
+          "resource": "food",
+          "amount": 4
+        },
+        {
+          "resource": "water",
+          "amount": 4
+        }
+      ],
+      "modifier": {
+        "profession": "Merchant",
+        "effect": "double goods received"
+      }
+    },
+    {
+      "name": "Repair Wagon",
+      "description": "Spend 1 Supply to repair wear and tear. Restores Movement to maximum.",
+      "cost": {
+        "supplies": 1
+      },
+      "effects": {
+        "movement_restore": true
+      },
+      "modifier": {
+        "profession": "Carpenter",
+        "effect": "no supply cost"
+      }
+    },
+    {
+      "name": "Rest at Fort",
+      "description": "Spend 1 day resting. Gain +2 Health, +2 Morale.",
+      "effects": {
+        "health": 2,
+        "morale": 2
+      }
+    },
+    {
+      "name": "Get Trail News",
+      "description": "Talk to travelers and trappers. Reveals what type of event the next 3 spaces hold.",
+      "effects": {
+        "reveal_next": 3
+      }
+    },
+    {
+      "name": "Move On",
+      "description": "Skip the fort and continue traveling.",
+      "effects": {}
+    }
+  ],
+  "river_options": [
+    {
+      "name": "Ford the River",
+      "description": "Drive your wagon across. Free, but risky.",
+      "cost": {},
+      "risk": {
+        "50_percent_lose": {
+          "supplies": 2
+        },
+        "20_percent_lose": {
+          "member": 1
+        }
+      },
+      "modifier": {
+        "profession": "Scout",
+        "effect": "halved risk"
+      }
+    },
+    {
+      "name": "Caulk and Float",
+      "description": "Seal the wagon to make it float. Safer, but uses supplies.",
+      "cost": {
+        "supplies": 2
+      },
+      "risk": {
+        "15_percent_lose": {
+          "supplies": 1
+        }
+      },
+      "modifier": {
+        "profession": "Carpenter",
+        "effect": "no supply cost"
+      }
+    },
+    {
+      "name": "Hire a Ferry",
+      "description": "Pay for safe passage. Costs money.",
+      "cost": {
+        "money": 3
+      },
+      "risk": {},
+      "modifier": {
+        "profession": "Merchant",
+        "effect": "negotiate cost down to 2 Money"
+      },
+      "availability": "Most rivers, not all (no ferry at Big Blue or Snake)"
+    },
+    {
+      "name": "Native Guide",
+      "description": "Hire a Shoshone or other Native American guide. Safest option, paid in trade goods.",
+      "cost": {
+        "supplies": 2
+      },
+      "risk": {},
+      "modifier": {
+        "profession": "Language Teacher",
+        "effect": "no cost \u2014 guide accepts your gratitude"
+      },
+      "availability": "Snake River and a few western crossings",
+      "historical_note": "Native guides routinely helped emigrants cross dangerous rivers, often for trade goods. This was one of many ways indigenous peoples aided the migration."
+    }
+  ],
+  "historical_facts": [
+    {
+      "title": "2,000 Miles on Foot",
+      "fact": "The Oregon Trail was about 2,000 miles long \u2014 roughly the same distance as walking from New York City to Denver. Most pioneers walked the entire journey. Only the very young, the very old, and the sick rode in the wagon. By the time families reached Oregon, many had worn through three or four pairs of shoes.",
+      "source": "U.S. Bureau of Land Management",
+      "quiz_question": "How long was the Oregon Trail?",
+      "correct": "About 2,000 miles",
+      "wrong": [
+        "About 500 miles",
+        "About 5,000 miles",
+        "About 200 miles"
+      ],
+      "category": "historical"
+    },
+    {
+      "title": "Why Leave in April?",
+      "fact": "Wagon trains had to leave Independence, Missouri by mid-April. Any later and the prairie grass wouldn't be tall enough to feed the oxen. Any later than that and you'd hit the Rocky Mountains in late summer \u2014 and the snows could close the passes by October. Timing was life and death.",
+      "source": "Oregon-California Trails Association",
+      "quiz_question": "Why did wagon trains have to leave Independence by mid-April?",
+      "correct": "To reach Oregon before winter snows closed the mountain passes",
+      "wrong": [
+        "To avoid summer heat in the mountains",
+        "To beat the rainy season in Oregon",
+        "To meet the U.S. Army for protection"
+      ],
+      "category": "historical"
+    },
+    {
+      "title": "Cholera: The Trail Killer",
+      "fact": "Cholera killed more pioneers than anything else on the Oregon Trail. It spread through dirty water at busy river crossings. The terrifying thing was its speed \u2014 a strong, healthy person could feel a stomach ache at breakfast and be dead by sundown. About 1 in 10 emigrants died on the trail. Most are buried in unmarked graves you can still find today.",
+      "source": "BLM National Historic Trails Office",
+      "quiz_question": "What was the #1 killer on the Oregon Trail?",
+      "correct": "Cholera",
+      "wrong": [
+        "Native American attacks",
+        "Wolf attacks",
+        "Wagon accidents"
+      ],
+      "category": "historical"
+    },
+    {
+      "title": "The Great Register of the Desert",
+      "fact": "Independence Rock in Wyoming is a 130-foot granite dome the size of a football field. Pioneers carved their names into it as they passed. Reaching it by July 4th meant you were on schedule for Oregon. Today, more than 5,000 names from the 1840s and 1850s are still visible in the stone \u2014 a 175-year-old guest book of the American West.",
+      "source": "National Park Service",
+      "quiz_question": "What landmark did pioneers carve their names into?",
+      "correct": "Independence Rock",
+      "wrong": [
+        "Chimney Rock",
+        "Devil's Gate",
+        "Scotts Bluff"
+      ],
+      "category": "historical"
+    },
+    {
+      "title": "Buffalo: The Plains' Living Pantry",
+      "fact": "When pioneers crossed the Great Plains, vast herds of American bison stretched to the horizon \u2014 sometimes 30 million animals. A single buffalo gave 350 to 500 pounds of meat. Pioneers also burned dried buffalo dung \u2014 called 'buffalo chips' \u2014 for cooking fires when there was no wood. By 1900, hunting had reduced the herds to fewer than 1,000 animals.",
+      "source": "Smithsonian Institution",
+      "quiz_question": "Approximately how much meat did a single buffalo provide?",
+      "correct": "350 to 500 pounds",
+      "wrong": [
+        "50 to 100 pounds",
+        "1,000 to 2,000 pounds",
+        "10 to 20 pounds"
+      ],
+      "category": "historical"
+    },
+    {
+      "title": "The Truth About Native Americans",
+      "fact": "Movies show pioneers fighting Native American warriors at every turn. The truth is the opposite: Native peoples helped emigrants far more than they harmed them. The Pawnee, Shoshone, Cayuse, and many other tribes traded food, guided river crossings, and shared knowledge of the land. Without their help, even more pioneers would have died on the trail.",
+      "source": "National Park Service",
+      "quiz_question": "Did Native American tribes mostly help or harm pioneers?",
+      "correct": "Mostly helped \u2014 they traded food, guided crossings, and shared land knowledge",
+      "wrong": [
+        "Mostly harmed \u2014 frequent attacks were common",
+        "They ignored pioneers entirely",
+        "They charged tolls to pass through their land"
+      ],
+      "category": "historical"
+    },
+    {
+      "title": "South Pass: The Hidden Doorway",
+      "fact": "South Pass crosses the Continental Divide at 7,400 feet \u2014 but the climb is so gentle and gradual that most pioneers didn't even realize they had crossed it. Yet on one side, every river flows east toward the Atlantic. On the other, every river flows west toward the Pacific. South Pass is the secret reason wagon travel to Oregon was possible at all.",
+      "source": "Wyoming Historical Society",
+      "quiz_question": "What is special about South Pass?",
+      "correct": "It crosses the Continental Divide so gently most pioneers didn't notice",
+      "wrong": [
+        "It is the steepest pass on the trail",
+        "It was built by the U.S. Army",
+        "It was named after a famous explorer named South"
+      ],
+      "category": "historical"
+    },
+    {
+      "title": "Not the Wagons You're Thinking Of",
+      "fact": "The big covered wagons in movies are 'Conestoga' wagons \u2014 but they were too heavy for the Oregon Trail. The real Oregon Trail wagon was the 'prairie schooner' \u2014 only about 4 feet wide and 10 feet long, with a canvas cover. It could only carry 2,000 pounds. Families had to make hard choices: take the piano or the plow? Take grandmother's china or another sack of flour? Most heirlooms ended up abandoned beside the trail.",
+      "source": "Oregon Encyclopedia",
+      "quiz_question": "What was a 'prairie schooner'?",
+      "correct": "A small canvas-covered wagon used on the Oregon Trail",
+      "wrong": [
+        "A type of riverboat",
+        "A scout's horse",
+        "A military fort design"
+      ],
+      "category": "historical"
+    },
+    {
+      "title": "The Loneliest Mailbox",
+      "fact": "Forts on the trail were the only places to mail letters home. A letter from Fort Laramie might take six months to reach a mother back in Ohio \u2014 and you might never know if it arrived. Many pioneer families never saw their relatives again after they left. Each fort visit was a chance to write what could be a final goodbye.",
+      "source": "Fort Laramie National Historic Site",
+      "quiz_question": "How long could a letter take to reach home from a fort on the trail?",
+      "correct": "About six months",
+      "wrong": [
+        "About one week",
+        "About two days",
+        "About one year"
+      ],
+      "category": "historical"
+    },
+    {
+      "title": "The Great Migration",
+      "fact": "Between 1840 and 1860, somewhere between 300,000 and 500,000 people walked west on the Oregon Trail. Some went to Oregon to farm. Some peeled off to California for the Gold Rush. Some headed to Utah. It was one of the largest peaceful migrations in human history \u2014 and it permanently changed America.",
+      "source": "Oregon Encyclopedia",
+      "quiz_question": "About how many people walked west on the Oregon Trail between 1840 and 1860?",
+      "correct": "300,000 to 500,000",
+      "wrong": [
+        "About 5,000 to 10,000",
+        "About 10 million",
+        "About 50,000"
+      ],
+      "category": "historical"
+    },
+    {
+      "title": "How Much Could You Carry?",
+      "fact": "A prairie schooner held 2,000 pounds \u2014 and that had to feed and clothe a family for six months. A typical load: 600 pounds of flour, 200 pounds of bacon, 100 pounds of sugar, 75 pounds of coffee, 50 pounds of salt, plus rifles, ammunition, blankets, tools, and one set of nice clothes for arrival. Every extra pound slowed the oxen. Every missing pound risked starvation.",
+      "source": "End of the Oregon Trail Interpretive Center",
+      "quiz_question": "About how much weight could a prairie schooner wagon carry?",
+      "correct": "About 2,000 pounds",
+      "wrong": [
+        "About 200 pounds",
+        "About 20,000 pounds",
+        "About 500 pounds"
+      ],
+      "category": "historical"
+    },
+    {
+      "title": "The Donner Party Warning",
+      "fact": "In 1846, the Donner Party left for California with 87 people. They tried a 'shortcut' that turned out to be slower. By the time they reached the Sierra Nevada mountains in late October, snow had closed the passes. Trapped for the winter without food, only 48 of them survived. Their story became the most famous warning of why timing mattered on the trail.",
+      "source": "California Historical Society",
+      "quiz_question": "What happened to the Donner Party in 1846?",
+      "correct": "They were trapped by mountain snow in the Sierra Nevada",
+      "wrong": [
+        "They got lost in the desert",
+        "They turned back to Missouri",
+        "They reached California first"
+      ],
+      "category": "historical"
+    },
+    {
+      "title": "Why Oxen, Not Horses?",
+      "fact": "Most Oregon Trail wagons were pulled by oxen, not horses. Oxen were stronger, ate any grass they could find, kept going on bad days, and weren't worth stealing. They moved slowly \u2014 only about 2 miles per hour \u2014 but they kept moving. Horses were faster, but they needed expensive grain, broke down on rough ground, and were prized targets for theft.",
+      "source": "Oregon Trail Center",
+      "quiz_question": "Why did most Oregon Trail wagons use oxen instead of horses?",
+      "correct": "Oxen were stronger, ate grass, didn't break down, and weren't worth stealing",
+      "wrong": [
+        "Oxen were faster than horses",
+        "Horses were too expensive",
+        "The U.S. Army required oxen"
+      ],
+      "category": "historical"
+    },
+    {
+      "title": "Manifest Destiny",
+      "category": "political",
+      "fact": "'Manifest Destiny' was the 1840s idea that the United States was destined to expand from coast to coast. It motivated thousands of pioneers \u2014 but it also justified taking land from Native peoples and from Mexico in the war of 1846-1848.",
+      "source": "Library of Congress",
+      "quiz_question": "What was 'Manifest Destiny'?",
+      "correct": "The 1840s belief that the U.S. was destined to expand from coast to coast",
+      "wrong": [
+        "A railroad company in the West",
+        "A type of pioneer wagon",
+        "A treaty with Native American tribes"
+      ]
+    },
+    {
+      "title": "The Oregon Treaty of 1846",
+      "category": "political",
+      "fact": "Until 1846, the Oregon Country was jointly claimed by Britain and the United States. The Oregon Treaty drew the border at the 49th parallel \u2014 the same border between the U.S. and Canada today. Pioneers leaving in 1848 had only just settled which country they were walking to.",
+      "source": "U.S. State Department",
+      "quiz_question": "Until 1846, which two countries jointly claimed the Oregon Country?",
+      "correct": "The United States and Britain",
+      "wrong": [
+        "The United States and Spain",
+        "The United States and Russia",
+        "The United States and France"
+      ]
+    },
+    {
+      "title": "What Did a Wagon Cost?",
+      "category": "economic",
+      "fact": "A fully outfitted wagon for the Oregon Trail cost between $500 and $1,000 in 1848 dollars \u2014 roughly $20,000 to $40,000 today. That included the wagon, oxen, food, tools, weapons, and clothing for the whole journey. For most pioneer families, it was every dollar they had.",
+      "source": "Oregon-California Trails Association",
+      "quiz_question": "About how much did a fully outfitted Oregon Trail wagon cost in 1848 dollars?",
+      "correct": "$500 to $1,000",
+      "wrong": [
+        "$5 to $10",
+        "$50 to $100",
+        "$5,000 to $10,000"
+      ]
+    },
+    {
+      "title": "Women on the Trail",
+      "category": "social",
+      "fact": "Women on the Oregon Trail did everything men did \u2014 drove wagons, hunted, made repairs, doctored \u2014 plus cooking, sewing, childcare, and laundry, often while pregnant. Their journals are some of our best historical records of the journey. Many women initially didn't want to go; their husbands had decided. By Oregon, many felt the journey had changed them.",
+      "source": "National Park Service",
+      "quiz_question": "What roles did women have on the Oregon Trail?",
+      "correct": "They did everything men did, plus cooking, childcare, and laundry \u2014 often while pregnant",
+      "wrong": [
+        "They mostly stayed in the wagons and didn't work",
+        "They led the wagon trains as official 'wagon mothers'",
+        "Most pioneer wagon trains had no women"
+      ]
+    },
+    {
+      "title": "Children of the Trail",
+      "category": "social",
+      "fact": "About 1 in 5 pioneers on the Oregon Trail was a child. Children walked, drove oxen, gathered buffalo chips for fires, hunted small game, and watched siblings. Many children died of cholera or accidents. Some pioneer families lost more than half their children before reaching Oregon.",
+      "source": "Oregon Encyclopedia",
+      "quiz_question": "About what fraction of Oregon Trail pioneers were children?",
+      "correct": "About 1 in 5",
+      "wrong": [
+        "About 1 in 100",
+        "About half of all pioneers",
+        "Almost none \u2014 children rarely went"
+      ]
+    },
+    {
+      "title": "Why the Mountains Have Less Air",
+      "category": "scientific",
+      "fact": "South Pass crosses the Rocky Mountains at 7,400 feet. At that altitude, the air contains about 25% less oxygen than at sea level. Pioneers got tired faster, oxen breathed harder, and fires burned cooler \u2014 all because of physics they couldn't have explained at the time.",
+      "source": "Wyoming Historical Society",
+      "quiz_question": "Why is breathing harder at higher altitudes like South Pass?",
+      "correct": "There is less oxygen in the thinner mountain air",
+      "wrong": [
+        "The air is colder, which slows breathing",
+        "The wind is stronger and blows the air away",
+        "Mountains have toxic gases from underground"
+      ]
+    },
+    {
+      "title": "The Indian Removal Act",
+      "category": "political",
+      "fact": "While pioneers were heading west, the U.S. government was forcing Native American tribes off their eastern lands under the 1830 Indian Removal Act. The Trail of Tears \u2014 when Cherokee, Creek, Choctaw, Chickasaw, and Seminole peoples were forced to walk to Oklahoma \u2014 happened just years before the Oregon Trail boom. The two trails were happening at the same time.",
+      "source": "National Museum of the American Indian",
+      "quiz_question": "What was the 'Trail of Tears'?",
+      "correct": "When Native American tribes were forced to walk to Oklahoma in the 1830s",
+      "wrong": [
+        "A river that pioneers had to cross",
+        "A painting of pioneer life",
+        "A song sung by pioneer women"
+      ]
+    },
+    {
+      "title": "Buffalo Chips for Fire",
+      "category": "social",
+      "fact": "Most of the Oregon Trail had no trees. Pioneers burned 'buffalo chips' \u2014 dried buffalo dung \u2014 for cooking fires. It was a job often given to children. The chips burned hot and clean. Pioneer women joked that biscuits cooked over buffalo chips tasted exactly the same as biscuits cooked over wood.",
+      "source": "Smithsonian",
+      "quiz_question": "What did pioneers burn for fires when there were no trees?",
+      "correct": "Buffalo chips (dried buffalo dung)",
+      "wrong": [
+        "Coal they bought at forts",
+        "Tumbleweeds",
+        "Their leftover wood from the wagon"
+      ]
+    },
+    {
+      "title": "Faith on the Trail",
+      "category": "social",
+      "fact": "Most Oregon Trail pioneers were religious \u2014 Methodist, Baptist, Catholic, Presbyterian, and others. Sunday was usually a rest day for both worship and giving the oxen a break. Wagon trains held church services in the open prairie, with hymns sung by hundreds of voices. Some pioneers described these as the most beautiful religious experiences of their lives.",
+      "source": "Oregon-California Trails Association",
+      "quiz_question": "What did most pioneer wagon trains do on Sundays?",
+      "correct": "Rested and held church services",
+      "wrong": [
+        "Pushed extra hard to make up time",
+        "Stayed in their wagons all day",
+        "Hunted to stock up on meat"
+      ]
+    },
+    {
+      "title": "Jumping-Off in Independence",
+      "category": "historical",
+      "fact": "Independence, Missouri became the main 'jumping-off place' for the Oregon Trail starting around 1841. By 1848, the year of this game, the population swelled every spring with thousands of waiting wagons. Local merchants made fortunes selling supplies. The town smelled of livestock, fresh-cut wood, and hope.",
+      "source": "Missouri State Parks",
+      "quiz_question": "What year was the Oregon Trail's main 'jumping-off place' fully established?",
+      "correct": "Around 1841 (in Independence, Missouri)",
+      "wrong": [
+        "Around 1776 (just after the Revolutionary War)",
+        "Around 1900 (when railroads arrived)",
+        "Around 1492 (when Columbus arrived)"
+      ]
+    }
+  ],
+  "surprise_events": [
+    {
+      "name": "Aurora Borealis",
+      "category": "campfire",
+      "rarity": "rare",
+      "weight": 1,
+      "intro": "A green light swims across the northern sky. Then red. Then green again, brighter.",
+      "flavor": "Aurora was rarely visible this far south, but it happened \u2014 pioneers wrote about it in journals as a sign from God, a wonder of wonders, a portent.",
+      "outcomes_default": [
+        "Gain 3 morale"
+      ],
+      "narratives": {
+        "default": "The whole camp stands in silence. The horses do not move. The children do not whisper. The lights ripple across the dark like cloth in water. By the time it fades, no one is the same. We will tell our grandchildren about this night."
+      }
+    },
+    {
+      "name": "A Lone Fiddler",
+      "category": "campfire",
+      "rarity": "uncommon",
+      "weight": 2,
+      "intro": "A man walks into camp at dusk with a fiddle case under his arm.",
+      "flavor": "Solo travelers walking the trail were not unheard of \u2014 fiddlers, preachers, prospectors, runaways. They asked for a meal and gave what they had.",
+      "outcomes_default": [
+        "Gain 2 morale"
+      ],
+      "modifiers": [
+        {
+          "profession": "Musician",
+          "effect": "extra morale gain"
+        }
+      ],
+      "narratives": {
+        "default": "He says he's headed for Oregon, same as us. Asks for a plate of beans in exchange for a song. He plays for two hours straight by firelight \u2014 old reels, slow ballads, jigs that get the children dancing. We sleep that night with music still in our ears.",
+        "Musician": "{Musician} unpacks their own fiddle within minutes. The two of them play together until the embers die \u2014 old reels and new ones, harmonies and counter-harmonies. The whole camp is awake at midnight, dancing, and no one minds."
+      }
+    },
+    {
+      "name": "Found Gold Dust",
+      "category": "trail",
+      "rarity": "rare",
+      "weight": 1,
+      "intro": "A small leather pouch in the dirt by an abandoned firepit.",
+      "flavor": "Pioneer leavings sometimes hid real value \u2014 coin pouches, jewelry, a few flakes of California-bound gold dust.",
+      "outcomes_default": [
+        "Gain 4 money"
+      ],
+      "narratives": {
+        "default": "Inside: a few flakes of gold dust and a folded note in a child's handwriting. The note just says 'for mama.' We do not know who they were. We do not know what happened to them. We pocket the gold quietly and continue west."
+      }
+    },
+    {
+      "name": "Eagle Feather",
+      "category": "wildlife",
+      "rarity": "uncommon",
+      "weight": 2,
+      "intro": "The youngest finds a feather in the grass \u2014 long, dark, unmistakable.",
+      "flavor": "Native peoples of the plains regard the eagle feather as sacred. Pioneers sometimes did too \u2014 a sign of fortune, a charm against harm.",
+      "outcomes_default": [
+        "Gain 2 morale"
+      ],
+      "narratives": {
+        "default": "The child holds it up like a sword. The whole team smiles. We tuck it into the wagon canvas where it can be seen. Something feels lighter for the rest of the week. Some call it luck. Some call it grace."
+      }
+    },
+    {
+      "name": "Shooting Star Wishes",
+      "category": "campfire",
+      "rarity": "uncommon",
+      "weight": 2,
+      "intro": "A streak across the sky. Then another. Then a hundred.",
+      "flavor": "The Perseid meteor shower peaks in mid-August \u2014 many pioneers crossed Wyoming during the show.",
+      "outcomes_default": [
+        "Gain 2 morale"
+      ],
+      "narratives": {
+        "default": "We lay on our backs in the dust and watch. Every few seconds, a streak of fire across the dark. We make wishes \u2014 every one of us, even those who don't say it out loud. By morning we don't remember most of them. But we feel different. The trail seems shorter in the morning."
+      }
+    },
+    {
+      "name": "White Buffalo",
+      "category": "wildlife",
+      "rarity": "very_rare",
+      "weight": 1,
+      "intro": "A buffalo, separate from the herd, white as winter, watching us.",
+      "flavor": "The white buffalo is sacred to many Plains tribes \u2014 a sign of profound importance, a blessing, a warning. Pioneer journals from the 1840s and 1850s record at least three sightings.",
+      "outcomes_default": [
+        "Gain 4 morale",
+        "Gain 2 health"
+      ],
+      "narratives": {
+        "default": "No one moves to raise a rifle. Even the children understand. We watch, the buffalo watches, and after a long quiet moment it turns and walks back into the herd. We do not speak of it for the rest of the day. But each of us feels something we don't have words for. The journey will be different from this point on."
+      }
+    },
+    {
+      "name": "A Stranger's Riddle",
+      "category": "people",
+      "rarity": "uncommon",
+      "weight": 2,
+      "intro": "An old man at a creek crossing, who looked like he'd been waiting for someone.",
+      "flavor": "The trail had its share of strange travelers \u2014 preachers, prophets, drifters, hermits.",
+      "outcomes_default": [
+        "No change"
+      ],
+      "narratives": {
+        "default": "He asks: \"What do you carry with you that you cannot put down?\" No one answers right away. He nods, as if the silence was the right answer, and walks off into the brush. We talk about it for days. None of us forgets the question."
+      }
+    },
+    {
+      "name": "Sudden Hailstorm",
+      "category": "weather",
+      "rarity": "uncommon",
+      "weight": 2,
+      "intro": "Out of a clear blue sky, a column of dark cloud \u2014 and then ice falling like fists.",
+      "flavor": "Plains hail could be the size of eggs and could kill livestock in minutes. Pioneer journals describe it with terror.",
+      "outcomes_default": [
+        "Lose 2 supplies",
+        "50% lose 1 oxen (= move back 1 space)"
+      ],
+      "modifiers": [
+        {
+          "profession": "Carpenter",
+          "effect": "wagon protected, no supply loss"
+        },
+        {
+          "profession": "Cowboy",
+          "effect": "oxen sheltered, no oxen loss"
+        }
+      ],
+      "narratives": {
+        "default": "The hailstones bruise everyone before we can shelter under the wagon. One ox is hit hard and goes down. The canvas is shredded. By the time it passes, we are bleeding and stunned and counting losses.",
+        "Carpenter": "{Carpenter} pulled the canvas tight and lashed extra wood across the wagon top before the worst of it. The team huddles underneath. Nothing breaks. The hail passes and we count blessings.",
+        "Cowboy": "{Cowboy} rushes to the oxen, drags them under a low overhang, holds the lead by force. The hail strips the grass bare around them but the oxen stand. We come through whole."
+      }
+    },
+    {
+      "name": "Buffalo Stampede Distant",
+      "category": "wildlife",
+      "rarity": "uncommon",
+      "weight": 2,
+      "intro": "A sound like thunder under the ground. The horizon turns dark with running animals.",
+      "flavor": "A real stampede was a force of nature. Pioneer journals describe miles of running buffalo \u2014 beautiful and terrifying.",
+      "outcomes_default": [
+        "Gain 1 morale"
+      ],
+      "narratives": {
+        "default": "The herd passes a half-mile to the south \u2014 thousands of dark shapes thundering through the dust. The earth shakes underfoot. Our oxen stamp nervously but hold. When the dust settles, the prairie behind them is bare. The team is silent, awed."
+      }
+    },
+    {
+      "name": "Wagon Train Reunion",
+      "category": "people",
+      "rarity": "rare",
+      "weight": 1,
+      "intro": "A wagon train heading EAST. Faces familiar \u2014 half-remembered cousins, neighbors from another life.",
+      "flavor": "Some pioneers turned back. Some had business to settle. Reunions on the trail were rare and emotional.",
+      "outcomes_default": [
+        "Gain 3 morale",
+        "Gain 2 food"
+      ],
+      "narratives": {
+        "default": "There are tears. There is laughter. We share a meal that lasts three hours. They tell us what's ahead \u2014 the rivers to fear, the fort that has fresh apples, the stretch where the wind never stops. They press extra food on us. We watch their wagons until they're a smudge on the horizon."
+      }
+    },
+    {
+      "name": "Strange Lights in the Hills",
+      "category": "campfire",
+      "rarity": "uncommon",
+      "weight": 2,
+      "intro": "Pinpoints of fire moving along the ridge. Not a wagon train. Not a camp. Something else.",
+      "flavor": "Pioneer journals occasionally mention 'spirit lights' or 'fox fire' \u2014 most likely campfires, optical effects, or natural gas vents. The mystery was real to those who saw them.",
+      "outcomes_default": [
+        "Lose 1 morale"
+      ],
+      "narratives": {
+        "default": "We post extra watch. The lights move along the ridge for hours and then are gone. By morning the dust has been brushed clean of any tracks. No one slept well. We continue on, glancing over our shoulders for two days."
+      }
+    },
+    {
+      "name": "Coyote Sings to the Moon",
+      "category": "wildlife",
+      "rarity": "common",
+      "weight": 3,
+      "intro": "A single coyote on a low rise, silhouetted against the moon. It tilts its head back and sings.",
+      "flavor": "Coyote song was the soundtrack of pioneer nights. Most found it eerie. Some learned to love it.",
+      "outcomes_default": [
+        "No change"
+      ],
+      "narratives": {
+        "default": "Then another joins. Then a chorus, far across the prairie. The song lasts twenty minutes \u2014 yips and howls weaving in and out. Then silence. The moon rolls on. We remember being small once, listening for things in the dark."
+      }
+    },
+    {
+      "name": "An Old Pioneer Veteran",
+      "category": "people",
+      "rarity": "uncommon",
+      "weight": 2,
+      "intro": "A bent old man at a creek crossing, smoking a clay pipe, watching the wagons go by.",
+      "flavor": "Some pioneers crossed multiple times. Some lived along the trail. Their wisdom was free for the asking.",
+      "outcomes_default": [
+        "Gain 1 morale"
+      ],
+      "modifiers": [
+        {
+          "profession": "Guide",
+          "effect": "useful tip \u2014 extra +2 morale, route hint"
+        },
+        {
+          "profession": "Politician",
+          "effect": "extra trust earned, +2 morale"
+        }
+      ],
+      "narratives": {
+        "default": "He tells us he's crossed five times. Lost a wife on the second crossing, a child on the fourth. Still came back. We give him coffee and listen for an hour. When we leave, he raises his hat. We do not see him again.",
+        "Guide": "{Guide} sits with him for two hours. He draws a map in the dirt \u2014 a route around bad ground, a creek the maps don't show, a fort that has fresh oranges in summer. {Guide} listens like a student. We walk away with knowledge no map can give.",
+        "Politician": "{Politician} has the gift of getting people talking. The old man opens up \u2014 tells us where the trail bandits are this season, which fort prices are honest, where to find good water. The team is buzzing about it for days."
+      }
+    },
+    {
+      "name": "Children Find a Bird's Nest",
+      "category": "wildlife",
+      "rarity": "common",
+      "weight": 3,
+      "intro": "The youngest comes running with cupped hands. \"Don't tell mama!\"",
+      "flavor": "Small wonders mattered on the trail. A nest of meadowlark eggs could brighten a whole week.",
+      "outcomes_default": [
+        "Gain 1 morale"
+      ],
+      "narratives": {
+        "default": "Inside: four pale-blue eggs no bigger than peas. We make her promise to put them back exactly where she found them. She does. The whole camp is gentler with each other for the rest of the day. Some things on the trail are just for the kids."
+      }
+    },
+    {
+      "name": "Tornado on the Horizon",
+      "category": "weather",
+      "rarity": "rare",
+      "weight": 1,
+      "intro": "A thin black thread, twisting from a black cloud to the prairie. Several miles distant.",
+      "flavor": "Plains tornadoes were rare for individual wagon trains to face directly, but seeing one in the distance was common \u2014 and never forgotten.",
+      "outcomes_default": [
+        "Lose 1 morale"
+      ],
+      "modifiers": [
+        {
+          "profession": "Scout",
+          "effect": "evade the worst, no morale loss"
+        }
+      ],
+      "narratives": {
+        "default": "We watch it cross the prairie for forty minutes \u2014 slow, almost graceful, leaving a brown trail behind it. It does not turn toward us, but no one breathes easy until it dissolves back into the cloud it came from. We are quiet for the rest of the day.",
+        "Scout": "{Scout} reads the wind shift early and pulls the wagon train into a draw a half-mile off the trail. The tornado passes a quarter-mile away \u2014 close enough to count rope-thicknesses in the funnel. We watch it pass and continue without a scratch. A story for the rest of our lives."
+      }
+    },
+    {
+      "name": "A Star Falls to Earth",
+      "category": "campfire",
+      "rarity": "very_rare",
+      "weight": 1,
+      "intro": "A streak of fire \u2014 green, then white \u2014 and a deep BOOM that shakes the wagon.",
+      "flavor": "Meteorites were occasionally seen and even recovered by 19th century travelers. The experience was unforgettable.",
+      "outcomes_default": [
+        "Gain 3 morale"
+      ],
+      "narratives": {
+        "default": "The team runs out of the wagons in the dark. Whatever it was struck not far off \u2014 somewhere over the next ridge. By dawn the air still smells faintly of ash and metal. We don't go looking. Some things are not meant to be picked up. We carry the story with us."
+      }
+    }
+  ],
+  "bandit_ambush": {
+    "philosophy": "The climactic encounter near journey's end. Quiz performance + profession bonuses + team state determine the outcome. Functions as the game's 'final exam' \u2014 rewarding teams who paid attention to historical content.",
+    "trigger_space_short": 23,
+    "trigger_space_extended": 47,
+    "guaranteed": true,
+    "intro": "Three riders on the ridge, faces wrapped, rifles across their saddles. They are between you and Oregon City.",
+    "flavor": "Bandits and outlaws preyed on emigrants near the end of the trail, when wagons were exhausted and the temptation was greatest. Real ambushes happened \u2014 and real wagons fought them off, talked them down, or paid the price.",
+    "quiz_question_count": 5,
+    "quiz_pool_source": "facts_shown_to_this_team_during_journey",
+    "quiz_format": "multiple_choice_4_options",
+    "quiz_time_limit_seconds": 45,
+    "quiz_question_styles": [
+      "What was MOST commonly used to caulk wagons crossing rivers?",
+      "Which fort was the LARGEST resupply point on the trail?",
+      "What landmark did pioneers carve their names into?",
+      "What was the #1 killer on the Oregon Trail?",
+      "What year was Independence, Missouri the main jumping-off point?"
+    ],
+    "quiz_outcome_table": {
+      "5_correct": {
+        "narrative": "The bandits ride closer, hesitating. {Politician_or_speaker} steps forward, calm and confident, and the team's calm bearing speaks louder than any rifle. The bandits turn their horses and ride east. We continue with everything we came with.",
+        "effects": {
+          "members_lost": 0,
+          "supplies_lost": 0,
+          "morale_change": 2
+        }
+      },
+      "4_correct": {
+        "narrative": "The standoff lasts a long minute. The bandits demand a tribute. {team_speaker} talks them down to a single barrel of supplies. They ride off cursing, but they ride.",
+        "effects": {
+          "members_lost": 0,
+          "supplies_lost": 1,
+          "morale_change": 1
+        }
+      },
+      "3_correct": {
+        "narrative": "The bandits open fire. We return it. {Cowboy_or_Hunter_if_present} drops one of them with a clean shot. The other two flee, but not before stealing two barrels and wounding {wounded_member}.",
+        "effects": {
+          "members_lost": 0,
+          "supplies_lost": 2,
+          "members_injured": 1,
+          "morale_change": -1
+        }
+      },
+      "2_correct": {
+        "narrative": "It is a gunfight, brief and ugly. We hold the wagon but we lose {lost_member} the {lost_profession} in the exchange. The bandits ride off with three barrels and a horse.",
+        "effects": {
+          "members_lost": 1,
+          "supplies_lost": 3,
+          "morale_change": -2
+        }
+      },
+      "1_correct": {
+        "narrative": "The ambush is bad. The bandits know what they're doing. We lose {lost_member_1} and {lost_member_2}. Half the supplies. We continue, but barely.",
+        "effects": {
+          "members_lost": 2,
+          "supplies_lost": 4,
+          "morale_change": -3
+        }
+      },
+      "0_correct": {
+        "narrative": "We were not ready. The bandits take everything. {lost_member_1}, {lost_member_2}, and {lost_member_3} fall. The wagon limps on toward Oregon City carrying ghosts.",
+        "effects": {
+          "members_lost": 3,
+          "supplies_lost": 6,
+          "morale_change": -4
+        }
+      }
+    },
+    "profession_protection": [
+      {
+        "profession": "Cowboy",
+        "effect": "+1 effective correct answer (their gunfight skill matters)"
+      },
+      {
+        "profession": "Hunter",
+        "effect": "+1 effective correct answer (marksmanship)"
+      },
+      {
+        "profession": "Politician",
+        "effect": "+1 effective correct answer (negotiation)"
+      },
+      {
+        "profession": "Priest",
+        "effect": "if 3+ correct, no member is lost (calming presence)"
+      },
+      {
+        "profession": "Scout",
+        "effect": "if 4+ correct, no supply loss (saw the ambush coming, prepared)"
+      }
+    ],
+    "narrative_post_ambush": "The trail ahead is clear. Oregon City is hours away. We are quieter than we were yesterday. Different. The journey has marked us."
+  },
+  "scripted_graves": [
+    {
+      "space_short": 7,
+      "space_extended": 14,
+      "name": "Sarah Keyes",
+      "epitaph": "Died May 29, 1846 \u2014 Aged 70 \u2014 Mother of the Donner-Reed Party",
+      "fact": "Sarah Keyes died of consumption near Alcove Spring on the way west. She was the oldest member of the Donner Party. Her family carved her name into a stone before continuing.",
+      "category": "historical"
+    },
+    {
+      "space_short": 12,
+      "space_extended": 22,
+      "name": "John D. Lee",
+      "epitaph": "1844 \u2014 Cholera",
+      "fact": "Cholera killed thousands of pioneers. Most graves on the trail were unmarked or marked with simple wooden boards that have long since rotted away.",
+      "category": "historical"
+    },
+    {
+      "space_short": 17,
+      "space_extended": 33,
+      "name": "Narcissa Whitman",
+      "epitaph": "1808 \u2014 1847 \u2014 Missionary, Mother, Pioneer",
+      "fact": "Narcissa Whitman was one of the first white women to cross the Rockies. She and her husband Marcus founded the Whitman Mission. Both were killed in 1847 in a tragic conflict with the Cayuse people during a measles epidemic. The story is more complicated than any monument can tell.",
+      "category": "historical"
+    },
+    {
+      "space_short": 21,
+      "space_extended": 44,
+      "name": "Unknown Child",
+      "epitaph": "Aged 6 \u2014 1845 \u2014 Beloved",
+      "fact": "Many pioneer graves were marked simply 'unknown' or with just a first name. About 1 in 5 trail emigrants was a child. Many did not survive the journey.",
+      "category": "historical"
+    }
+  ],
+  "hidden_figures": [
+    {
+      "space_short": 1,
+      "space_extended": 1,
+      "figure": "Daniel Boone",
+      "hint": "An old frontiersman waving from the edge of town",
+      "fact": "Daniel Boone helped open the western frontier decades before the Oregon Trail."
+    },
+    {
+      "space_short": 5,
+      "space_extended": 10,
+      "figure": "Stephen Watts Kearny",
+      "hint": "A man in army blue inspecting the fort",
+      "fact": "Fort Kearney (later renamed Fort Kearny) was named after Stephen Watts Kearny, a U.S. Army officer of the Mexican-American War."
+    },
+    {
+      "space_short": 10,
+      "space_extended": 18,
+      "figure": "Jim Bridger",
+      "hint": "A bearded mountain man at the trading post",
+      "fact": "Jim Bridger was a legendary mountain man who founded Fort Bridger in 1843. By 1848 he was already famous across the West."
+    },
+    {
+      "space_short": 12,
+      "space_extended": 22,
+      "figure": "Father Pierre-Jean De Smet",
+      "hint": "A robed priest carving his name into the rock",
+      "fact": "Father De Smet was a Belgian Jesuit missionary who carved his name into Independence Rock in 1840 \u2014 one of the earliest signatures still visible today."
+    },
+    {
+      "space_short": 14,
+      "space_extended": 26,
+      "figure": "Jedediah Smith",
+      "hint": "A scout pointing west across the divide",
+      "fact": "Jedediah Smith was the first American to cross South Pass in 1824 \u2014 opening the route that became the Oregon Trail."
+    },
+    {
+      "space_short": 22,
+      "space_extended": 45,
+      "figure": "Marcus Whitman",
+      "hint": "A doctor in a long coat, walking near a small white church",
+      "fact": "Marcus Whitman was a physician and missionary who, with his wife Narcissa, founded the Whitman Mission in 1836."
+    },
+    {
+      "space_short": 25,
+      "space_extended": 50,
+      "figure": "John McLoughlin",
+      "hint": "A tall white-haired man at the gates of Oregon City",
+      "fact": "John McLoughlin, the 'Father of Oregon,' was a Hudson's Bay Company chief factor who helped countless pioneers reach Oregon City. He founded the city in 1842."
+    }
+  ],
+  "leaderboard_seed": [
+    {
+      "name": "Sarah Whitman",
+      "team_status": "7 of 7 alive",
+      "day_finished": 138,
+      "score": 178,
+      "epitaph": "On schedule. Brought everyone home."
+    },
+    {
+      "name": "Joseph Meek",
+      "team_status": "6 of 7 alive",
+      "day_finished": 142,
+      "score": 156,
+      "epitaph": "Lost the Carpenter at the Snake River."
+    },
+    {
+      "name": "Tabitha Brown",
+      "team_status": "5 of 7 alive",
+      "day_finished": 158,
+      "score": 134,
+      "epitaph": "Late but proud. Hard winter ahead."
+    },
+    {
+      "name": "Ezra Meeker",
+      "team_status": "7 of 7 alive",
+      "day_finished": 145,
+      "score": 165,
+      "epitaph": "A long journey, well led."
+    },
+    {
+      "name": "Narcissa Prentiss",
+      "team_status": "6 of 7 alive",
+      "day_finished": 140,
+      "score": 148,
+      "epitaph": "First over the divide."
+    },
+    {
+      "name": "John Sutter",
+      "team_status": "4 of 7 alive",
+      "day_finished": 165,
+      "score": 102,
+      "epitaph": "Cholera near Fort Laramie."
+    },
+    {
+      "name": "Margaret Reed",
+      "team_status": "ELIMINATED",
+      "day_finished": null,
+      "score": 24,
+      "epitaph": "Lost in the snow before Fort Hall."
+    },
+    {
+      "name": "Joel Palmer",
+      "team_status": "7 of 7 alive",
+      "day_finished": 132,
+      "score": 188,
+      "epitaph": "Veteran of the trail. Knew every shortcut."
+    },
+    {
+      "name": "Lucinda Olds",
+      "team_status": "5 of 7 alive",
+      "day_finished": 152,
+      "score": 122,
+      "epitaph": "Lost two children to fever."
+    },
+    {
+      "name": "Asa Lovejoy",
+      "team_status": "6 of 7 alive",
+      "day_finished": 144,
+      "score": 152,
+      "epitaph": "Founded a town when he arrived."
+    },
+    {
+      "name": "Catherine Sager",
+      "team_status": "ELIMINATED",
+      "day_finished": null,
+      "score": 38,
+      "epitaph": "Orphaned on the trail. A different journey."
+    },
+    {
+      "name": "Father De Smet",
+      "team_status": "7 of 7 alive",
+      "day_finished": 136,
+      "score": 172,
+      "epitaph": "Faith and patience saw them through."
+    },
+    {
+      "name": "Mary Walker",
+      "team_status": "6 of 7 alive",
+      "day_finished": 148,
+      "score": 144,
+      "epitaph": "Wrote everything in her journal."
+    },
+    {
+      "name": "Nancy Kelsey",
+      "team_status": "7 of 7 alive",
+      "day_finished": 134,
+      "score": 184,
+      "epitaph": "First woman to cross by wagon."
+    },
+    {
+      "name": "Marcus Whitman",
+      "team_status": "5 of 7 alive",
+      "day_finished": 156,
+      "score": 118,
+      "epitaph": "A hard year."
+    }
+  ],
+  "dispatch_system": {
+    "philosophy": "Letters home cost money but boost morale and create personal artifacts. The app generates a one-paragraph letter from the team's perspective when sent.",
+    "available_at": "any fort space",
+    "cost_money": 1,
+    "morale_bonus": 2,
+    "morale_bonus_duration_turns": 3,
+    "max_letters_per_game": 3,
+    "letter_template_seed": "Generate a 4-6 sentence letter in 1840s voice from the team's wagon to family back east. Reference: current location, days elapsed, current team status (who's alive, sick, lost), pace and rations strategy, one specific recent event. Sign with the player's name. End with hope or worry, depending on team state."
+  },
+  "teacher_mode": {
+    "philosophy": "Generate a printable rubric report after each game so teachers can grade engagement and learning objectively.",
+    "report_includes": [
+      "Player name(s) and wagon name(s)",
+      "Game length chosen (Short or Extended)",
+      "Game mode (Single / Cooperative / Competitive)",
+      "Team composition (7 chosen professions)",
+      "Total events encountered",
+      "Total choices made",
+      "Total historical facts shown to team",
+      "Quiz score on the bandit ambush (if reached)",
+      "Number of forts visited",
+      "Number of rivers crossed and crossing methods used",
+      "Pace strategy summary (% time in Steady / Strenuous / Grueling)",
+      "Rations strategy summary",
+      "Members lost (with names, days, and causes)",
+      "Final outcome (Reached Oregon / Eliminated / Winter)",
+      "Final score breakdown",
+      "Trail Journal full text"
+    ],
+    "format": "Printable HTML page (Letter portrait), structured for grading",
+    "trigger": "Toggle in setup: 'Teacher Mode' (default off). When on, the report screen replaces or supplements the regular end-game screen."
+  },
+  "what_if_mode": {
+    "philosophy": "After a wagon finishes (win or lose), offer ONE counterfactual replay where the team sees an alternate outcome from their pivotal choice.",
+    "trigger": "End-game screen, button labeled 'What If?' below the score",
+    "logic": [
+      "Identify the pivotal choice during the game (largest resource-shift decision, OR member-loss-causing decision, OR Independence Rock arrival)",
+      "Replay JUST that scene with the alternate option taken",
+      "Show the alternate narrative outcome",
+      "Compute the alternate end-game score (briefly)",
+      "Return to the original score screen \u2014 the original game is what counts"
+    ],
+    "max_uses_per_game": 1,
+    "narrative_intro": "What if you had chosen differently at [event_name] on Day [day]?"
+  },
+  "dispatch_letter_templates": {
+    "patterns": [
+      "Dearest family \u2014 / We are at {location}. The journey has been {tone}. {specific_recent_event}. {team_status_line}. We push on. / Yours always, / {player_name}",
+      "Mother \u2014 / It is Day {day} on the trail. We reached {location} at last. {specific_event}. The team is {tone_word}. {member_callout}. Pray for us. / {player_name}",
+      "{recipient} \u2014 / The {wagon_name} has come {distance_descriptor}. {specific_event}. {team_status_line}. The land is bigger than I imagined. / Your {relationship}, / {player_name}"
+    ],
+    "tone_words_by_morale": {
+      "high": [
+        "strong",
+        "hopeful",
+        "well",
+        "in good cheer",
+        "weary but proud"
+      ],
+      "medium": [
+        "steady",
+        "carrying on",
+        "determined",
+        "weary"
+      ],
+      "low": [
+        "tired",
+        "weighed down",
+        "grieving",
+        "carrying heavy hearts"
+      ]
+    }
+  }
+}

@@ -1,0 +1,21 @@
+# Claude Code harness state — local-only, never commit.
+.claude/
+
+# OS clutter
+.DS_Store
+Thumbs.db
+
+# Node — not used in the build, but harmless to ignore
+node_modules/
+package-lock.json
+
+# Editor cruft
+*.swp
+*.swo
+.vscode/
+
+# Local-only experiments and one-off calibration scripts (filenames starting with .)
+# (.claude/ already covered above; this catches future ad-hoc test scripts)
+.sim_*.js
+.test_*.js
+.build_*.js
