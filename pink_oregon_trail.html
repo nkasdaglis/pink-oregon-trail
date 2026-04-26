@@ -6322,8 +6322,13 @@ class AudioController {
     this.regionLoop = null;
     this.musicTimer = null;
     this.musicSilenceUntil = 0;
-    this.musicMood = 'calm';
     this.musicStarted = false;
+    // Music rotation state (Part 1C)
+    this.currentMood    = 'neutral';     // hopeful | neutral | weary | somber | funeral_only
+    this._priorMood     = 'neutral';     // remembered when funeral_only takes over
+    this.currentSongId  = null;          // song currently playing
+    this.lastPlayedId   = null;          // never play same song twice in a row
+    this.songStartTime  = 0;             // for the 90s rotation cap
   }
   init() {
     if (this.ctx) return true;
@@ -6477,31 +6482,114 @@ class AudioController {
     if (this.musicStarted) return;
     if (!this.init()) return;
     this.musicStarted = true;
+    // Seed mood from the current wagon so the opening pool matches the team's state
+    const wagon = (typeof currentWagon === 'function') ? currentWagon() : null;
+    this.currentMood = this.computeMoodFromWagon(wagon);
+    this._priorMood = this.currentMood;
     this._scheduleNextSong();
   }
-  setMood(mood) { this.musicMood = mood; }
-  duckMusic()    { if (this.musicGain) this.musicGain.gain.setTargetAtTime(0.05, this.ctx.currentTime, 0.5); }
-  unduckMusic()  { if (this.musicGain) this.musicGain.gain.setTargetAtTime(this.muted.music ? 0 : 0.10, this.ctx.currentTime, 0.5); }
+  // ===== Part 1C — music rotation rules =====
+  // Rules per GAME_DATA.music_system.rotation_rules:
+  //   1. Pool song by mood ([hopeful, neutral, weary, somber] or funeral_only)
+  //   2. Never play the same song twice in a row (lastPlayedId tracking)
+  //   3. Rotate at minimum every 90s even if mood unchanged
+  //   4. On mood change, fade current song over ~5s and switch
+  //   5. Amazing Grace (funeral_only) plays only on member loss / wagon
+  //      elimination, then returns to the prior mood pool
+  setMood(mood) {
+    if (mood === this.currentMood) return;
+    const previous = this.currentMood;
+    this.currentMood = mood;
+    if (this.musicStarted && previous && previous !== 'funeral_only') {
+      // Save the prior mood so funeral can return to it
+      this._priorMood = previous;
+    }
+    if (this.musicStarted) this._fadeAndSwitch();
+  }
+  duckMusic()   { if (this.musicGain) this.musicGain.gain.setTargetAtTime(0.05, this.ctx.currentTime, 0.5); }
+  unduckMusic() { if (this.musicGain) this.musicGain.gain.setTargetAtTime(this.muted.music ? 0 : 0.10, this.ctx.currentTime, 0.5); }
+
+  // Mood derivation per GAME_DATA.music_system.mood_logic.
+  // Pure function of wagon state — call from a tick loop or after state changes.
+  computeMoodFromWagon(wagon) {
+    if (!wagon) return 'neutral';
+    const team = (wagon.team || []).filter(m => m.state !== 'lost');
+    const hasDying = team.some(m => m.state === 'dying');
+    const hasSick  = team.some(m => m.state === 'sick' || m.state === 'injured');
+    const r = wagon.resources || {};
+    if (hasDying || r.food === 0 || r.water === 0) return 'somber';
+    if (hasSick || r.morale <= 3)                   return 'weary';
+    if (r.morale >= 7 && !hasSick)                  return 'hopeful';
+    return 'neutral';
+  }
+
   _scheduleNextSong() {
     if (this.musicTimer) clearTimeout(this.musicTimer);
     if (this.muted.music) return;
-    const wait = 12000 + rand(8000);
+    const wait = 8000 + rand(6000); // brief silence between songs
     this.musicTimer = setTimeout(() => this._playSong(), wait);
   }
+
+  _fadeAndSwitch() {
+    if (!this.ctx || this.muted.music) return;
+    if (this.musicTimer) clearTimeout(this.musicTimer);
+    // Fade gain to near-zero over ~5s, then start the new mood's song
+    try { this.musicGain.gain.cancelScheduledValues(this.ctx.currentTime); } catch (e) {}
+    this.musicGain.gain.setTargetAtTime(0.001, this.ctx.currentTime, 1.5); // ~5s perceptual fade
+    this.musicTimer = setTimeout(() => {
+      try { this.musicGain.gain.setTargetAtTime(0.10, this.ctx.currentTime, 0.4); } catch (e) {}
+      this._playSong();
+    }, 5000);
+  }
+
+  // Pool of song IDs eligible for the current mood, excluding the funeral pool.
+  _eligibleSongIds(mood) {
+    const songs = (GAME_DATA.music_system && GAME_DATA.music_system.songs) || [];
+    return songs
+      .filter(s => Array.isArray(s.mood) ? s.mood.includes(mood) : s.mood === mood)
+      .filter(s => !(Array.isArray(s.mood) ? s.mood.includes('funeral_only') : s.mood === 'funeral_only'))
+      .map(s => s.id);
+  }
+
+  _pickNextSong(mood) {
+    const pool = this._eligibleSongIds(mood);
+    if (pool.length === 0) {
+      // Fall back to any non-funeral song so we never go dead-silent unintentionally
+      const fallback = (GAME_DATA.music_system.songs || [])
+        .filter(s => !(Array.isArray(s.mood) ? s.mood.includes('funeral_only') : s.mood === 'funeral_only'))
+        .map(s => s.id);
+      return fallback[rand(fallback.length)] || null;
+    }
+    // Never repeat back-to-back when other choices exist
+    const noRepeat = pool.filter(id => id !== this.lastPlayedId);
+    const choices = noRepeat.length > 0 ? noRepeat : pool;
+    return choices[rand(choices.length)];
+  }
+
   _playSong() {
     if (this.muted.music || !this.ctx) { this._scheduleNextSong(); return; }
-    const songs = {
-      'oh_susanna':       { bpm: 110, mood: 'upbeat', notes: 'C4:1 D4:1 E4:2 G4:2 G4:1 A4:1 G4:1 E4:1 C4:1 D4:1 E4:2 D4:1 C4:1 D4:1 R:2 F4:2 A4:2 G4:2 E4:2 C4:1 D4:1 E4:2 D4:2 C4:3' },
-      'sweet_betsy':      { bpm: 100, mood: 'upbeat', notes: 'C4:2 E4:1 G4:2 G4:1 A4:2 G4:2 E4:2 D4:2 C4:2 R:1 C4:2 E4:1 G4:2 G4:1 A4:2 G4:2 F4:2 E4:2 D4:2 C4:3' },
-      'buffalo_gals':     { bpm: 130, mood: 'upbeat', notes: 'G4:1 G4:1 A4:1 G4:1 F4:1 D4:1 G4:2 G4:1 G4:1 A4:1 G4:1 F4:1 D4:1 E4:2 R:1 C5:1 C5:1 B4:1 A4:1 G4:1 F4:1 E4:2 D4:1 D4:1 C4:3' },
-      'shenandoah':       { bpm: 60,  mood: 'solemn', notes: 'D4:2 G4:3 D5:2 B4:2 A4:3 G4:2 D4:2 E4:2 G4:4 D5:3 C5:2 A4:2 G4:5' },
-      'amazing_grace':    { bpm: 60,  mood: 'funeral', notes: 'D4:3 G4:2 B4:2 G4:1 B4:2 A4:3 G4:1 E4:2 D4:3 D4:2 G4:2 B4:2 G4:1 B4:2 A4:5' }
+    // Funeral mood plays Amazing Grace once, then returns to prior mood
+    let id;
+    if (this.currentMood === 'funeral_only') {
+      id = 'amazing_grace';
+    } else {
+      id = this._pickNextSong(this.currentMood);
+    }
+    if (!id) { this._scheduleNextSong(); return; }
+    this.lastPlayedId = id;
+    this.currentSongId = id;
+    this.songStartTime = Date.now();
+
+    // Built-in melodies (notes live in code; metadata lives in JSON)
+    const melodies = {
+      'oh_susanna':    { bpm: 110, notes: 'C4:1 D4:1 E4:2 G4:2 G4:1 A4:1 G4:1 E4:1 C4:1 D4:1 E4:2 D4:1 C4:1 D4:1 R:2 F4:2 A4:2 G4:2 E4:2 C4:1 D4:1 E4:2 D4:2 C4:3' },
+      'sweet_betsy':   { bpm: 100, notes: 'C4:2 E4:1 G4:2 G4:1 A4:2 G4:2 E4:2 D4:2 C4:2 R:1 C4:2 E4:1 G4:2 G4:1 A4:2 G4:2 F4:2 E4:2 D4:2 C4:3' },
+      'buffalo_gals':  { bpm: 130, notes: 'G4:1 G4:1 A4:1 G4:1 F4:1 D4:1 G4:2 G4:1 G4:1 A4:1 G4:1 F4:1 D4:1 E4:2 R:1 C5:1 C5:1 B4:1 A4:1 G4:1 F4:1 E4:2 D4:1 D4:1 C4:3' },
+      'shenandoah':    { bpm: 60,  notes: 'D4:2 G4:3 D5:2 B4:2 A4:3 G4:2 D4:2 E4:2 G4:4 D5:3 C5:2 A4:2 G4:5' },
+      'amazing_grace': { bpm: 60,  notes: 'D4:3 G4:2 B4:2 G4:1 B4:2 A4:3 G4:1 E4:2 D4:3 D4:2 G4:2 B4:2 G4:1 B4:2 A4:5' }
     };
-    const allowed = this.musicMood === 'funeral' ? ['amazing_grace']
-                  : this.musicMood === 'solemn'  ? ['shenandoah']
-                  : ['oh_susanna','sweet_betsy','buffalo_gals'];
-    const k = allowed[rand(allowed.length)];
-    const song = songs[k];
+    const song = melodies[id];
+    if (!song) { this._scheduleNextSong(); return; }
     const beat = 60 / song.bpm;
     const tokens = song.notes.split(/\s+/);
     const noteFreq = (n) => {
@@ -6523,12 +6611,52 @@ class AudioController {
       tt += sec;
     }
     const totalSec = tt - this.ctx.currentTime;
-    this.musicTimer = setTimeout(() => this._scheduleNextSong(), totalSec * 1000 + 500);
+    // Cap any single song at the spec's 90-second rotation max — even if a long
+    // song is playing, the timer will fire to pick a new one. The notes already
+    // scheduled won't be cancelled (they'll bleed past) but the next song
+    // begins on schedule.
+    const maxRotateMs = (GAME_DATA.music_system && GAME_DATA.music_system.max_rotation_seconds) || 90000;
+    const rotateAt = Math.min(totalSec * 1000 + 500, maxRotateMs);
+    this.musicTimer = setTimeout(() => {
+      // After song ends, if the wagon's mood has drifted, switch; otherwise queue next song.
+      const wagon = (typeof currentWagon === 'function') ? currentWagon() : null;
+      const newMood = this.computeMoodFromWagon(wagon);
+      if (newMood !== this.currentMood && this.currentMood !== 'funeral_only') {
+        this.setMood(newMood);
+      } else if (this.currentMood === 'funeral_only') {
+        // Funeral has finished — return to the prior mood pool
+        this.currentMood = this._priorMood || 'neutral';
+        this._scheduleNextSong();
+      } else {
+        this._scheduleNextSong();
+      }
+    }, rotateAt);
   }
+
   switchToFuneral() {
-    this.setMood('funeral');
+    if (!this.ctx) this.init();
+    if (!this.ctx) return;
+    if (this.currentMood !== 'funeral_only') {
+      this._priorMood = this.currentMood || 'neutral';
+    }
+    this.currentMood = 'funeral_only';
     if (this.musicTimer) clearTimeout(this.musicTimer);
-    setTimeout(() => this._playSong(), 500);
+    // Quick fade-out so the prior song ducks before Amazing Grace begins
+    try { this.musicGain.gain.cancelScheduledValues(this.ctx.currentTime); } catch (e) {}
+    try { this.musicGain.gain.setTargetAtTime(0.0001, this.ctx.currentTime, 0.4); } catch (e) {}
+    setTimeout(() => {
+      try { this.musicGain.gain.setTargetAtTime(this.muted.music ? 0 : 0.10, this.ctx.currentTime, 0.3); } catch (e) {}
+      this._playSong();
+    }, 1500);
+  }
+
+  // Public hook: call at end of every player turn so the music tracks the
+  // wagon's emotional arc without a separate setInterval.
+  syncMoodToWagon(wagon) {
+    if (!this.musicStarted) return;
+    if (this.currentMood === 'funeral_only') return;
+    const newMood = this.computeMoodFromWagon(wagon);
+    if (newMood !== this.currentMood) this.setMood(newMood);
   }
 }
 const audioController = new AudioController();
@@ -7933,6 +8061,9 @@ function endTurn(w) {
   // Apply state transitions (per JSON rules)
   applyEndOfTurnStateTransitions(w);
   audioController.updateStateLoops(w.team);
+  // Music mood follows the wagon's emotional arc (hopeful → neutral → weary → somber).
+  // Funeral_only takes precedence and won't be overridden until it finishes.
+  audioController.syncMoodToWagon(w);
   // Eliminate?
   if (livingMembers(w).length === 0 && !w.eliminated) {
     w.eliminated = true;
