@@ -1,0 +1,14 @@
+# Normalize line endings to LF in the repo, regardless of OS.
+# Working-copy line endings stay native (Windows checkouts get CRLF locally,
+# but the stored blob is LF so diffs and hashes are stable across machines).
+* text=auto eol=lf
+
+# Make sure these are always treated as text and stored as LF.
+*.html  text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.js    text eol=lf
+*.css   text eol=lf
+*.svg   text eol=lf
+.gitignore     text eol=lf
+.gitattributes text eol=lf
