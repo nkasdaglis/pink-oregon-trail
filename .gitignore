@@ -19,3 +19,8 @@ package-lock.json
 .sim_*.js
 .test_*.js
 .build_*.js
+
+# Temporary files from debugging — never commit
+*.tmp.json
+*.tmp.html
+*.tmp.js
