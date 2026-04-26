@@ -423,6 +423,34 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
 .team-portrait.state-lost svg { filter: grayscale(1); }
 .team-portrait.state-lost { opacity: 0.4; background: #ddd8cf; }
 .team-portrait.state-lost .lost-day { font-size: 9px; font-style: italic; color: var(--gray-lost); }
+/* Per-member health bar (Part 5) — 48×4px below the name, color & width by state.
+   Width/color animate over 0.6s ease-out via CSS transition; the dying state
+   adds a subtle 1.0s opacity pulse on the fill (the card itself already pulses
+   via .state-dying box-shadow, so we keep this gentle to avoid double-pulse). */
+.team-portrait .member-health-bar {
+  width: 48px; height: 4px;
+  background: rgba(61, 40, 23, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+.team-portrait .member-health-bar-fill {
+  height: 100%;
+  width: 100%;
+  border-radius: 2px;
+  transition: width 0.6s ease-out, background-color 0.6s ease-out;
+}
+.team-portrait.state-healthy  .member-health-bar-fill { background: #4A7C3A; width: 100%; }
+.team-portrait.state-weakened .member-health-bar-fill { background: #D4AF37; width: 70%; }
+.team-portrait.state-sick     .member-health-bar-fill { background: #E08850; width: 45%; }
+.team-portrait.state-injured  .member-health-bar-fill { background: #C8956D; width: 50%; }
+.team-portrait.state-dying    .member-health-bar-fill { background: #B85770; width: 15%; animation: healthBarPulse 1.0s ease-in-out infinite; }
+.team-portrait.state-lost     .member-health-bar { display: none; }
+@keyframes healthBarPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) {
+  .team-portrait .member-health-bar-fill { transition: none; animation: none !important; }
+}
 .team-portrait.hero-active { animation: heroPulse 1.2s ease-out 2; border-color: var(--rose); }
 @keyframes heroPulse {
   0%,100% { box-shadow: 0 0 0 rgba(184, 87, 112, 0); }
@@ -6710,21 +6738,55 @@ function renderResourceRibbon() {
 function renderTeamStrip() {
   const w = currentWagon(); if (!w) return;
   const strip = $('team-strip');
-  strip.innerHTML = '';
-  w.team.forEach((m, i) => {
-    const card = el('div', { class: 'team-portrait state-' + m.state, 'data-member-index': i });
-    card.innerHTML = characterPortrait(m.profession, m.skinTone);
-    card.appendChild(el('div', { class: 'member-name', textContent: m.name }));
-    card.appendChild(el('div', { class: 'member-prof', textContent: m.profession }));
-    if (m.state === 'sick') card.appendChild(el('div', { class: 'state-icon', textContent: '🤒' }));
-    else if (m.state === 'injured') card.appendChild(el('div', { class: 'state-icon', textContent: '🩹' }));
-    else if (m.state === 'dying') card.appendChild(el('div', { class: 'state-icon', textContent: '✝' }));
-    else if (m.state === 'lost') {
-      card.appendChild(el('div', { class: 'state-icon', textContent: '✝' }));
-      card.appendChild(el('div', { class: 'lost-day', textContent: 'd' + (m.lostOnDay || '?') }));
-    }
-    strip.appendChild(card);
-  });
+  // Patch in-place when team membership is stable (same length, same names) so
+  // the CSS transition on .member-health-bar-fill can animate width/color over
+  // 0.6s when a member's state changes. A full innerHTML rebuild would replace
+  // the bar DOM and the transition wouldn't fire.
+  const sameRoster = strip.children.length === w.team.length &&
+    Array.from(strip.children).every((c, i) =>
+      c.getAttribute('data-member-name') === w.team[i].name);
+  if (sameRoster) {
+    w.team.forEach((m, i) => updateTeamPortrait(strip.children[i], m));
+  } else {
+    strip.innerHTML = '';
+    w.team.forEach((m, i) => strip.appendChild(buildTeamPortrait(m, i)));
+  }
+}
+
+function buildTeamPortrait(m, i) {
+  const card = el('div', { class: 'team-portrait state-' + m.state,
+                           'data-member-index': i, 'data-member-name': m.name });
+  card.innerHTML = characterPortrait(m.profession, m.skinTone);
+  card.appendChild(el('div', { class: 'member-name', textContent: m.name }));
+  // Health bar (Part 5) — 48×4px under the name. State CSS sets color & width.
+  const bar = el('div', { class: 'member-health-bar' });
+  bar.appendChild(el('div', { class: 'member-health-bar-fill' }));
+  card.appendChild(bar);
+  card.appendChild(el('div', { class: 'member-prof', textContent: m.profession }));
+  applyStateIcon(card, m);
+  return card;
+}
+
+function updateTeamPortrait(card, m) {
+  // Reset the state-* class without disturbing other classes (e.g. hero-active)
+  const next = 'state-' + m.state;
+  if (!card.classList.contains(next)) {
+    Array.from(card.classList).forEach(c => { if (c.indexOf('state-') === 0) card.classList.remove(c); });
+    card.classList.add(next);
+  }
+  // Refresh the state-icon / lost-day overlays
+  Array.from(card.querySelectorAll('.state-icon, .lost-day')).forEach(n => n.remove());
+  applyStateIcon(card, m);
+}
+
+function applyStateIcon(card, m) {
+  if (m.state === 'sick')         card.appendChild(el('div', { class: 'state-icon', textContent: '🤒' }));
+  else if (m.state === 'injured') card.appendChild(el('div', { class: 'state-icon', textContent: '🩹' }));
+  else if (m.state === 'dying')   card.appendChild(el('div', { class: 'state-icon', textContent: '✝' }));
+  else if (m.state === 'lost') {
+    card.appendChild(el('div', { class: 'state-icon', textContent: '✝' }));
+    card.appendChild(el('div', { class: 'lost-day', textContent: 'd' + (m.lostOnDay || '?') }));
+  }
 }
 
 function pulseHero(memberIndex) {
