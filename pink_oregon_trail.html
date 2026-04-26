@@ -6109,16 +6109,42 @@ const PLAYER_WAGON_SVG = '<svg viewBox="0 0 90 60" width="90" height="60" class=
   '<g class="wheel" style="transform-origin: 40px 44px;"><circle cx="40" cy="44" r="6" fill="#3D2817"/><circle cx="40" cy="44" r="4.5" fill="#8B5A2B"/><line x1="40" y1="38" x2="40" y2="50" stroke="#3D2817" stroke-width="0.8"/><line x1="34" y1="44" x2="46" y2="44" stroke="#3D2817" stroke-width="0.8"/><line x1="36" y1="40" x2="44" y2="48" stroke="#3D2817" stroke-width="0.8"/><line x1="36" y1="48" x2="44" y2="40" stroke="#3D2817" stroke-width="0.8"/></g>' +
 '</svg>';
 
-// Wheel rotation + ox bob CSS (added inline since CSS section is closed)
+// Wagon animation CSS — scope rules to .player-wagon so wheel transform-origins
+// (set inline as 14px 44px and 40px 44px) resolve in the wagon SVG's own viewBox
+// and cannot be hijacked by other elements that happen to share class names.
+// transform-box is intentionally NOT set: in SVG context, transform-origin in
+// pixel units resolves correctly against the user coordinate space when the
+// wagon is rendered as a top-level <svg> with x/y/width/height (see scene
+// composition helper below — we no longer wrap the wagon in <g transform>).
 (function injectWagonStyle() {
   const s = document.createElement('style');
   s.textContent = '@keyframes wheelSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }' +
-                  '@keyframes oxStep { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-1px); } }' +
-                  '.wheel { transform-box: fill-box; transform-origin: center; animation: wheelSpin 0.7s linear infinite; }' +
-                  '.ox-walk { transform-box: fill-box; transform-origin: center; animation: oxStep 0.5s ease-in-out infinite; }' +
-                  '@media (prefers-reduced-motion: reduce) { .wheel, .ox-walk { animation: none !important; } }';
+                  '@keyframes oxWalk { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-1px); } }' +
+                  '.player-wagon .wheel { animation: wheelSpin 1.2s linear infinite; }' +
+                  '.player-wagon .ox-walk { animation: oxWalk 0.6s ease-in-out infinite; }' +
+                  '@media (prefers-reduced-motion: reduce) { .player-wagon .wheel, .player-wagon .ox-walk { animation: none !important; } }';
   document.head.appendChild(s);
 })();
+
+// Inner content of the wagon SVG (no outer <svg> wrapper). Used by playerWagonInScene()
+// to embed the wagon as a nested <svg x y width height> inside the scene SVG —
+// which preserves the wagon's own coordinate space so wheel transform-origins
+// (14,44 and 40,44) anchor correctly regardless of placement scale.
+const PLAYER_WAGON_INNER = PLAYER_WAGON_SVG
+  .replace(/^<svg[^>]+>/, '')
+  .replace(/<\/svg>$/, '');
+
+// Render the wagon at a position in the scene canvas (or anywhere inside an SVG).
+// Returns a self-contained <svg> element with explicit x/y/width/height —
+// this is the form that keeps wheel rotation anchored to the wagon's own
+// coordinate space (per Part 1A of the v2.2 amendment).
+function playerWagonInScene(x, y, scale) {
+  scale = scale || 1.0;
+  const w = 90 * scale, h = 60 * scale;
+  return '<svg x="' + x + '" y="' + y + '" width="' + w.toFixed(1) + '" height="' + h.toFixed(1) +
+         '" viewBox="0 0 90 60" class="player-wagon" overflow="visible">' +
+         PLAYER_WAGON_INNER + '</svg>';
+}
 
 // Profession accessories (overlaid on the base figure)
 const PROFESSION_ACCESSORY = {
@@ -6219,11 +6245,14 @@ function renderSceneCharacters(opts) {
   const w = currentWagon();
   if (!w) return;
 
-  // Wagon (always visible — small in background, larger when scene calls for it)
+  // Wagon (always visible — small in background, larger when scene calls for it).
+  // Use playerWagonInScene to render as a nested <svg x y> rather than wrapping
+  // PLAYER_WAGON_SVG in <g transform>, which would break wheel rotation anchors
+  // (per Part 1A: wheels must rotate inside their own viewBox coordinate space).
   const wagonScale = opts.wagonScale || 0.9;
   const wagonX = opts.wagonX != null ? opts.wagonX : 540;
   const wagonY = opts.wagonY != null ? opts.wagonY : 380;
-  const wagonGroup = '<g transform="translate(' + wagonX + ' ' + wagonY + ') scale(' + wagonScale + ')">' + PLAYER_WAGON_SVG + '</g>';
+  const wagonGroup = playerWagonInScene(wagonX, wagonY, wagonScale);
 
   // Hero characters in scene
   const heroes = opts.heroes || []; // array of profession names
@@ -6582,10 +6611,11 @@ function renderMinimap() {
     else if (sp.type === 'finish')   color = '#D4AF37';
     body += '<circle cx="' + x.toFixed(1) + '" cy="18" r="3" fill="' + color + '" stroke="#8B5A2B" stroke-width="0.5"/>';
   }
-  // Wagon at current position
+  // Wagon at current position — use the helper so the wagon stays a single
+  // self-contained <svg> with its wheels' transform-origins anchored correctly.
   const fx = (w.position - 1) / Math.max(1, total - 1);
   const wx = padX + fx * w_;
-  body += '<g transform="translate(' + (wx - 12).toFixed(1) + ' 8) scale(0.32)">' + PLAYER_WAGON_SVG + '</g>';
+  body += playerWagonInScene(wx - 12, 8, 0.32);
   svg.innerHTML = body;
   const lab = $('minimap-label');
   if (lab) {
@@ -6598,7 +6628,11 @@ function renderMinimap() {
 function renderLengthScreen() {
   const cards = $('length-cards');
   cards.innerHTML = '';
-  const wagonIcon = '<svg class="icon-svg" viewBox="0 0 90 60">' + PLAYER_WAGON_SVG.replace(/<svg[^>]+>/, '<g>').replace(/<\/svg>/, '</g>') + '</svg>';
+  // Setup-screen wagon icon: render the inner content into a fresh <svg>
+  // with the icon-svg class. PLAYER_WAGON_INNER carries the .ox-walk and
+  // .wheel groups so their animations still attach via the .player-wagon
+  // descendant selector — preserve that class.
+  const wagonIcon = '<svg class="icon-svg player-wagon" viewBox="0 0 90 60">' + PLAYER_WAGON_INNER + '</svg>';
   const opts = [
     { key: 'short',    title: 'Short Journey',    sub: 'About 15 minutes. 25 stops along the trail. Perfect for one class period.' },
     { key: 'extended', title: 'Extended Journey', sub: 'About 40 minutes. 50 stops along the trail. The full crossing of America.' }
