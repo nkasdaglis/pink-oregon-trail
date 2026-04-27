@@ -26,6 +26,38 @@
   --skin-light: #F4D2A8;
   --skin-medium: #E8B888;
   --skin-dark: #C89868;
+  /* v2.7 — UI density default tier values (standard). JS sets
+     data-ui-density on document root from window.innerWidth on load
+     and resize; tier-specific overrides below replace these defaults.
+     Keeping standard-tier defaults here means the game still works
+     usefully if JS hasn't run yet.
+     v2.8 — callout widths narrowed for left-anchored geometry so the
+     right portion of the canvas stays visible for wagon + scenery. */
+  --portrait-size: 76px;
+  --action-btn-height: 84px;
+  --callout-max-w: min(560px, 42vw);
+}
+:root[data-ui-density="compact"] {
+  --portrait-size: 62px;
+  --action-btn-height: 70px;
+  /* compact: phones don't have horizontal room for a side panel — let the
+     callout take 86vw. The mobile media query below (<740px) re-centers it. */
+  --callout-max-w: min(440px, 86vw);
+}
+:root[data-ui-density="standard"] {
+  --portrait-size: 76px;
+  --action-btn-height: 84px;
+  --callout-max-w: min(560px, 42vw);
+}
+:root[data-ui-density="large"] {
+  --portrait-size: 92px;
+  --action-btn-height: 100px;
+  --callout-max-w: min(680px, 38vw);
+}
+:root[data-ui-density="jumbo"] {
+  --portrait-size: 120px;
+  --action-btn-height: 130px;
+  --callout-max-w: min(820px, 35vw);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
@@ -208,8 +240,9 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
   justify-content: space-between;
 }
 .res-item .icon { width: 12px; height: 12px; flex-shrink: 0; }
-.res-item .label { flex: 1; font-size: 11px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.04em; }
-.res-item .val { font-size: 16px; color: var(--rose-dark); font-variant-numeric: tabular-nums; font-weight: 700; }
+/* v2.7 — resource ribbon text scales smoothly within density tier */
+.res-item .label { flex: 1; font-size: clamp(9px, 0.7vw, 13px); opacity: 0.7; text-transform: uppercase; letter-spacing: 0.04em; }
+.res-item .val { font-size: clamp(14px, 1.1vw, 22px); color: var(--rose-dark); font-variant-numeric: tabular-nums; font-weight: 700; }
 .res-item.changed .val { animation: pulseRes 0.55s ease; }
 .res-item.danger { background: #f6d8d8; }
 .res-item.danger .val { color: #a32d2d; }
@@ -388,17 +421,22 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
   border-radius: 14px;
   box-shadow: 0 8px 32px rgba(61, 40, 23, 0.18), 0 0 0 1px rgba(255,255,255,0.5) inset;
   padding: clamp(14px, 2vw, 26px);
-  max-width: min(580px, 80vw);
+  /* v2.8 — max-width tracks density tier; left-anchored geometry (was
+     centered + translateX(-50%)) so the wagon stays visible to the
+     right of the callout. Compact tier near full width is OK; other
+     tiers cap at 35-42% so there's room for scenery. */
+  max-width: var(--callout-max-w, min(580px, 42vw));
   width: calc(100% - 32px);
   position: absolute;
-  left: 50%; bottom: 16px;
-  transform: translateX(-50%);
+  /* v2.8 — left-anchored at 16px instead of left:50% + translateX(-50%) */
+  left: 16px; bottom: 16px;
   backdrop-filter: blur(2px);
   animation: calloutIn 0.4s ease;
-  max-height: 80%;
+  max-height: 88%;
   overflow-y: auto;
 }
-@keyframes calloutIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+/* v2.8 — keyframe drops the translateX(-50%) since we no longer center. */
+@keyframes calloutIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
 /* Transition warning toasts (Part 2 — 6b)
    Top-right of the scene canvas, yellow accent, auto-dismisses in 4s.
@@ -776,16 +814,18 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
   color: var(--brown);
   opacity: 0.85;
 }
+/* v2.7 — event narrative typography uses clamp() for smooth in-tier scaling.
+   Wider clamp ranges than v2.6 so 4K projector text reads from across-room. */
 .event-title {
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(20px, 2.5vw, 28px); font-style: italic; font-weight: 500;
+  font-size: clamp(20px, 2vw, 36px); font-style: italic; font-weight: 500;
   color: var(--rose); text-align: center;
   margin: 6px 0 10px; letter-spacing: 0.01em;
 }
-.event-intro { font-style: italic; font-size: clamp(15px, 1.8vw, 19px); text-align: center; color: var(--rose-dark); margin: 4px 0 10px; line-height: 1.45; }
-.event-flavor { font-style: italic; font-size: clamp(13px, 1.6vw, 17px); text-align: center; color: var(--brown); margin: 0 0 14px; line-height: 1.6; }
-.modifier-bonus { color: var(--green-soft); font-style: italic; font-weight: 600; font-size: 14px; text-align: center; display: block; margin: 6px 0; padding: 6px 10px; background: rgba(74, 124, 58, 0.08); border-left: 3px solid var(--green-soft); border-radius: 0 6px 6px 0; }
-.narrative-text { background: rgba(251,246,240,0.55); border: 1px solid rgba(217,179,145,0.5); padding: 12px 14px; border-radius: 8px; font-family: Georgia, serif; font-size: 16px; line-height: 1.6; margin-bottom: 12px; }
+.event-intro { font-style: italic; font-size: clamp(15px, 1.4vw, 24px); text-align: center; color: var(--rose-dark); margin: 4px 0 10px; line-height: 1.45; }
+.event-flavor { font-style: italic; font-size: clamp(13px, 1vw, 20px); text-align: center; color: var(--brown); margin: 0 0 14px; line-height: 1.6; }
+.modifier-bonus { color: var(--green-soft); font-style: italic; font-weight: 600; font-size: clamp(13px, 1vw, 18px); text-align: center; display: block; margin: 6px 0; padding: 6px 10px; background: rgba(74, 124, 58, 0.08); border-left: 3px solid var(--green-soft); border-radius: 0 6px 6px 0; }
+.narrative-text { background: rgba(251,246,240,0.55); border: 1px solid rgba(217,179,145,0.5); padding: 12px 14px; border-radius: 8px; font-family: Georgia, serif; font-size: clamp(14px, 1.1vw, 22px); line-height: 1.6; margin-bottom: 12px; }
 .consequence-line, .residual-fail, .near-miss { font-style: italic; font-size: 13px; opacity: 0.78; margin-top: 6px; text-align: center; }
 .consequence-line { color: var(--brown); }
 .residual-fail, .near-miss { color: var(--brown-soft); }
@@ -906,7 +946,8 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
 }
 .team-portrait {
   flex-shrink: 0;
-  width: 76px;
+  /* v2.7 — width tracks density tier */
+  width: var(--portrait-size, 76px);
   background: white;
   border: 1.5px solid var(--tan);
   border-radius: 8px;
@@ -914,10 +955,14 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   position: relative;
   font-family: system-ui, sans-serif;
-  transition: all 0.3s;
+  transition: width 0.3s, all 0.3s;
 }
-.team-portrait svg { width: 56px; height: 60px; }
-.team-portrait .member-name { font-size: 11px; font-weight: 700; color: var(--brown); text-align: center; line-height: 1.1; max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* v2.7 — character portrait SVG scales with the team-portrait card.
+   The SVG itself uses preserveAspectRatio defaults (xMidYMid meet) so
+   it stays centered as the card grows. */
+.team-portrait svg { width: calc(var(--portrait-size, 76px) * 0.74); height: calc(var(--portrait-size, 76px) * 0.79); }
+/* v2.7 — name label scales with viewport; max-width tracks the portrait card */
+.team-portrait .member-name { font-size: clamp(11px, 0.8vw, 15px); font-weight: 700; color: var(--brown); text-align: center; line-height: 1.1; max-width: calc(var(--portrait-size, 76px) - 6px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .team-portrait .member-prof { font-size: 9px; color: var(--rose-dark); text-transform: uppercase; letter-spacing: 0.04em; }
 .team-portrait .state-icon {
   position: absolute; top: 2px; right: 2px;
@@ -1068,15 +1113,19 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
   text-align: center;
   font-family: system-ui, sans-serif;
   transition: all 0.15s;
-  display: flex; flex-direction: column; gap: 2px; min-height: 60px;
+  /* v2.7 — min-height tracks density tier so 4K projector buttons are
+     thumb-friendly across-room and Chromebook buttons stay compact. */
+  display: flex; flex-direction: column; gap: 2px;
+  min-height: var(--action-btn-height, 84px);
   justify-content: center;
 }
 .action-btn:hover { background: var(--pink-deeper); transform: translateY(-1px); }
 .action-btn.primary { background: var(--rose); color: white; }
 .action-btn.primary:hover { background: var(--rose-dark); }
 .action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-.action-btn .name { font-size: 15px; font-weight: 700; }
-.action-btn .desc { font-size: 11px; opacity: 0.8; line-height: 1.2; font-family: Georgia, serif; font-style: italic; }
+/* v2.7 — action button text uses clamp() for smooth scaling within tier */
+.action-btn .name { font-size: clamp(15px, 1.2vw, 22px); font-weight: 700; }
+.action-btn .desc { font-size: clamp(11px, 0.8vw, 16px); opacity: 0.8; line-height: 1.2; font-family: Georgia, serif; font-style: italic; }
 .action-btn .bonus { font-size: 10px; color: var(--green-soft); font-style: italic; margin-top: 2px; }
 
 /* Pace + ration badges in ribbon area */
@@ -1269,7 +1318,19 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
   .action-buttons { grid-template-columns: 1fr 1fr; }
   .mini-map { flex: 0 0 100%; }
   .title { font-size: 36px; }
-  .narrative-callout { padding: 14px 18px; bottom: 8px; }
+  /* v2.8 — phones have no horizontal room for a side-panel callout.
+     Restore the v2.7 centered-bottom positioning here. The keyframe
+     also has to be re-defined to put the translateX(-50%) back. */
+  .narrative-callout {
+    padding: 14px 18px;
+    left: 50%; bottom: 8px;
+    transform: translateX(-50%);
+    max-width: min(95vw, 540px);
+  }
+  @keyframes calloutIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
 }
 </style>
 </head>
@@ -1332,8 +1393,12 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
     <div class="pr-badge luck-display" id="region-label">&mdash;</div>
   </div>
   <div class="scene-canvas" id="scene-canvas">
+    <!-- v2.7 Stage 4 — backdrop keeps slice (sky/ground always fill canvas).
+         Character layer changes to xMidYMid meet so wagon/fort/characters
+         are NEVER cropped at extreme aspect ratios; transparent letterbox
+         bands show the backdrop through. -->
     <svg class="scene-backdrop" id="scene-backdrop" viewBox="0 0 800 500" preserveAspectRatio="xMidYMax slice"></svg>
-    <svg class="scene-characters" id="scene-characters" viewBox="0 0 800 500" preserveAspectRatio="xMidYMax slice"></svg>
+    <svg class="scene-characters" id="scene-characters" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="scene-overlay" id="scene-overlay"></div>
     <div id="eyelid-overlay"></div>
   </div>
@@ -8424,7 +8489,14 @@ function renderSceneCharacters(opts) {
   // PLAYER_WAGON_SVG in <g transform>, which would break wheel rotation anchors
   // (per Part 1A: wheels must rotate inside their own viewBox coordinate space).
   const wagonScale = opts.wagonScale || 0.9;
-  const wagonX = opts.wagonX != null ? opts.wagonX : 540;
+  // v2.8 — default wagonX shifted right (540→580) so the wagon clears the
+  // left-anchored narrative callout introduced in this patch. Explicit
+  // wagonX overrides land near 560 for "wagon visible while callout is
+  // open" scenes (river, bandit, finish, elimination). The lone wagonX:360
+  // call (renderTravelScene) is intentionally wagon-on-far-left at scale
+  // 1.0 — its 90vb-unit width still extends past the callout's right edge
+  // on every density tier so the wagon is partly visible there too.
+  const wagonX = opts.wagonX != null ? opts.wagonX : 580;
   const wagonY = opts.wagonY != null ? opts.wagonY : 380;
   const wagonGroup = playerWagonInScene(wagonX, wagonY, wagonScale);
 
@@ -10238,7 +10310,7 @@ function doActionHunt(w) {
   applyRegion(w);
   renderSceneCharacters({
     heroes: heroLabel ? [heroLabel] : [],
-    wagonX: 540, wagonY: 380, wagonScale: 0.7,
+    wagonX: 580, wagonY: 380, wagonScale: 0.7,
     extra: succeeded ? '<g transform="translate(360 300)" fill="#5C4A36" opacity="0.85"><ellipse cx="0" cy="0" rx="36" ry="14"/><ellipse cx="-26" cy="-6" rx="13" ry="10"/><polygon points="-38,-12 -42,-22 -34,-18" /><line x1="-30" y1="14" x2="-30" y2="28" stroke="#5C4A36" stroke-width="3"/><line x1="-12" y1="14" x2="-12" y2="28" stroke="#5C4A36" stroke-width="3"/><line x1="6" y1="14" x2="6" y2="28" stroke="#5C4A36" stroke-width="3"/><line x1="22" y1="14" x2="22" y2="28" stroke="#5C4A36" stroke-width="3"/></g>' : ''
   });
   const tally = succeeded
@@ -10259,7 +10331,7 @@ function doActionRest(w) {
   // Rest scene with eyelid effect
   applyRegion(w);
   const heroProfs = w.team.filter(m => m.state === 'sick' || m.state === 'injured').slice(0, 3).map(m => m.profession);
-  renderSceneCharacters({ heroes: heroProfs, wagonScale: 0.85, wagonX: 540, wagonY: 380 });
+  renderSceneCharacters({ heroes: heroProfs, wagonScale: 0.85, wagonX: 580, wagonY: 380 });
   // v2.6 Stage 3 — campfire embers drift up during the Rest scene.
   spawnEmbers(10);
   setTimeout(() => spawnEmbers(0), 6000);
@@ -10293,7 +10365,7 @@ function doActionForage(w) {
   applyRegion(w);
   renderSceneCharacters({
     heroes: farmer ? ['Farmer'] : (scout ? ['Scout'] : []),
-    wagonX: 540, wagonY: 380, wagonScale: 0.7,
+    wagonX: 580, wagonY: 380, wagonScale: 0.7,
     extra: '<g transform="translate(380 350)"><circle cx="0" cy="0" r="10" fill="#7d2030" opacity="0.6"/><circle cx="14" cy="-4" r="8" fill="#7d2030" opacity="0.6"/><circle cx="-12" cy="6" r="7" fill="#7d2030" opacity="0.6"/></g>'
   });
   const hero = farmer || scout;
@@ -10522,7 +10594,7 @@ function resolveNarrativeEvent(w, space, event) {
 
   // Scene composition
   applyRegion(w);
-  renderSceneCharacters({ heroes: hero ? [hero.profession] : [], wagonScale: 0.85, wagonX: 540, wagonY: 380 });
+  renderSceneCharacters({ heroes: hero ? [hero.profession] : [], wagonScale: 0.85, wagonX: 580, wagonY: 380 });
   if (event._isSurprise) audioController.duckMusic();
 
   // v2.5 Stage 3 — apply member-loss state IMMEDIATELY (no setTimeout
@@ -10818,7 +10890,7 @@ function drawAndResolveChoice(w, space) {
   };
 
   applyRegion(w);
-  renderSceneCharacters({ wagonScale: 0.85, wagonX: 540, wagonY: 380 });
+  renderSceneCharacters({ wagonScale: 0.85, wagonX: 580, wagonY: 380 });
   let html = eventIllustration(eventCategoryFromName(ch.name)) +
     '<div class="event-title">' + escapeHtml(ch.name) + '</div>' +
     (space.info ? '<div class="event-flavor">"' + escapeHtml(space.info) + '"</div>' : '') +
@@ -10930,11 +11002,17 @@ function resolveFort(w, sp) {
     w._fortVisitDayCharged = true;
   }
   applyRegion(w);
-  renderSceneCharacters({ wagonScale: 0.7, wagonX: 540, wagonY: 380, extra:
-    '<g transform="translate(160 240)"><rect x="0" y="40" width="180" height="100" fill="#A67B5B" stroke="#5C4A36" stroke-width="2"/>' +
-    '<polygon points="0,40 0,20 18,32 36,20 54,32 72,20 90,32 108,20 126,32 144,20 162,32 180,20 180,40" fill="#A67B5B" stroke="#5C4A36" stroke-width="1.5"/>' +
-    '<rect x="78" y="80" width="24" height="60" fill="#5C4A36"/><line x1="90" y1="20" x2="90" y2="-12" stroke="#3D2817" stroke-width="2"/>' +
-    '<polygon points="90,-12 110,-7 90,-2" fill="#c63a3a"/></g>' });
+  // v2.7 Stage 3 — reduce fort silhouette from 180x100 base to 130x70
+  // (viewBox units). Translate from (160,240) to (220,310). Fort visual
+  // footprint dropped from ~30% to ~14% of viewBox vertical, allowing
+  // sky and surrounding scenery to breathe. Crenellations scaled by
+  // 130/180 ratio (13-unit step instead of 18); door scaled to 14x42;
+  // flagpole shortened from 32 to 24 units.
+  renderSceneCharacters({ wagonScale: 0.7, wagonX: 580, wagonY: 380, extra:
+    '<g transform="translate(220 310)"><rect x="0" y="30" width="130" height="70" fill="#A67B5B" stroke="#5C4A36" stroke-width="1.5"/>' +
+    '<polygon points="0,30 0,16 13,24 26,16 39,24 52,16 65,24 78,16 91,24 104,16 117,24 130,16 130,30" fill="#A67B5B" stroke="#5C4A36" stroke-width="1.2"/>' +
+    '<rect x="58" y="58" width="14" height="42" fill="#5C4A36"/><line x1="65" y1="16" x2="65" y2="-4" stroke="#3D2817" stroke-width="1.5"/>' +
+    '<polygon points="65,-4 80,0 65,4" fill="#c63a3a"/></g>' });
   // Track shown fact for landmark? No, fort isn't landmark — but we still show fact card if appropriate. Keep simple here.
   const trackerUsedAction = { Buy: false, Repair: false, Rest: false, News: false, Letter: false, Sell: false, Hire: false };
   // Excess thresholds for Sell Goods (Part 3 — 7d) per money_economy.income_sources.
@@ -11169,7 +11247,7 @@ function generateDispatchLetter(w) {
 function resolveRiver(w, sp) {
   audioController.playSfx('river');
   applyRegion(w);
-  renderSceneCharacters({ wagonScale: 0.85, wagonX: 380, wagonY: 360, extra:
+  renderSceneCharacters({ wagonScale: 0.85, wagonX: 560, wagonY: 360, extra:
     '<g><path d="M 0 280 L 800 280 L 800 360 L 0 360 Z" fill="#5B7FA8" opacity="0.7"/>' +
     '<path d="M 0 280 Q 200 270 400 282 Q 600 290 800 280" fill="none" stroke="#7FA0C8" stroke-width="2" opacity="0.7"/></g>'
   });
@@ -11282,7 +11360,7 @@ function resolveLandmark(w, sp) {
   w.factsShownTitles.push(facts[idx].title);
   const fact = facts[idx];
 
-  renderSceneCharacters({ wagonScale: 0.7, wagonX: 540, wagonY: 380, extra: hidden ?
+  renderSceneCharacters({ wagonScale: 0.7, wagonX: 580, wagonY: 380, extra: hidden ?
     '<g transform="translate(80 280)" opacity="0.85"><circle cx="0" cy="0" r="8" fill="#5C4A36"/><rect x="-5" y="8" width="10" height="20" fill="#7C5E3F"/></g>' : '' });
 
   // Daguerreotype illustration if this is one of the 9 historical
@@ -11355,7 +11433,7 @@ function resolveLandmark(w, sp) {
 function showIndependenceRockCheck(w, sp) {
   w.independenceRockSeen = true;
   applyRegion(w);
-  renderSceneCharacters({ wagonScale: 0.7, wagonX: 540, wagonY: 380 });
+  renderSceneCharacters({ wagonScale: 0.7, wagonX: 580, wagonY: 380 });
   const onTime = w.daysTraveled <= INDEPENDENCE_ROCK_DAY;
   if (onTime) {
     audioController.playSfx('onTime');
@@ -11380,7 +11458,7 @@ function triggerBanditAmbush(w) {
   const ba = GAME_DATA.bandit_ambush;
   audioController.playSfx('banditAttack');
   applyRegion(w);
-  renderSceneCharacters({ wagonScale: 0.85, wagonX: 540, wagonY: 380, heroes: ['Cowboy', 'Hunter'].filter(p => activeProtectorMember(w, p)),
+  renderSceneCharacters({ wagonScale: 0.85, wagonX: 580, wagonY: 380, heroes: ['Cowboy', 'Hunter'].filter(p => activeProtectorMember(w, p)),
     extra: '<g transform="translate(120 200)" opacity="0.85"><g fill="#3D2817"><rect x="0" y="20" width="14" height="40"/><circle cx="7" cy="14" r="9"/><line x1="14" y1="30" x2="22" y2="30" stroke="#3D2817" stroke-width="3"/></g><g transform="translate(36 0)" fill="#3D2817"><rect x="0" y="20" width="14" height="40"/><circle cx="7" cy="14" r="9"/></g><g transform="translate(72 4)" fill="#3D2817"><rect x="0" y="20" width="14" height="40"/><circle cx="7" cy="14" r="9"/></g></g>' });
   // Pre-quiz intro
   const html = '<div class="event-title">Ambush Near Trail\'s End</div>' +
@@ -11518,7 +11596,7 @@ function resolveFinish(w) {
   audioController.playSfx('cheering');
   startConfettiLoop();
   applyRegion(w);
-  renderSceneCharacters({ wagonScale: 0.95, wagonX: 380, wagonY: 380, heroes: livingMembers(w).slice(0, 3).map(m => m.profession) });
+  renderSceneCharacters({ wagonScale: 0.95, wagonX: 560, wagonY: 380, heroes: livingMembers(w).slice(0, 3).map(m => m.profession) });
   logToWagon(w, w.name + ' reached Oregon City on Day ' + w.daysTraveled + ' (' + dateForDay(w.daysTraveled) + ')! Survivors: ' + formatList(livingMembers(w).map(m => m.name)) + '.');
   const html = '<div class="event-title">Oregon City</div>' +
     '<div class="event-intro">"You made it. The Willamette Valley stretches before you."</div>' +
@@ -11737,7 +11815,7 @@ function triggerWinterEnding(w) {
 }
 function showEliminationScene(w) {
   applyRegion(w);
-  renderSceneCharacters({ wagonScale: 0.7, wagonX: 380, wagonY: 380 });
+  renderSceneCharacters({ wagonScale: 0.7, wagonX: 560, wagonY: 380 });
   const html = '<div class="event-title">The Wagon Is Left Behind</div>' +
     '<div class="narrative-text">The ' + escapeHtml(w.name) + ' never reached Oregon. Their bones rest beneath the trail. Their story will not be forgotten.</div>';
   showOutcomeCallout('', html, () => { if (gameState.mode === 'competitive' && gameState.wagons.some(x => !x.eliminated && !x.finished)) advanceWagon(); else endGame(); });
@@ -12036,6 +12114,26 @@ function printTeacherReport() {
 // =====================================================================
 // SECTION 11 — INIT
 // =====================================================================
+// v2.7 Stage 1 — UI density tiers driven by viewport width.
+//   compact   < 1280   (Chromebook tab, small laptop)
+//   standard  1280-1919 (default laptops)
+//   large     1920-2559 (4K laptop, large monitor)
+//   jumbo     >= 2560   (4K TV / projector)
+// CSS rules under :root[data-ui-density="..."] swap --portrait-size,
+// --action-btn-height, --callout-max-w. Standard tier values are also
+// the :root defaults so the layout works before this fires.
+function updateUIDensity() {
+  if (typeof window === 'undefined' || !window.innerWidth) return;
+  const w = window.innerWidth;
+  let density = 'standard';
+  if (w < 1280) density = 'compact';
+  else if (w >= 2560) density = 'jumbo';
+  else if (w >= 1920) density = 'large';
+  if (typeof document !== 'undefined' && document.documentElement) {
+    document.documentElement.setAttribute('data-ui-density', density);
+  }
+}
+
 function init() {
   // Audio toggles
   $('mute-toggle').addEventListener('click', () => { audioController.init(); audioController.setMute('sfx', !audioController.muted.sfx); audioController.playSfx('click'); });
@@ -12048,6 +12146,10 @@ function init() {
   $('mode-back').addEventListener('click', () => { showScreen('screen-length'); renderLengthScreen(); });
   $('difficulty-back').addEventListener('click', () => { showScreen('screen-mode'); renderModeScreen(); });
   $('count-back').addEventListener('click', () => { showScreen('screen-difficulty'); renderDifficultyScreen(); });
+
+  // v2.7 Stage 1 — pick the initial density tier and watch for resizes.
+  updateUIDensity();
+  window.addEventListener('resize', updateUIDensity);
 
   // Render the first screen
   renderLengthScreen();
