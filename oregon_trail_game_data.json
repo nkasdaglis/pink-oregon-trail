@@ -2,7 +2,7 @@
   "meta": {
     "title": "Pink Oregon Trail",
     "designer": "Gabriella Kasdaglis (Gabby)",
-    "version": "2.9",
+    "version": "3.0",
     "trail_lengths": {
       "short": {
         "spaces": 25,
@@ -55,7 +55,7 @@
         "STARVATION_THRESHOLD": 0
       }
     },
-    "notes": "v2.9 visual overhaul: brighter scenery + day/night cycling fix, weather variety expansion, wagon size up, callout typography down, single-row bottom layout for standard+ density, team walking alongside the wagon during Push On (option A staging), historical-shape digital map, photo override populated from Nicholas's zip (11 photos), now-playing badge full-name fix, scenery elements that move.",
+    "notes": "v3.0: Mobile UI overhaul (drawer-based layout) and modified pin-needle wagon markers with smart-stacking. v3.1 (physical board redesign) follows as separate amendment.",
     "stochastic_system": {
       "philosophy": "Real pioneers did not see probability tables before making choices. They knew the river was high, the team was tired, the trail looked rough \u2014 and they decided. The game models this. Choice screens show qualitative risk and team advantages, never exact numbers. Outcomes sample from hidden distributions. Sometimes the dice fall well. Sometimes they don't. Profession bonuses shift the distribution but rarely eliminate risk entirely.",
       "choice_display_mode": "qualitative",
@@ -5746,5 +5746,270 @@
       "The static-noise-every-30-seconds bug \u2014 deferred to v3.0 audio overhaul",
       "Real instrument samples for music \u2014 deferred to v3.0"
     ]
+  },
+  "v3_0_mobile_and_visibility": {
+    "philosophy": "The game was designed primarily for desktop classroom use but Gabby plays at home on multiple devices including phones. Mobile screens currently can't display the scene, callouts, action menu, team strip, AND mini-map all at once \u2014 something is always cut off. Plus, in multi-wagon Competitive games, wagon markers stack into a blob that hides individual positions. Fix both with one focused amendment.",
+    "scope": {
+      "mobile_ui_overhaul": "Drawer-based layout (Approach C) for viewports < 740px wide AND for any narrow-portrait orientation",
+      "pin_needles": "Smart-stacking pin needle wagon markers \u2014 affects desktop mini-map AND mobile drawer-map equally"
+    },
+    "stage_1_mobile_drawer_layout": {
+      "philosophy": "On mobile, the scene canvas takes the top ~60% of viewport. Below it, a fixed-position interaction panel takes ~40% \u2014 shows the active callout when an event is firing, otherwise shows the action buttons. Team strip and mini-map collapse into bottom-edge drawer tabs that slide up over the scene when tapped.",
+      "viewport_detection": "Add to existing density updater: if window.innerWidth < 740 OR (window.innerWidth < 1024 AND innerHeight > innerWidth), set density to 'mobile'. This treats narrow-portrait tablets as mobile too.",
+      "layout_when_mobile": {
+        "scene_canvas_zone": "top 60% of viewport. Region backdrop, characters, wagon, parallax \u2014 all rendered here, stretched to fill available space",
+        "interaction_panel": "fixed bottom 40%. Shows narrative callout when one is active; falls back to action buttons (Push On / Hunt / Rest / Forage) when not",
+        "resource_ribbon": "compressed to 32px tall, scrollable horizontally if needed, sticks to top",
+        "drawer_tabs": "Two slim tabs visible along the bottom edge: 'Team' (left) and 'Map' (right). Both ~80px wide \u00d7 28px tall, tap to slide up the corresponding drawer over the scene",
+        "drawer_team": "slides up from bottom, takes ~70% of viewport height, shows full team strip with state info inline (no hover needed \u2014 tap a portrait for tooltip; tap outside drawer to dismiss)",
+        "drawer_map": "slides up similarly, shows the mini-map at near-fullscreen size with all wagons visible via pin needles"
+      },
+      "css_pattern": "Use position: fixed for the bottom interaction panel and drawer tabs. Drawers use transform: translateY(100%) -> translateY(0) with 0.3s cubic-bezier transition for slide animation. Drawers have backdrop-filter: blur(2px) so scene shows through subtly. Tap-outside (overlay div behind drawer) dismisses.",
+      "scene_canvas_aspect_lock": "On mobile in portrait: encourage landscape via a one-time gentle prompt 'Rotate your phone for the best experience'. Don't HARD lock \u2014 kids might be sitting on a couch holding the phone in portrait. Just suggest. Don't show the prompt twice in the same session (use sessionStorage flag).",
+      "audio_gate": "First user gesture (tap on Begin Journey button or any setup screen interaction) triggers audioController.init() if not already initialized. Mobile browsers (especially iOS Safari) require this. Add a 'tap to enable sound' hint on first mobile load if no gesture detected after 3 seconds.",
+      "save_state_notice": "On first mobile launch, show a one-time toast: 'Your progress saves on this device. Different devices keep separate journeys.' Auto-dismiss after 6 seconds. Use localStorage flag to never show again.",
+      "tap_vs_hover": "Replace hover-tooltip behavior on team portraits with tap-to-show. On desktop, hover still works. On mobile, tap a portrait opens a small popover with the same info; tap elsewhere dismisses. Detect via @media (hover: none) \u2014 no DOM-time detection needed."
+    },
+    "stage_2_pin_needle_wagons": {
+      "philosophy": "Current wagon markers on the mini-map are 10px colored circles. When 4-6 wagons are at or near the same trail position, they overlap into a single colored blob. Replace with pin-needle markers that stack vertically when wagons share a space.",
+      "marker_design": {
+        "needle": "Thin vertical line (2px wide) extending up from the trail line. Color matches the wagon's assigned color (rose, gold, navy, forest, plum, copper).",
+        "head": "Circle at the top of the needle, 8-10px diameter, same color as needle, with player's first initial in white inside (centered).",
+        "needle_length_per_wagon": "Each wagon at the same space gets a different needle length so heads don't overlap. Order: leftmost wagon (lowest player index) gets shortest needle (16px), next gets 24px, then 32px, 40px, 48px, 56px. Up to 6 wagons stacked at one space without head overlap.",
+        "needle_origin_offset": "Each needle's base attaches at slightly different x within the space (5-pixel range), so even at the same space they're not coplanar \u2014 easier to read which is whose."
+      },
+      "smart_stacking_logic": {
+        "step_1": "Group all wagons by their current trail position",
+        "step_2": "For each group sharing a space, sort by player index (or wagon ID)",
+        "step_3": "Assign each wagon in the group a 'stack rank' from 0 to N-1",
+        "step_4": "Render needle length = 16 + (stackRank * 8) px",
+        "step_5": "Render needle x-offset = (stackRank - (groupSize-1)/2) * 5 px from space center",
+        "result": "Six wagons stacked at one space appear as a fan of six pin needles of increasing height, slightly spread horizontally. Six wagons spread across the trail look like six individual flags. Player visually identifies their own wagon by color and initial."
+      },
+      "active_wagon_marker": "Currently-active wagon's needle pulses gently (CSS keyframe scale 1.0 -> 1.15 -> 1.0 over 1.5s). Other wagons stay static.",
+      "applies_to": [
+        "Desktop mini-map in the bottom-bar (single-row at standard+ density)",
+        "Mobile drawer-map (drawer slides up from bottom)",
+        "Fullscreen-expanded mini-map (click/tap to expand)"
+      ],
+      "performance": "Six pin needles per wagon = 12 SVG elements per wagon (line + head circle + text). For 6 wagons = 72 elements. Negligible."
+    },
+    "stage_3_setup_screen_mobile_reflow": {
+      "philosophy": "Setup screens currently use multi-column grids that overflow narrow viewports. Reflow to single-column, full-width on mobile.",
+      "specific_changes": [
+        "Profession selection grid: 5 columns desktop -> 2 columns mobile -> scrollable list. Each card 100% width on mobile.",
+        "Name inputs: stack vertically, full-width, 50px tall touch targets",
+        "Difficulty cards (Easy/Medium/Hard): stack vertically full-width on mobile (currently side-by-side)",
+        "Wagon count selector: large tap targets, stack vertically",
+        "Begin Journey button: 60px tall on mobile, full-width-minus-margin"
+      ]
+    }
+  },
+  "v3_1_physical_board_redesign": {
+    "philosophy": "The physical board is the keepsake. Currently 6 letter-size tiles taped together \u2014 functional but not beautiful. Redesign with historically accurate geography, period-style watercolor aesthetic, AND add a single-sheet 36x24-inch poster format for Staples-quality wall printing. Decorated and paintable versions of both. Designed so Gabby and her mom can paint either format into something extraordinary.",
+    "outputs": {
+      "tile_format": {
+        "count": 12,
+        "files": "board_short_tile_A_decorated.html through board_short_tile_F_paintable.html (6 tiles x 2 versions)",
+        "sheet_size": "8.5 x 11 inches portrait per tile",
+        "assembly": "3 wide x 2 tall = 25.5 x 17 inches assembled board",
+        "audience": "print at home on a regular printer, glue to foam board"
+      },
+      "single_sheet_format": {
+        "count": 2,
+        "files": "board_poster_decorated.html and board_poster_paintable.html",
+        "sheet_size": "36 x 24 inches landscape (matches Staples standard)",
+        "audience": "print at Staples or similar, ready to use as a finished poster",
+        "cost_estimate": "$15-30 at Staples on satin photo paper or 100lb cardstock"
+      }
+    },
+    "design_principles": {
+      "historical_geography": "Trail follows the actual Oregon Trail route \u2014 east-to-west across plains (Missouri/Kansas/Nebraska), slight southern dip through Wyoming, South Pass crossing, northwest through Idaho along Snake River, ending in the Willamette Valley. Trail shape is an L-shape rotated: long east-west horizontal with a northwest leg in the final third.",
+      "aesthetic": "Period-style watercolor map, like 1840s emigrant guides or Lewis & Clark expedition maps. Sepia browns, muted greens, dusty roses, parchment cream. Pink as the trail color (period-appropriate cochineal red was a real period dye).",
+      "scenery_per_region": "Each section of the trail shows region-appropriate scenery: prairie grass and buffalo on the plains, Chimney Rock and Independence Rock as drawn landmarks in Wyoming, mountain ranges around South Pass, Snake River with oxbow shape across Idaho, Cascade Mountains and Pacific Northwest forest at the finish.",
+      "key_landmarks_visible": [
+        "Independence, MO (start)",
+        "Fort Kearny",
+        "Chimney Rock (drawn as actual recognizable shape)",
+        "Scotts Bluff",
+        "Fort Laramie",
+        "Independence Rock (the turtle-shell granite dome)",
+        "Devil's Gate",
+        "South Pass (the gentle saddle)",
+        "Fort Bridger",
+        "Soda Springs",
+        "Fort Hall",
+        "Fort Boise",
+        "Whitman Mission",
+        "The Dalles",
+        "Oregon City (finish)"
+      ],
+      "spaces_marked": "25 spaces for Short Journey or 50 for Extended, drawn as small numbered circles along the trail line. Each space has its place name in italic serif text below.",
+      "decorative_elements": [
+        "Compass rose in upper-left corner (period style, 8-point with fleur-de-lis north)",
+        "Cartouche/title block in upper-right with 'Pink Oregon Trail' title and 'Designed by Gabby Kasdaglis, 1848' attribution",
+        "Scale bar showing 'one inch = X miles' at bottom",
+        "Faint state/territory borders (Missouri, Kansas Territory, Nebraska Territory, Wyoming Territory, Idaho Territory, Oregon Territory)",
+        "River systems drawn faintly (Missouri, Platte, Sweetwater, Snake, Columbia)",
+        "Mountain ranges shaded as soft brown forms (Rockies, Wasatch, Blue Mountains, Cascades)",
+        "Decorative border edge \u2014 narrow patterned frame in sepia"
+      ]
+    },
+    "color_palette": {
+      "parchment": "#F4E8D8",
+      "deep_brown": "#5C4A36",
+      "tan": "#A89070",
+      "trail_pink": "#B85770",
+      "soft_pink": "#F4D3DA",
+      "cream": "#FBF6F0",
+      "river_blue": "#7A9DBE",
+      "forest_green": "#5F7A5F",
+      "mountain_purple": "#8B7A95",
+      "desert_tan": "#C8956D",
+      "gold_accent": "#D4AF37"
+    },
+    "stage_1_redesigned_tiles": {
+      "philosophy": "Replace the existing 12 tile HTML files with historically accurate, beautifully decorated versions. Each tile is one section of the trail; tiles assemble 3-wide-by-2-tall into a 25.5x17 inch board.",
+      "tile_layout_assembled": {
+        "tile_A": {
+          "position": "top-left",
+          "region": "Missouri / Kansas plains",
+          "spaces_short": "1-4",
+          "spaces_extended": "1-9"
+        },
+        "tile_B": {
+          "position": "top-middle",
+          "region": "Nebraska / Platte River country",
+          "spaces_short": "5-8",
+          "spaces_extended": "10-17"
+        },
+        "tile_C": {
+          "position": "top-right",
+          "region": "Wyoming foothills / Independence Rock area",
+          "spaces_short": "9-13",
+          "spaces_extended": "18-25"
+        },
+        "tile_F": {
+          "position": "bottom-right",
+          "region": "Wyoming high country / South Pass / Idaho",
+          "spaces_short": "14-17",
+          "spaces_extended": "26-33"
+        },
+        "tile_E": {
+          "position": "bottom-middle",
+          "region": "Idaho / Snake River country",
+          "spaces_short": "18-21",
+          "spaces_extended": "34-42"
+        },
+        "tile_D": {
+          "position": "bottom-left",
+          "region": "Pacific Northwest / Oregon City",
+          "spaces_short": "22-25",
+          "spaces_extended": "43-50"
+        }
+      },
+      "trail_flow": "A -> B -> C across top. C drops down to F (continues vertically at right edge). F -> E -> D across bottom (right to left). D contains finish at Oregon City in lower-left.",
+      "per_tile_artistic_elements": {
+        "tile_A": [
+          "Independence MO start: small drawn town with red-brick storefronts, smoke from chimney",
+          "Wagon train silhouettes leaving town heading west",
+          "Tall prairie grass in foreground",
+          "First few river crossings (Kansas River, Big Blue River)",
+          "Compass rose in upper-left corner of this tile only (north pointer)",
+          "State label MISSOURI in faint italic"
+        ],
+        "tile_B": [
+          "Platte River drawn as wide blue-gray ribbon across tile",
+          "Fort Kearny as small palisade fort silhouette",
+          "Buffalo herd on the horizon (small dark shapes)",
+          "Chimney Rock drawn as actual recognizable conical spire with its distinct silhouette",
+          "Scotts Bluff as broad rocky escarpment",
+          "Ash Hollow as small valley with trees",
+          "State label NEBRASKA in faint italic"
+        ],
+        "tile_C": [
+          "Fort Laramie as larger fort with American flag",
+          "Sweetwater River drawn faintly",
+          "Independence Rock drawn as turtle-shell granite dome with names visible faintly carved",
+          "Devil's Gate drawn as narrow river canyon",
+          "Trail bending to drop downward at tile's lower-right (toward tile F)",
+          "State label WYOMING TERRITORY"
+        ],
+        "tile_F": [
+          "South Pass drawn as gentle saddle between mountain ranges (Rocky Mountains visible in background as soft brown forms)",
+          "Fort Bridger as smaller log palisade",
+          "Soda Springs drawn as small bubbling springs with steam",
+          "Fort Hall as British-style trading post",
+          "Trail entering from top (continuing from tile C) and exiting to the left (continuing to tile E)",
+          "State label IDAHO TERRITORY"
+        ],
+        "tile_E": [
+          "Snake River drawn with its actual oxbow curve shape \u2014 the dramatic bends Idaho is known for",
+          "Fort Boise as small palisade near a river bend",
+          "Three Island Crossing as a section where the trail crosses through a river",
+          "Massacre Rocks (note: respectfully drawn \u2014 small rocky outcrop, not dramatized)",
+          "Hot Springs steam rising",
+          "Sagebrush and high desert vegetation",
+          "Trail flowing right-to-left across this tile (continues from F, heads to D)"
+        ],
+        "tile_D": [
+          "Cascade Mountains rising in background (snow-capped peaks)",
+          "Whitman Mission as small white-painted clapboard building (treated solemnly)",
+          "Walla Walla and Blue Mountains",
+          "The Dalles drawn as Columbia River narrowing through black basalt cliffs (Native fishermen on rocky platforms \u2014 respectful representation)",
+          "Columbia River widening as it flows toward the Pacific",
+          "Oregon City at finish \u2014 small Willamette Valley town beside Willamette Falls",
+          "Pacific Ocean hinted at as soft blue at the western edge",
+          "State label OREGON TERRITORY"
+        ]
+      },
+      "tile_construction": {
+        "viewBox": "612 x 792 (8.5 x 11 inches at 72 dpi)",
+        "page_size_css": "letter portrait via @page",
+        "border": "Decorative sepia border around each tile, ~24px wide, with period pattern (small repeated motif)",
+        "tile_label": "Each tile labeled in lower-right with 'Tile A of 6' style indicator and assembly hint arrow",
+        "alignment_marks": "Small pink registration dots at corners help kids align tiles when taping together",
+        "paintable_version": "Same composition but with most fills removed, leaving only outlines in light sepia. Trail line stays light pink. Numbered space circles stay outlined. Region name and key landmark labels stay in pencil-stroke gray. Text spaces large enough to paint within. Light gray dot grid faintly visible to suggest 'paint within these regions'."
+      }
+    },
+    "stage_2_single_sheet_poster": {
+      "philosophy": "A separate, more elaborate design optimized for the 36x24 inch landscape poster format that Staples can print. Different from the tiles \u2014 single continuous artwork without seam lines, more decorative, more space for elaborate scenery.",
+      "construction": {
+        "viewBox": "2592 x 1728 (36 x 24 inches at 72 dpi)",
+        "page_size_css": "@page { size: 36in 24in; margin: 0.5in; }",
+        "preserve_aspect_ratio": "xMidYMid meet (in case browser rendering is for preview)",
+        "print_optimization": "All vector \u2014 no raster images. Scales to any size cleanly. Staples will print at native 36x24 inches without quality loss."
+      },
+      "compositional_choices": {
+        "trail_layout": "More elaborate than tile version. Trail is a sweeping S-curve across the landscape, with Independence in lower-left and Oregon City in upper-left (echoing the historical L-shape but more dramatic for visual impact at poster size).",
+        "space_distribution": "All 50 Extended-trail spaces marked. Short Journey players use only the first 25 (or play with all 50 if they want \u2014 both modes work on the same poster).",
+        "scenery_zones": "Each region has a dedicated zone of the poster with elaborated scenery \u2014 Missouri starts with a frontier town vignette, plains have a buffalo herd in detail, Wyoming features Independence Rock and Chimney Rock as foreground subjects, mountains have snow-capped peaks with detailed shading, desert has mesa formations, Pacific Northwest has Mount Hood and Cascade range visible.",
+        "compass_rose": "Large ornate compass rose, ~8 inches diameter, in lower-right corner. Eight-point with fleur-de-lis north and decorative scrollwork.",
+        "title_cartouche": "Upper-center: large cartouche scroll-style banner reading 'PINK OREGON TRAIL \u2014 1848' in period serif. Below it: 'A History Game Designed by Gabby Kasdaglis'. Decorated with quill-and-inkwell vignette, small drawing of a covered wagon.",
+        "scale_bar": "Bottom-center: 'One inch = approximately 70 miles' with hash marks.",
+        "decorative_borders": "1.5-inch decorative border around the whole poster with repeated period motifs (small wagons, oxen, fleurs, stars).",
+        "corner_vignettes": "Each of the four corners has a small period-style vignette: NW corner shows a settler family, NE shows oxen yoked to wagon, SW shows a Native American family in respectful representation (a Pawnee guide), SE shows a campfire scene."
+      },
+      "paintable_version": {
+        "philosophy": "Designed specifically for a mother-daughter painting project. Outlines clear and clean. Large open regions for color filling. Reference colors hinted as soft watermark labels (e.g., 'sky blue here', 'prairie green here') in faint pencil.",
+        "what_stays_printed": "Trail line in light pink. Space circles outlined and numbered. Landmark labels in italic serif. State borders in pencil stroke. Compass rose outlined (not filled). Title cartouche outlined. Border pattern outlined.",
+        "what_to_paint": "Region scenery (sky, ground, mountains, rivers, trees, buffalo). Decorative borders. Compass rose interior. Cartouche backing. Corner vignette interiors.",
+        "paint_guide_overlay": "Optional: light gray text labels in each major region suggesting paint colors ('sage green for plains', 'sepia for mountains', 'soft yellow for desert'). Toggle-able when generating the file."
+      }
+    },
+    "stage_3_assembly_and_painting_guide": {
+      "philosophy": "A document Gabby and her mom can use to plan the painting project. Lists all the supplies needed, suggests color palette, provides painting tutorial for the trickier elements (mountains, rivers, watercolor washes).",
+      "deliverable": "PRINTING_AND_PAINTING_GUIDE.html \u2014 single-page printable guide",
+      "sections": [
+        "Print options (tile version OR poster version, with cost estimates)",
+        "Staples printing instructions (paper recommendations, finish recommendations)",
+        "Hobby Lobby supply list (paints, brushes, palette, sealant)",
+        "Color palette card with hex values and physical paint matches",
+        "Painting techniques (watercolor wash for sky, layered green for grass, soft graduated mountains, river highlights)",
+        "Tips for painting around the printed text (don't paint over the trail line, the space numbers, the labels)",
+        "Sealing instructions (Mod Podge gloss after fully dry to make the board last a school year)",
+        "Optional: laminating service at Staples ($5-10) for ultra-durability"
+      ]
+    }
   }
 }

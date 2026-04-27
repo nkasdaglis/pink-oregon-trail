@@ -44,6 +44,16 @@
      callout take 86vw. The mobile media query below (<740px) re-centers it. */
   --callout-max-w: min(440px, 86vw);
 }
+/* v3.0 Stage 1A — mobile tier. Joins compact/standard/large/jumbo for
+   phones (w<740) and narrow-portrait tablets (w<1024 AND h>w).
+   Portraits at 56px so 7 fit edge-to-edge in the team drawer; callout
+   spans the full interaction panel; action buttons at 56px tall meet
+   the 44px iOS touch-target floor with breathing room. */
+:root[data-ui-density="mobile"] {
+  --portrait-size: 56px;
+  --action-btn-height: 56px;
+  --callout-max-w: calc(100vw - 24px);
+}
 :root[data-ui-density="standard"] {
   --portrait-size: 76px;
   --action-btn-height: 84px;
@@ -1525,6 +1535,125 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
     to   { opacity: 1; transform: translateX(-50%) translateY(0); }
   }
 }
+
+/* ===== v3.0 Stage 1 — mobile drawer-based UI =====
+   Active only at data-ui-density="mobile" (phones and narrow-portrait
+   tablets). The bottom bar collapses; team-strip + mini-map move into
+   slide-up drawers; action buttons + callout share a fixed interaction
+   panel below the scene. Drawer tabs sit at the bottom edge. */
+
+/* Hide drawers, tabs, and interaction panel by default — they only
+   exist at mobile density. */
+.drawer-tab,
+.drawer-overlay,
+.drawer,
+.mobile-interaction-panel { display: none; }
+
+:root[data-ui-density="mobile"] .drawer-tab { display: flex; }
+:root[data-ui-density="mobile"] .drawer-overlay,
+:root[data-ui-density="mobile"] .drawer { display: block; }
+:root[data-ui-density="mobile"] .mobile-interaction-panel { display: flex; }
+
+/* Drawer tabs — bottom-edge nubs. Tap to slide the drawer up. */
+.drawer-tab {
+  position: fixed;
+  bottom: 0;
+  width: 96px; height: 32px;
+  background: var(--rose);
+  color: white;
+  font-family: Georgia, serif;
+  font-size: 14px;
+  font-weight: 700;
+  align-items: center; justify-content: center;
+  border-radius: 14px 14px 0 0;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.22);
+  z-index: 150;
+  cursor: pointer;
+  user-select: none;
+  letter-spacing: 0.04em;
+  border: 1.5px solid var(--rose-dark);
+  border-bottom: none;
+  transition: transform 0.18s, background 0.18s;
+}
+.drawer-tab:active,
+.drawer-tab:hover { background: var(--rose-dark); transform: translateY(-2px); }
+.drawer-tab.team { left: 12px; }
+.drawer-tab.map  { right: 12px; }
+
+/* Drawer overlay — covers the screen when a drawer is open. Tap
+   anywhere on this to dismiss the drawer. */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 199;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s;
+}
+.drawer-overlay.open { opacity: 1; pointer-events: auto; }
+
+/* Drawer body itself. Slides up from below via translateY. */
+.drawer {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 72vh;
+  transform: translateY(100%);
+  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(251, 246, 240, 0.97);
+  z-index: 200;
+  overflow: hidden;
+  border-top: 2px solid var(--rose);
+  border-radius: 18px 18px 0 0;
+  box-shadow: 0 -10px 36px rgba(61, 40, 23, 0.28);
+  display: flex;
+  flex-direction: column;
+}
+.drawer.open { transform: translateY(0); }
+.drawer-handle {
+  width: 48px; height: 4px;
+  background: var(--tan);
+  border-radius: 2px;
+  margin: 8px auto 4px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+.drawer-title {
+  font-family: Georgia, serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--rose-dark);
+  text-align: center;
+  padding: 4px 14px 8px;
+  border-bottom: 1px solid var(--tan);
+  flex-shrink: 0;
+}
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px 24px;
+  -webkit-overflow-scrolling: touch;
+}
+@media (prefers-reduced-motion: reduce) {
+  .drawer { transition: none; }
+  .drawer-overlay { transition: none; }
+}
+
+/* Mobile interaction panel — fixed below the scene, hosts action
+   buttons and the narrative callout. Layout below in Stage 1D. */
+.mobile-interaction-panel {
+  position: fixed;
+  left: 0; right: 0; bottom: 32px; /* clear the drawer-tab strip */
+  background: var(--cream);
+  border-top: 2px solid var(--rose);
+  z-index: 90;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  max-height: 42vh;
+  overflow-y: auto;
+}
+
 </style>
 </head>
 <body>
@@ -1605,6 +1734,25 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
       <svg id="minimap-svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet"></svg>
     </div>
     <div class="action-buttons" id="action-buttons"></div>
+  </div>
+  <!-- v3.0 Stage 1 — mobile interaction panel + drawer infrastructure.
+       Hidden at standard+ density. The interaction panel is the home of
+       action buttons and (when an event fires) the narrative callout on
+       mobile; team-strip and mini-map relocate into slide-up drawers
+       triggered by tabs at the bottom edge. -->
+  <div class="mobile-interaction-panel" id="mobile-interaction-panel"></div>
+  <div class="drawer-tab team" id="drawer-tab-team" role="button" tabindex="0" aria-label="Open team drawer">Team</div>
+  <div class="drawer-tab map"  id="drawer-tab-map"  role="button" tabindex="0" aria-label="Open map drawer">Map</div>
+  <div class="drawer-overlay"  id="drawer-overlay"></div>
+  <div class="drawer drawer-team" id="drawer-team" role="dialog" aria-label="Team">
+    <div class="drawer-handle"></div>
+    <div class="drawer-title">Wagon Team</div>
+    <div class="drawer-body" id="drawer-team-body"></div>
+  </div>
+  <div class="drawer drawer-map"  id="drawer-map"  role="dialog" aria-label="Map">
+    <div class="drawer-handle"></div>
+    <div class="drawer-title">The Oregon Trail</div>
+    <div class="drawer-body" id="drawer-map-body"></div>
   </div>
 </div>
 
@@ -12558,18 +12706,24 @@ function printTeacherReport() {
 // SECTION 11 — INIT
 // =====================================================================
 // v2.7 Stage 1 — UI density tiers driven by viewport width.
-//   compact   < 1280   (Chromebook tab, small laptop)
-//   standard  1280-1919 (default laptops)
-//   large     1920-2559 (4K laptop, large monitor)
-//   jumbo     >= 2560   (4K TV / projector)
+//   mobile    w < 740 OR (w < 1024 AND h > w)  (phones, narrow-portrait tablets)  [v3.0]
+//   compact   < 1280                          (Chromebook tab, small laptop)
+//   standard  1280-1919                       (default laptops)
+//   large     1920-2559                       (4K laptop, large monitor)
+//   jumbo     >= 2560                         (4K TV / projector)
 // CSS rules under :root[data-ui-density="..."] swap --portrait-size,
 // --action-btn-height, --callout-max-w. Standard tier values are also
 // the :root defaults so the layout works before this fires.
+// v3.0 Stage 1A — added the `mobile` tier. Picked first because the
+// later mobile rules also fire at narrow-portrait tablet sizes (iPad
+// mini portrait); `compact` handles narrow-landscape laptops.
 function updateUIDensity() {
   if (typeof window === 'undefined' || !window.innerWidth) return;
   const w = window.innerWidth;
+  const h = window.innerHeight || w;
   let density = 'standard';
-  if (w < 1280) density = 'compact';
+  if (w < 740 || (w < 1024 && h > w)) density = 'mobile';
+  else if (w < 1280) density = 'compact';
   else if (w >= 2560) density = 'jumbo';
   else if (w >= 1920) density = 'large';
   if (typeof document !== 'undefined' && document.documentElement) {
