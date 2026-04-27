@@ -265,6 +265,36 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
   overflow-y: auto;
 }
 @keyframes calloutIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+/* Transition warning toasts (Part 2 — 6b)
+   Top-right of the scene canvas, yellow accent, auto-dismisses in 4s.
+   The toast pulses in for 0.3s, holds 3.6s, fades out in 0.4s; the JS
+   timer removes the node at 4.5s as a safety net. */
+.transition-toast-stack {
+  position: absolute; top: 12px; right: 12px;
+  display: flex; flex-direction: column; gap: 6px;
+  z-index: 200; pointer-events: none;
+  max-width: 260px;
+}
+.transition-toast {
+  background: #FBF6F0;
+  border-left: 4px solid #D4AF37;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-family: Georgia, serif;
+  font-size: clamp(12px, 1.4vw, 14px);
+  line-height: 1.35;
+  color: var(--brown);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  animation: toastIn 0.3s ease-out, toastOut 0.4s ease-in 3.6s forwards;
+  pointer-events: auto;
+}
+@keyframes toastIn  { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes toastOut { to   { opacity: 0; transform: translateX(20px); } }
+@media (prefers-reduced-motion: reduce) {
+  .transition-toast { animation: none; }
+}
+
 .event-illustration { display: block; margin: 0 auto 10px; width: 80px; height: 56px; }
 .event-title {
   font-family: Georgia, "Times New Roman", serif;
@@ -5869,13 +5899,19 @@ function ruleMatches(rule, w) {
 }
 
 function applyEndOfTurnStateTransitions(w) {
+  // Reset the per-turn warning queues (Part 2 — 6b). These are drained by
+  // processWarningEvents() in endTurn after this function returns.
+  w._pendingTransitionToasts  = [];
+  w._pendingTransitionBanners = [];
   for (const rule of TRANSITION_RULES) {
     if (!ruleMatches(rule, w)) continue;
     for (const m of w.team) {
       if (m.state === 'lost') continue;
       if (rule.from_state === 'any_living' || m.state === rule.from_state) {
         if (Math.random() < (rule.probability || 0)) {
+          const fromState = m.state;
           transitionMember(m, rule.to_state, w.daysTraveled, rule.trigger);
+          queueTransitionWarning(w, m, fromState, rule.to_state, rule.trigger);
         }
       }
     }
@@ -5927,6 +5963,116 @@ function describeCause(cause) {
   if (c.includes('winter')) return 'the cold';
   if (c.includes('bandits')) return 'an ambush';
   return cause;
+}
+
+// ===== Warning escalation (Part 2 — 6b) =====
+// Map a transition rule's trigger phrase to one of the narrative cause keys
+// the JSON's narratives_by_cause block uses.
+function classifyTransitionCause(cause) {
+  const c = (cause || '').toLowerCase();
+  if (c.includes('food'))                                  return 'starvation';
+  if (c.includes('water'))                                 return 'dehydration';
+  if (c.includes('grueling') || c.includes('exhaustion')) return 'exhaustion';
+  if (c.includes('morale'))                                return 'low_morale';
+  if (c.includes('cholera'))                               return 'cholera_event';
+  if (c.includes('injury') || c.includes('hunting'))       return 'injury_event';
+  return 'default';
+}
+
+// Build the narrative line for a degrade transition. Returns '' for
+// transitions we don't surface (recovery, → dying, → lost).
+function transitionWarningNarrative(toState, fromState, cause, name) {
+  const ws = (GAME_DATA.warning_escalation_system || {}).transition_notifications;
+  if (!ws) return '';
+  const escName = escapeHtml(name);
+  let block;
+  if (toState === 'weakened' && fromState === 'healthy') {
+    block = ws.healthy_to_weakened;
+  } else if ((toState === 'sick' || toState === 'injured') && fromState === 'weakened') {
+    block = ws.weakened_to_sick_or_injured;
+  } else {
+    return '';
+  }
+  const key = classifyTransitionCause(cause);
+  const tmpl = (block.narratives_by_cause && (block.narratives_by_cause[key] || block.narratives_by_cause.default)) || '{name} is not at full strength.';
+  return tmpl.replace(/\{name\}/g, escName);
+}
+
+// Queue a warning entry for a transition that just happened.
+// Toasts: healthy → weakened (informational, top-right, auto-dismiss).
+// Banners: weakened → sick / injured (modal, requires Acknowledge).
+// Recovery transitions and → dying / → lost are NOT queued here; they have
+// their own dedicated flows (intervention event for dying; death
+// announcement for lost).
+function queueTransitionWarning(w, member, fromState, toState, cause) {
+  const text = transitionWarningNarrative(toState, fromState, cause, member.name);
+  if (!text) return;
+  const entry = { name: member.name, profession: member.profession, fromState, toState, cause, text };
+  if (toState === 'weakened') (w._pendingTransitionToasts  ||= []).push(entry);
+  else                        (w._pendingTransitionBanners ||= []).push(entry);
+}
+
+// Toast UI — top-right of the scene canvas, yellow accent, 4s auto-dismiss.
+function ensureTransitionToastStack() {
+  let stack = document.querySelector('.transition-toast-stack');
+  if (!stack) {
+    stack = el('div', { class: 'transition-toast-stack' });
+    const screen = $('screen-game');
+    if (screen) screen.appendChild(stack);
+  }
+  return stack;
+}
+
+function showTransitionToast(text) {
+  const stack = ensureTransitionToastStack();
+  const t = el('div', { class: 'transition-toast', html: text });
+  stack.appendChild(t);
+  // CSS animates in then out; this timer just removes the node from the DOM.
+  setTimeout(() => { try { t.remove(); } catch (e) {} }, 4500);
+}
+
+// Drain queues. Toasts fire in parallel; banners chain sequentially.
+// Calls onDone exactly once when all banners have been acknowledged.
+function processWarningEvents(w, onDone) {
+  // 1. Fire all toasts at once with a small worried sine cue
+  const toasts = (w._pendingTransitionToasts || []);
+  w._pendingTransitionToasts = [];
+  if (toasts.length > 0) {
+    audioController.playSfx('transitionWarn');
+    toasts.forEach(t => { showTransitionToast(t.text); logToWagon(w, t.text.replace(/<[^>]+>/g, '')); });
+  }
+  // 2. Chain banners
+  const banners = (w._pendingTransitionBanners || []);
+  w._pendingTransitionBanners = [];
+  let i = 0;
+  function next() {
+    if (i >= banners.length) { onDone(); return; }
+    const b = banners[i++];
+    // One-shot cough cue. The state loop will pick up the cough rhythm
+    // after updateStateLoops runs in completeEndTurn for any sick members.
+    audioController.playSfx('cough');
+    const html = '<div class="event-title">' + escapeHtml(b.name) + ' has fallen ill</div>' +
+                 '<div class="narrative-text">' + b.text + '</div>';
+    logToWagon(w, b.text.replace(/<[^>]+>/g, ''));
+    showAcknowledgeBanner('', html, next);
+  }
+  next();
+}
+
+// Banner is a single Acknowledge button on a frozen scene — like
+// showOutcomeCallout but with custom button text and no continue-mode hint.
+function showAcknowledgeBanner(title, html, onAck) {
+  const callout = '<div class="event-title">' + escapeHtml(title) + '</div>' + html;
+  renderNarrativeCallout(callout);
+  const bar = $('action-buttons');
+  bar.classList.add('continue-mode');
+  bar.innerHTML = '';
+  const btn = el('button', { class: 'action-btn primary', textContent: 'Acknowledge',
+    onclick: () => { audioController.playSfx('click'); onAck(); } });
+  bar.appendChild(btn);
+  renderResourceRibbon();
+  renderTeamStrip();
+  renderMinimap();
 }
 
 // Rest action — explicit recovery
@@ -6477,6 +6623,10 @@ class AudioController {
       case 'cheering':     this._noise(t, 1.2, 'bandpass', 1500, 0.5, this.sfxGain, 0.5); for (let i = 0; i < 5; i++) this._tone(t + Math.random() * 1.0, 400 + rand(800), 'sine', 0.18, 0.6, this.sfxGain); break;
       case 'memberLoss':   this._tone(t, 110, 'sine', 0.8, 1.5, this.sfxGain, 0.2, 0.55); break;
       case 'banditAttack': this._noise(t, 0.18, 'bandpass', 2400, 1.4, this.sfxGain, 0.7); this._tone(t + 0.2, 80, 'sine', 0.5, 1.2, this.sfxGain); break;
+      // Part 2 — 6b: 200ms descending sine for the healthy→weakened toast
+      case 'transitionWarn': this._tone(t, 440, 'sine', 0.10, 0.6, this.sfxGain, 0.005, 0.05); this._tone(t + 0.10, 330, 'sine', 0.10, 0.6, this.sfxGain, 0.005, 0.05); break;
+      // One-shot cough — used for the weakened→sick/injured banner
+      case 'cough':         this._noise(t, 0.18, 'bandpass', 300, 1.5, this.sfxGain, 0.5); if (Math.random() < 0.3) this._noise(t + 0.3, 0.2, 'bandpass', 600, 1.0, this.sfxGain, 0.5); break;
     }
   }
   playCue(name) {
@@ -8142,15 +8292,24 @@ function resolveFinish(w) {
 }
 
 // ===== End of turn =====
+// The end-of-turn flow is split in two so warning banners (Part 2 — 6b) can
+// pause sequencing without blocking simulation logic:
+//   1. endTurn — applies state transitions, then drains the warning queue
+//      (toasts fire-and-forget; banners chain via Acknowledge clicks).
+//   2. completeEndTurn — runs after the player has acknowledged every banner;
+//      handles audio, elimination, finish, calendar advance, winter, and
+//      the next-action transition.
 function endTurn(w) {
-  // Update consec counters AFTER space resolution refills
   updateConsecCounters(w);
-  // Apply state transitions (per JSON rules)
   applyEndOfTurnStateTransitions(w);
+  // Update state loops + music BEFORE banners so a sick member's cough loop
+  // can underscore the "fallen ill" banner audibly.
   audioController.updateStateLoops(w.team);
-  // Music mood follows the wagon's emotional arc (hopeful → neutral → weary → somber).
-  // Funeral_only takes precedence and won't be overridden until it finishes.
   audioController.syncMoodToWagon(w);
+  processWarningEvents(w, () => completeEndTurn(w));
+}
+
+function completeEndTurn(w) {
   // Eliminate?
   if (livingMembers(w).length === 0 && !w.eliminated) {
     w.eliminated = true;
