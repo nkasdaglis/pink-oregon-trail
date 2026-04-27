@@ -315,6 +315,63 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
   .transition-toast { animation: none; }
 }
 
+/* Dice roll overlay (v2.3 — Issue 1)
+   Center-canvas pair of dice that tumble for 0.6s on Push On, then settle
+   on their face values. The summary callout below explains the math. */
+.dice-roll-overlay {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 14px;
+  pointer-events: none;
+  z-index: 80;
+  background: rgba(251, 246, 240, 0.55);
+  animation: diceFadeIn 0.18s ease-out;
+}
+.dice-roll-overlay .dice-pair { display: flex; gap: 18px; }
+.die {
+  width: 72px; height: 72px;
+  background: #FBF6F0;
+  border: 2px solid #5C4A36;
+  border-radius: 12px;
+  position: relative;
+  box-shadow: 0 4px 8px rgba(60, 42, 22, 0.25);
+}
+.die.tumbling { animation: dieTumble 0.6s ease-out; }
+.die-face { position: absolute; inset: 0; visibility: hidden; }
+.die-face.face-on { visibility: visible; }
+.die-face circle { fill: #3D2817; }
+.dice-summary {
+  background: rgba(251, 246, 240, 0.95);
+  border: 1px solid #b8895c;
+  border-radius: 8px;
+  padding: 8px 14px;
+  max-width: 80%;
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-size: clamp(13px, 1.6vw, 16px);
+  color: var(--brown);
+  line-height: 1.4;
+  text-align: center;
+  animation: diceFadeIn 0.25s ease-out;
+}
+.dice-summary .summary-total {
+  display: inline-block; margin-top: 4px;
+  font-style: normal; font-weight: 700; color: var(--rose);
+}
+@keyframes diceFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dieTumble {
+  0%   { transform: rotate(0deg) translateY(0); }
+  25%  { transform: rotate(-15deg) translateY(-6px); }
+  50%  { transform: rotate(15deg) translateY(0); }
+  75%  { transform: rotate(-10deg) translateY(-4px); }
+  100% { transform: rotate(0deg) translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .die.tumbling { animation: none; }
+  .dice-roll-overlay { animation: none; }
+}
+
 /* Death scene overlay (Part 2 — 6d)
    Composes inside .scene-canvas: a 40% black wash (ramping in 1.5s) plus
    a center-canvas full-body figure that fades from invisible/colorful to
@@ -7883,24 +7940,122 @@ function showSettingPicker(kind) {
 }
 
 // ===== Action handlers =====
-function doActionPushOn(w) {
-  audioController.playSfx('click');
-  applyTurnConsumption(w);
-  // Roll dice
-  const baseRoll = die(4);
+// SVG pip patterns for dice faces 1-6. Each is a 72x72 viewBox with
+// pips at standard tabletop positions.
+function _diePipPositions(face) {
+  // Coordinates within a 72x72 die — six positions at corners + edges.
+  const tl = [22, 22], tr = [50, 22], ml = [22, 36], mr = [50, 36],
+        bl = [22, 50], br = [50, 50], cc = [36, 36];
+  switch (face) {
+    case 1: return [cc];
+    case 2: return [tl, br];
+    case 3: return [tl, cc, br];
+    case 4: return [tl, tr, bl, br];
+    case 5: return [tl, tr, cc, bl, br];
+    case 6: return [tl, tr, ml, mr, bl, br];
+    default: return [];
+  }
+}
+function _dieSvg(face) {
+  const pts = _diePipPositions(face);
+  const pips = pts.map(([x, y]) => '<circle cx="' + x + '" cy="' + y + '" r="6"/>').join('');
+  return '<svg class="die-face face-on" data-face="' + face + '" viewBox="0 0 72 72" width="100%" height="100%">' + pips + '</svg>';
+}
+
+// Show a 2d6 dice roll overlay, animate tumble + settle, render summary,
+// then call onDone(total). Used by doActionPushOn (Issue 1).
+function rollDiceAndAdvance(w, onDone) {
+  const ds = (GAME_DATA.dice_system || {});
+  const settleMs = ds.ui_specification && ds.ui_specification.settle_duration_ms || 200;
+  const tumbleMs = ds.ui_specification && ds.ui_specification.tumble_duration_ms || 600;
+  const summaryHold = ds.ui_specification && ds.ui_specification.summary_hold_ms || 1500;
+  const moveCap = ds.movement_cap   || 8;
+  const moveFloor = ds.movement_floor || 1;
+  const reducedMotion = (typeof window !== 'undefined' && window.matchMedia &&
+                         window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const d1 = 1 + rand(6);
+  const d2 = 1 + rand(6);
+  const raw = d1 + d2;
   const paceMod = GAME_DATA.pace_options.find(o => o.name === w.pace).movement_modifier;
   let stateMod = 0;
   for (const m of livingMembers(w)) stateMod += STATES[m.state].movement_contribution;
   if (stateMod < -3) stateMod = -3;
-  if (w.resources.morale >= 8) stateMod += 1;
-  if (w.resources.health <= 3) stateMod -= 1;
-  const move = Math.max(1, baseRoll + paceMod + stateMod);
+  let moraleMod = 0;
+  if (w.resources.morale >= 8) moraleMod = 1;
+  else if (w.resources.morale <= 2) moraleMod = -1;
+  let healthMod = 0;
+  if (w.resources.health <= 3) healthMod = -1;
+  const preCap = raw + paceMod + stateMod + moraleMod + healthMod;
+  const move = clamp(preCap, moveFloor, moveCap);
+
+  const canvas = $('scene-canvas');
+  if (!canvas) { onDone(move, raw, d1, d2); return; }
+  // Defensive: clear any prior overlay
+  const old = canvas.querySelector('.dice-roll-overlay');
+  if (old) old.remove();
+
+  const overlay = el('div', { class: 'dice-roll-overlay' });
+  const pair = el('div', { class: 'dice-pair' });
+  const die1 = el('div', { class: 'die' + (reducedMotion ? '' : ' tumbling') });
+  const die2 = el('div', { class: 'die' + (reducedMotion ? '' : ' tumbling') });
+  pair.appendChild(die1);
+  pair.appendChild(die2);
+  overlay.appendChild(pair);
+  canvas.appendChild(overlay);
+
   audioController.playSfx('dice');
+
+  // During tumble, cycle through random faces every 80ms
+  let cycleTimer = null;
+  function cycle() {
+    die1.innerHTML = _dieSvg(1 + rand(6));
+    die2.innerHTML = _dieSvg(1 + rand(6));
+  }
+  if (!reducedMotion) {
+    cycle();
+    cycleTimer = setInterval(cycle, 80);
+  } else {
+    die1.innerHTML = _dieSvg(d1);
+    die2.innerHTML = _dieSvg(d2);
+  }
+
   setTimeout(() => {
+    if (cycleTimer) clearInterval(cycleTimer);
+    die1.innerHTML = _dieSvg(d1);
+    die2.innerHTML = _dieSvg(d2);
+    audioController.playSfx('regionChime'); // soft chime on settle
+    // Compose the math line
+    const parts = [];
+    parts.push('Rolled ' + d1 + ' + ' + d2 + ' = ' + raw);
+    if (paceMod)   parts.push((paceMod   > 0 ? '+' : '') + paceMod   + ' pace');
+    if (stateMod)  parts.push((stateMod  > 0 ? '+' : '') + stateMod  + ' team');
+    if (moraleMod) parts.push((moraleMod > 0 ? '+' : '') + moraleMod + ' morale');
+    if (healthMod) parts.push((healthMod > 0 ? '+' : '') + healthMod + ' health');
+    let line = parts.join(', ');
+    if (preCap > moveCap) line += ' = ' + preCap + ' (capped at ' + moveCap + ')';
+    else                   line += ' = ' + preCap;
+    const summary = el('div', { class: 'dice-summary',
+      html: '<div>' + escapeHtml(line) + '</div>' +
+            '<div class="summary-total">Travel ' + move + ' space' + (move === 1 ? '' : 's') + '.</div>'
+    });
+    overlay.appendChild(summary);
+    setTimeout(() => {
+      try { overlay.remove(); } catch (e) {}
+      onDone(move, raw, d1, d2);
+    }, summaryHold);
+  }, reducedMotion ? settleMs : tumbleMs);
+}
+
+function doActionPushOn(w) {
+  audioController.playSfx('click');
+  applyTurnConsumption(w);
+  // Issue 1 (v2.3) — visible 2d6 with summary callout. The dice overlay
+  // animates for ~0.6s tumble + ~1.5s summary hold, then advances.
+  rollDiceAndAdvance(w, (move, raw, d1, d2) => {
     w.position = Math.min(gameState.trailEnd, w.position + move);
-    logToWagon(w, 'Rolled ' + baseRoll + ' (move ' + move + '). Now at space ' + w.position + '.');
+    logToWagon(w, 'Rolled ' + d1 + '+' + d2 + ' = ' + raw + ' (move ' + move + '). Now at space ' + w.position + '.');
     resolveSpace(w);
-  }, 300);
+  });
 }
 function doActionHunt(w) {
   audioController.playSfx('click');

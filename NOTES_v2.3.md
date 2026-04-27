@@ -70,3 +70,55 @@ all three arrays.
 
 **No spec contradictions surfaced.** Proceeding with the fix.
 
+**POST-IMPLEMENTATION:** PASS. `.test_team_alignment.js` replays the
+exact US-02 sequence and confirms slot-2 holds Cookie (the original Cook
+name) after the deselect, slot-6 is empty for the new Influencer, and
+all other slots retain their original names. The death-overlay
+consistency check (Issue 9) follows in Stage 8.
+
+---
+
+## Stage 2 — Issue 1 — visible 2d6 dice (PRE-IMPLEMENTATION)
+
+**US-06 walk-through:**
+
+Player clicks Push On → two dice tumble center-canvas for 0.6s, settle
+on visible pip faces, summary callout reads
+`"Rolled 4 + 5 = 9, pace +1, capped at 8 — travel 8 spaces."` After
+~1.5s hold, the wagon advances and the new space resolves.
+
+**Implementation choice:** A new `rollDiceAndAdvance(w, onAdvance)`
+helper renders an absolutely-positioned `.dice-roll-overlay` inside
+`.scene-canvas`. Each die is a `<div class="die">` with six `<svg
+class="die-face">` children showing pip patterns for 1–6, only one
+visible at a time via `visibility:visible`. During the 0.6s tumble,
+the JS picks random faces every 80ms; on settle, it locks the final
+face. The summary callout is a `<div class="dice-summary">` that fades
+in below the dice, holds 1.5s, then the overlay clears and
+`onAdvance(move)` fires. The existing `audioController.playSfx('dice')`
+is kept for the rattle; a soft `regionChime`-equivalent fires on settle.
+
+The math:
+```
+raw = d1 + d2                 // 2..12
+paceMod = pace.movement_modifier
+stateMod = sum(STATES[m.state].movement_contribution) clamped [-3, +inf]
+moraleMod = +1 if morale>=8, -1 if morale<=2, else 0
+healthMod = -1 if health<=3
+total = clamp(raw + paceMod + stateMod + moraleMod + healthMod, 1, 8)
+```
+
+The cap of 8 is from JSON. The summary text shows the raw dice and
+the modifiers transparently so kids can see what each part contributed.
+
+**Edge cases:**
+- A 2 (snake-eyes) with a sick team and Grueling pace can still hit
+  the floor of 1 — never a zero or negative move.
+- Any tumble interrupted (window unfocus, component unmount) — the
+  setTimeout chain still fires `onAdvance`, so the wagon never gets
+  stuck.
+- `prefers-reduced-motion`: skip the tumble; show final faces
+  immediately and shorten the summary hold.
+
+**No spec contradictions surfaced.** Proceeding.
+
