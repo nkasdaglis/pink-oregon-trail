@@ -2,7 +2,7 @@
   "meta": {
     "title": "Pink Oregon Trail",
     "designer": "Gabriella Kasdaglis (Gabby)",
-    "version": "3.1.1",
+    "version": "3.2",
     "trail_lengths": {
       "short": {
         "spaces": 25,
@@ -4069,7 +4069,7 @@
     "patterns": [
       "Dearest family — / We are at {location}. The journey has been {tone}. {specific_recent_event}. {team_status_line}. We push on. / Yours always, / {player_name}",
       "Mother — / It is Day {day} on the trail. We reached {location} at last. {specific_event}. The team is {tone_word}. {member_callout}. Pray for us. / {player_name}",
-      "{recipient} — / The {wagon_name} has come {distance_descriptor}. {specific_event}. {team_status_line}. The land is bigger than I imagined. / Your {relationship}, / {player_name}"
+      "{recipient} — / The {wagon_name} has come {distance_descriptor}. {specific_event}. {team_status_line}. The land is bigger than I imagined. / With love, / {player_name}"
     ],
     "tone_words_by_morale": {
       "high": [

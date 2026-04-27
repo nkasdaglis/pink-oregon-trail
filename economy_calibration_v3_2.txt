@@ -1,0 +1,64 @@
+================================================================================
+PINK OREGON TRAIL v3.2 ECONOMY — CANONICAL PARAMETERS
+Calibrated by Monte Carlo simulation (800 runs per scenario)
+================================================================================
+
+STARTING RESOURCES (per difficulty):
+  EASY    | $35 |  200 lbs food | 30 gal water | 8 sup | 3 med | 100 wagon HP
+  MEDIUM  | $18 |  140 lbs food | 22 gal water | 5 sup | 1 med | 100 wagon HP
+  HARD    | $12 |  110 lbs food | 16 gal water | 3 sup | 0 med |  85 wagon HP
+
+PROFESSION STARTING BONUSES (apply ONCE at game start):
+  Banker  : +$12
+  Doctor  : +1 medicine
+  Hunter  : +25 lbs food
+  Cook    : +15 lbs food
+
+DAILY CONSUMPTION (per ALIVE member):
+  Food : 2.0 lbs/day  (Cook reduces to 1.56 lbs/day, -22%)
+  Water: 0.5 gal/day  (no profession reduces)
+
+PRICES at FORTS (Merchant gets -15% buy / +40% sell):
+  Food         : $0.12 / lb
+  Water        : $0.10 / gal
+  Medicine     : $3.50 / dose
+  Supplies     : $1.20 / unit
+  Wagon repair : $4.00 (restores 30 HP)
+  Major repair : $10.00 (restores 50 HP, broken axle)
+  Ferry crossing: $6.00 (alternative: ford = food/supply loss + 18% drown)
+  Local guide  : $4.00 (avoids "lost trail")
+  Doctor visit : $5.00 (+50% revival chance)
+
+SALE PRICES at FORTS:
+  Hide      : $3.00 each (Hunter +1/hunt, Trapper +2/hunt)
+  Food      : $0.05 / lb (half of buy)
+  Water     : $0.02 / gal
+  Supplies  : $0.40 / unit
+
+UNEXPECTED COSTS (per-day probabilities):
+  Food spoiled        : 16%   (25-50 lbs lost; Cook halves)
+  Water spilled       : 16%   (5-14 gal lost)
+  Supplies lost       : 10%   (1-3 units)
+  Wagon damage        : 18%   (15-35 HP; Blacksmith -35%)
+  Broken axle         :  4%   (50-75 HP; $10 repair OR Carpenter free OR stranded)
+  Sickness minor      : 12%   (-1 medicine OR 20% death)
+  Sickness severe     :  6%   (-2 medicine OR 60% death; Doctor halves to -1/30%)
+  Bandit demand       :  6%   ($8-22 OR 2 supplies)
+  Cholera outbreak    : 2.5%  (each member 30% death; Doctor reduces to 10%)
+  Lost trail          :  5%   (-25 food, -4 water; Guide/Scout/Surveyor immune)
+  Theft               :  3%   ($4-12)
+
+GUIDE/SCOUT shock avoidance: 30%/10% chance to skip turn's shock entirely
+
+INCOME EVENTS (per-day):
+  Hunter success      : 32%   (+22 lbs food, +1 hide → $3 at next fort)
+  Trapper success     : 28%   (+12 lbs food, +2 hides → $6 at next fort)
+  Farmer foraging     : 20%   (+10 lbs food)
+
+CALIBRATION TARGETS (Medium difficulty):
+  Finish rate:           96-100%
+  Loss-of-at-least-1:    35-72% (depending on team)
+  Loss-of-3-plus:        3-24%  (depending on team)
+  P25 end money:         $2-3 (quarter of teams hit broke)
+  P75 end money:         $6-12
+

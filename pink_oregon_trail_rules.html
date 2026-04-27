@@ -612,50 +612,78 @@
   <div class="resource-icon-row">
     <div class="resource-item">
       <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="#F4D3DA" stroke="#B85770" stroke-width="1.5"/><text x="18" y="22" text-anchor="middle" font-size="14">🌾</text></svg>
-      <div class="resource-name">Food</div>
-      <div class="resource-desc">Eaten daily. 0 = starving</div>
+      <div class="resource-name">Food (lbs)</div>
+      <div class="resource-desc">~2 lbs/person/day. Cook reduces 22%.</div>
     </div>
     <div class="resource-item">
       <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="#5B7FA8" opacity="0.3" stroke="#5B7FA8" stroke-width="1.5"/><text x="18" y="22" text-anchor="middle" font-size="14">💧</text></svg>
-      <div class="resource-name">Water</div>
-      <div class="resource-desc">Critical. 0 kills fastest</div>
+      <div class="resource-name">Water (gal)</div>
+      <div class="resource-desc">0.5 gal/person/day.</div>
     </div>
     <div class="resource-item">
       <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="#A89070" stroke="#5C4A36" stroke-width="1.5"/><text x="18" y="22" text-anchor="middle" font-size="14">📦</text></svg>
       <div class="resource-name">Supplies</div>
-      <div class="resource-desc">Tools, parts, gear</div>
+      <div class="resource-desc">Rope, oil, tools — used in repairs.</div>
+    </div>
+    <div class="resource-item">
+      <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="#FBF6F0" stroke="#c63a3a" stroke-width="1.5"/><text x="18" y="22" text-anchor="middle" font-size="14">✚</text></svg>
+      <div class="resource-name">Medicine (doses)</div>
+      <div class="resource-desc">Sickness without it can kill. Doctor uses less per cure.</div>
     </div>
     <div class="resource-item">
       <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="#D4C19E" stroke="#8B5A2B" stroke-width="1.5"/><text x="18" y="22" text-anchor="middle" font-size="14">🦌</text></svg>
       <div class="resource-name">Hides</div>
-      <div class="resource-desc">From hunting. Sell for cash</div>
+      <div class="resource-desc">Sell at forts ($3 each).</div>
     </div>
     <div class="resource-item">
       <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="#D4AF37" stroke="#8B6914" stroke-width="1.5"/><text x="18" y="22" text-anchor="middle" font-size="14">💰</text></svg>
-      <div class="resource-name">Money</div>
-      <div class="resource-desc">Buy at forts</div>
+      <div class="resource-name">Money ($)</div>
+      <div class="resource-desc">Dollars and cents. Pays for everything at forts.</div>
     </div>
     <div class="resource-item">
-      <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="#FBF6F0" stroke="#B85770" stroke-width="1.5"/><text x="18" y="22" text-anchor="middle" font-size="14">❤</text></svg>
-      <div class="resource-name">Health</div>
-      <div class="resource-desc">Wagon condition</div>
+      <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="#5C4A36" stroke="#3D2817" stroke-width="1.5"/><text x="18" y="22" text-anchor="middle" font-size="14" fill="#FBF6F0">🛞</text></svg>
+      <div class="resource-name">Wagon HP (0-100)</div>
+      <div class="resource-desc">Damage reduces it. Repairs cost money.</div>
     </div>
     <div class="resource-item">
       <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="#FBF6F0" stroke="#D4AF37" stroke-width="1.5"/><text x="18" y="22" text-anchor="middle" font-size="14">⭐</text></svg>
       <div class="resource-name">Morale</div>
-      <div class="resource-desc">Team spirit</div>
+      <div class="resource-desc">Team spirit (0-10).</div>
     </div>
   </div>
-  
+
+  <h3>Prices at forts (Medium difficulty, before Merchant discount)</h3>
+  <ul>
+    <li><strong>Food</strong> — $0.12 per pound</li>
+    <li><strong>Water</strong> — $0.10 per gallon</li>
+    <li><strong>Medicine</strong> — $3.50 per dose</li>
+    <li><strong>Supplies</strong> — $1.20 per unit</li>
+    <li><strong>Wagon repair</strong> — $4.00 (restores 30 HP)</li>
+    <li><strong>Major repair</strong> — $10.00 (restores 50 HP, broken axle)</li>
+    <li><strong>Ferry crossing</strong> — $6.00</li>
+    <li><strong>Local guide</strong> — $4.00 (avoids the next "lost trail")</li>
+    <li><strong>Visit fort doctor</strong> — $5.00 (only when a member is dying; +50% revival chance)</li>
+    <li><strong>Send a letter home</strong> — $1.00 (+2 morale)</li>
+  </ul>
+  <p>A <strong>Merchant</strong> on the team buys at -15% and sells at +40%.</p>
+
+  <h3>Unexpected costs</h3>
+  <ul>
+    <li>Food spoils. Water spills. Wheels crack. About one unexpected event per 4-5 days of travel.</li>
+    <li>A <strong>Cook</strong> halves food spoilage; a <strong>Blacksmith</strong> reduces wagon damage; a <strong>Carpenter</strong> rebuilds broken axles for free; a <strong>Guide</strong> or <strong>Scout</strong> may avoid the day's mishap altogether.</li>
+    <li>Without medicine, sickness kills.</li>
+  </ul>
+
   <h3>How to get more of each:</h3>
   <ul>
-    <li><strong>Food:</strong> Hunt successfully, Forage, buy at forts, certain events</li>
-    <li><strong>Water:</strong> Cross rivers, Forage, certain events</li>
+    <li><strong>Food:</strong> Hunt (+22 lbs, Hunter), trap (+12 lbs, Trapper), forage (+10 lbs, Farmer), buy at forts, certain events</li>
+    <li><strong>Water:</strong> Cross rivers, forage, buy at forts, certain events</li>
     <li><strong>Supplies:</strong> Buy at forts, certain events</li>
+    <li><strong>Medicine:</strong> Buy at forts ($3.50/dose); a Doctor on team starts with +1 dose</li>
     <li><strong>Hides:</strong> Successful hunts (more if Hunter or Trapper on team)</li>
-    <li><strong>Money:</strong> Sell hides at forts, sell extra food/water/supplies, day labor at forts, profession-specific encounter events (Doctor treating sick, Carpenter fixing wagons, etc.), discovered caches</li>
-    <li><strong>Health:</strong> Rest at fort, repair at fort, certain events</li>
-    <li><strong>Morale:</strong> Rest, send a letter home from fort, certain events, eating well</li>
+    <li><strong>Money:</strong> Sell hides at forts, sell extra food/water/supplies, day labor at forts, profession-specific encounter events, discovered caches; a Banker on team starts with +$12</li>
+    <li><strong>Wagon HP:</strong> Repair at fort ($4 / $10), or free with a Carpenter on team</li>
+    <li><strong>Morale:</strong> Rest, send a letter home, certain events, eating well</li>
   </ul>
   
   <h2>The Team Strip (bottom of screen)</h2>
@@ -703,7 +731,8 @@
   <p>When a team member is in danger of dying, the game will <strong>pause</strong> and offer you choices:</p>
   
   <ul>
-    <li><strong>Race to a fort</strong> for medical help — costs a day, +30% chance to save them</li>
+    <li><strong>Race to a fort</strong> for medical help — costs a day, +30% chance to save them. Hidden when you're already at one.</li>
+    <li><strong>Visit the fort doctor</strong> — $5.00, only available when the wagon is currently at a fort. Strong odds (+50%) and no day lost.</li>
     <li><strong>Stop and tend to them</strong> — costs 2 days, doubled with a Doctor on team</li>
     <li><strong>Pray and continue</strong> — slower, requires a Priest for best chance</li>
     <li><strong>Continue at full pace</strong> — last resort, riskiest</li>
