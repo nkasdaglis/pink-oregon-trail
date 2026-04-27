@@ -295,6 +295,43 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
   .transition-toast { animation: none; }
 }
 
+/* Death scene overlay (Part 2 — 6d)
+   Composes inside .scene-canvas: a 40% black wash (ramping in 1.5s) plus
+   a center-canvas full-body figure that fades from invisible/colorful to
+   fully visible/grayscale over 1.5s. The overlay is pointer-events:none
+   so the action bar's Continue button still receives clicks. */
+.death-overlay {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  z-index: 50;
+}
+.death-dim {
+  position: absolute; inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  animation: deathDim 1.5s ease-in forwards;
+}
+.death-figure {
+  position: absolute;
+  left: 50%; top: 22%;
+  width: clamp(120px, 22%, 240px);
+  height: 56%;
+  transform: translateX(-50%);
+  filter: grayscale(0);
+  opacity: 0;
+  animation: deathFade 1.5s ease-in forwards;
+}
+@keyframes deathDim  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes deathFade {
+  from { opacity: 0; filter: grayscale(0); }
+  60%  { opacity: 1; filter: grayscale(0.5); }
+  to   { opacity: 1; filter: grayscale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .death-dim    { animation: none; opacity: 1; }
+  .death-figure { animation: none; opacity: 1; filter: grayscale(1); }
+}
+
 .event-illustration { display: block; margin: 0 auto 10px; width: 80px; height: 56px; }
 .event-title {
   font-family: Georgia, "Times New Roman", serif;
@@ -5951,7 +5988,10 @@ function applyEndOfTurnDeathChecks(w) {
   const cause = chosen.cause_of_state || chosen.state;
   transitionMember(chosen, 'lost', w.daysTraveled, cause);
   w.membersLost.push({ name: chosen.name, profession: chosen.profession, day: w.daysTraveled, cause: cause });
-  logToWagon(w, '✝ ' + chosen.name + ' the ' + chosen.profession + ' was lost on Day ' + w.daysTraveled + ' to ' + describeCause(cause) + '.');
+  // Journal entry is owned by the Part 2 — 6d death announcement protocol
+  // (presentDeathAnnouncement). The announcement runs in the endTurn flow
+  // immediately after this function returns. Tests that bypass the flow
+  // can read w.membersLost directly.
   // Survivors who would have died stay in their current state for another
   // turn — giving the player one more window to intervene next turn.
   if (survived.length > 0) {
@@ -6212,6 +6252,118 @@ function populateInterventionChoices(w, member, onDone) {
                   '<div class="opt-hint">'  + escapeHtml(desc)  + '</div>';
     list.appendChild(o);
   }
+}
+
+// ===== Death announcement protocol (Part 2 — 6d) =====
+// 9-step sequence per death_announcement_protocol.required_sequence:
+//   1. Pause       — we're already in a callback chain
+//   2. Scene       — dim backdrop, full-body figure with 1.5s fade-to-grayscale
+//   3. Audio       — Amazing Grace via switchToFuneral, +tolling 'lost' SFX
+//   4. Narrative   — title 'Name is lost' + body + period closing
+//   5. Trail strip — portrait already grayscales via state-lost CSS; we
+//                    just call renderTeamStrip to flush the patch
+//   6. Delay       — Continue inactive for 2.5s (3.5s on first death)
+//   7. Journal     — spec-format entry "{Day N}: ... lost to {cause}. We pressed on."
+//   8. Resume      — overlay cleared, continuation runs
+
+// Map a cause string into the human phrase from
+// GAME_DATA.death_announcement_protocol.cause_phrase_map.
+function causePhraseFor(cause) {
+  const map = ((GAME_DATA.death_announcement_protocol || {}).cause_phrase_map) || {};
+  const def = map.default || 'the hardships of the trail';
+  if (!cause) return def;
+  const c = String(cause).toLowerCase();
+  if (c.includes('food') || c.includes('starv'))     return map.starvation       || def;
+  if (c.includes('water') || c.includes('thirst') || c.includes('dehydr')) return map.dehydration || def;
+  if (c.includes('cholera'))                         return map.cholera          || def;
+  if (c.includes('river') || c.includes('drown'))    return map.river_drowning   || def;
+  if (c.includes('bandit'))                          return map.bandit_attack    || def;
+  if (c.includes('winter') || c.includes('cold'))    return map.winter_exposure  || def;
+  if (c.includes('abandon'))                         return map.abandonment      || def;
+  if (c.includes('sick') || c.includes('disease') || c.includes('injur') || c.includes('dying'))
+                                                     return map.disease_general  || def;
+  return def;
+}
+
+function renderDeathSceneOverlay(deceased) {
+  const canvas = $('scene-canvas');
+  if (!canvas) return;
+  // Remove any prior overlay (defensive — chained announcements clean up between)
+  const existing = canvas.querySelector('.death-overlay');
+  if (existing) existing.remove();
+  const overlay = el('div', { class: 'death-overlay' });
+  const dim     = el('div', { class: 'death-dim' });
+  const figure  = el('div', { class: 'death-figure',
+    html: '<svg viewBox="0 0 80 120" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">' +
+          '<g transform="translate(0 0)">' + characterFullBody(deceased.profession, deceased.skinTone) + '</g>' +
+          '</svg>' });
+  overlay.appendChild(dim);
+  overlay.appendChild(figure);
+  canvas.appendChild(overlay);
+}
+
+function clearDeathSceneOverlay() {
+  const canvas = $('scene-canvas');
+  if (!canvas) return;
+  const overlay = canvas.querySelector('.death-overlay');
+  if (overlay) overlay.remove();
+}
+
+// Single death announcement. onContinue runs when the player clicks
+// the Continue button (after the spec's 2.5s / 3.5s hold).
+function presentDeathAnnouncement(w, deceased, onContinue) {
+  // Step 2: Scene
+  renderDeathSceneOverlay(deceased);
+  // Step 3: Audio
+  audioController.switchToFuneral();
+  audioController.playSfx('lost');
+  // Step 7: Journal — write the entry FIRST so the trail strip render can
+  //   reflect the new state alongside the journal line.
+  const phrase = causePhraseFor(deceased.causeOfDeath || deceased.cause_of_state);
+  const day = deceased.lostOnDay || w.daysTraveled;
+  logToWagon(w, 'Day ' + day + ': ' + deceased.name + ' the ' + deceased.profession +
+                ', lost to ' + phrase + '. We pressed on.');
+  // Step 5: trail strip refresh
+  renderTeamStrip();
+  // Step 4: Narrative callout
+  const html = '<div class="event-title">' + escapeHtml(deceased.name) + ' is lost</div>' +
+               '<div class="narrative-text">' +
+               escapeHtml(deceased.name) + ' the ' + escapeHtml(deceased.profession) +
+               ' was lost on Day ' + day + '. Cause: ' + escapeHtml(phrase) + '.<br>' +
+               'We dig a grave by the trail and continue west.' +
+               '</div>';
+  renderNarrativeCallout(html);
+  // Step 6: Delayed Continue button. First-death special swaps the label.
+  const isFirstDeath = (w._firstDeathAnnounced !== true);
+  w._firstDeathAnnounced = true;
+  const bar = $('action-buttons');
+  bar.classList.add('continue-mode');
+  bar.innerHTML = '';
+  const finalLabel = 'We continue west.';
+  const firstLabel = 'A grave on the trail.';
+  const btn = el('button', { class: 'action-btn primary',
+    textContent: isFirstDeath ? firstLabel : finalLabel,
+    disabled: true,
+    onclick: () => { audioController.playSfx('click'); clearDeathSceneOverlay(); onContinue(); } });
+  bar.appendChild(btn);
+  const delayMs = isFirstDeath ? 3500 : 2500; // first-death adds 1s of weight per spec
+  setTimeout(() => {
+    btn.disabled = false;
+    if (isFirstDeath) btn.textContent = finalLabel;
+  }, delayMs);
+}
+
+// Chain announcements when more than one death happens in a single
+// catastrophic event. Natural-progression deaths max out at 1 per turn
+// (the cap), so most calls have a single-element list.
+function processDeathAnnouncements(w, deceasedList, onDone) {
+  if (!deceasedList || deceasedList.length === 0) { onDone(); return; }
+  let i = 0;
+  function next() {
+    if (i >= deceasedList.length) { onDone(); return; }
+    presentDeathAnnouncement(w, deceasedList[i++], next);
+  }
+  next();
 }
 
 // Banner is a single Acknowledge button on a frozen scene — like
@@ -8469,12 +8621,15 @@ function endTurn(w) {
       //    natural death per turn. The intervention's recovery roll has
       //    already moved survivors out of dying state, so the cap only
       //    fires on members who refused to recover.
-      applyEndOfTurnDeathChecks(w);
-      // Refresh audio + mood — a death may shift mood to somber and
-      //   end an oof_oof_oof loop for the deceased member.
+      const deceased = applyEndOfTurnDeathChecks(w);
+      // Refresh audio + mood — a death shifts mood to somber and ends
+      //   the oof_oof_oof loop for the deceased member.
       audioController.updateStateLoops(w.team);
       audioController.syncMoodToWagon(w);
-      completeEndTurn(w);
+      // 4. Run the 9-step death announcement protocol (Part 2 — 6d)
+      //    for any natural-progression deaths. Catastrophic events
+      //    (river/bandits/winter) still use their own outcome callouts.
+      processDeathAnnouncements(w, deceased, () => completeEndTurn(w));
     });
   });
 }
