@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pink Oregon Trail</title>
+<style>
+  /* === Reset === */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* === Pink palette (matches game) === */
+  :root {
+    --rose-deep: #B85770;
+    --rose-mid: #D08294;
+    --rose-pale: #F4D3DA;
+    --rose-glow: #FF98B5;
+    --cream: #FBF6F0;
+    --paper: #F4E8D8;
+    --brown: #3D2817;
+    --tan: #A89070;
+    --shadow: rgba(61, 40, 23, 0.4);
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    background: #1a0810;
+    color: var(--cream);
+    font-family: 'Courier New', 'Consolas', monospace;
+  }
+
+  /* === CRT scan-line overlay across the whole page === */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0px,
+      rgba(0,0,0,0) 2px,
+      rgba(0,0,0,0.18) 3px,
+      rgba(0,0,0,0) 4px
+    );
+  }
+  /* Subtle CRT vignette */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 99;
+    background: radial-gradient(ellipse at center,
+      transparent 50%,
+      rgba(0,0,0,0.5) 100%);
+  }
+
+  /* === Page container === */
+  .page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background:
+      radial-gradient(ellipse at top, #2a1018 0%, #1a0810 60%, #0a0408 100%);
+    padding: 24px 16px;
+  }
+
+  /* === Header / title === */
+  .crt-header {
+    text-align: center;
+    margin-bottom: 28px;
+    padding: 24px 16px;
+    position: relative;
+  }
+
+  /* Subtle pink phosphor glow on title */
+  .game-title {
+    font-family: 'Courier New', monospace;
+    font-size: clamp(36px, 7vw, 88px);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--rose-glow);
+    text-shadow:
+      0 0 6px var(--rose-glow),
+      0 0 18px rgba(255, 152, 181, 0.5),
+      0 0 38px rgba(255, 152, 181, 0.25);
+    line-height: 1;
+    animation: phosphorFlicker 4s ease-in-out infinite;
+  }
+  @keyframes phosphorFlicker {
+    0%, 100% { opacity: 1; }
+    47%      { opacity: 1; }
+    48%      { opacity: 0.85; }
+    49%      { opacity: 1; }
+    97%      { opacity: 0.92; }
+    98%      { opacity: 1; }
+  }
+  .game-subtitle {
+    font-family: 'Courier New', monospace;
+    font-size: clamp(13px, 1.4vw, 17px);
+    color: var(--rose-pale);
+    letter-spacing: 0.4em;
+    margin-top: 14px;
+    text-transform: uppercase;
+    text-shadow: 0 0 6px rgba(244, 211, 218, 0.4);
+  }
+  .game-tagline {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-size: clamp(14px, 1.5vw, 19px);
+    color: var(--cream);
+    margin-top: 18px;
+    opacity: 0.85;
+  }
+
+  /* === Pixel CRT scene (echoes Apple II Oregon Trail) === */
+  .crt-scene {
+    margin: 0 auto 28px;
+    width: min(960px, 95vw);
+    background: #0a0a0a;
+    border: 2px solid #2a2a2a;
+    border-radius: 4px;
+    box-shadow:
+      0 0 0 1px rgba(255, 152, 181, 0.18),
+      0 8px 40px rgba(0,0,0,0.7),
+      inset 0 0 80px rgba(255, 152, 181, 0.05);
+    overflow: hidden;
+    position: relative;
+  }
+  .crt-scene svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* === The terminal-style menu underneath the scene === */
+  .crt-menu {
+    margin: 0 auto 28px;
+    width: min(960px, 95vw);
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 152, 181, 0.3);
+    border-radius: 4px;
+    padding: 22px 28px;
+    font-family: 'Courier New', monospace;
+    color: var(--rose-pale);
+    font-size: clamp(15px, 1.5vw, 19px);
+    line-height: 1.7;
+    text-shadow: 0 0 4px rgba(255, 152, 181, 0.4);
+    box-shadow: inset 0 0 60px rgba(255, 152, 181, 0.04);
+  }
+  .crt-menu .prompt-line {
+    color: var(--rose-glow);
+    margin-bottom: 8px;
+  }
+  .crt-menu .menu-line {
+    margin: 4px 0;
+  }
+  .crt-menu .menu-line .num {
+    color: var(--rose-glow);
+    font-weight: 700;
+    margin-right: 12px;
+  }
+  .crt-menu .menu-line a {
+    color: var(--rose-pale);
+    text-decoration: none;
+    border-bottom: 1px dotted transparent;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .crt-menu .menu-line a:hover {
+    color: var(--rose-glow);
+    border-bottom-color: var(--rose-glow);
+    text-shadow: 0 0 6px var(--rose-glow);
+  }
+  .crt-menu .menu-line a:focus {
+    outline: 2px solid var(--rose-glow);
+    outline-offset: 4px;
+  }
+  .crt-menu .blink-cursor {
+    display: inline-block;
+    width: 0.6em;
+    height: 1.1em;
+    background: var(--rose-glow);
+    margin-left: 4px;
+    vertical-align: text-bottom;
+    animation: blink 1s step-end infinite;
+    box-shadow: 0 0 6px var(--rose-glow);
+  }
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  /* === Big PLAY button === */
+  .play-cta {
+    display: block;
+    margin: 0 auto 28px;
+    width: min(540px, 92vw);
+    padding: 24px 32px;
+    background: linear-gradient(180deg, var(--rose-glow) 0%, var(--rose-deep) 100%);
+    border: 3px solid var(--cream);
+    border-radius: 8px;
+    color: #fff;
+    text-align: center;
+    text-decoration: none;
+    font-family: 'Courier New', monospace;
+    font-size: clamp(20px, 2.4vw, 28px);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.4), 0 0 12px rgba(255, 255, 255, 0.5);
+    box-shadow:
+      0 0 0 2px rgba(255, 152, 181, 0.6),
+      0 0 30px rgba(255, 152, 181, 0.6),
+      0 8px 24px rgba(0,0,0,0.4);
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s;
+    animation: ctaPulse 2.4s ease-in-out infinite;
+  }
+  @keyframes ctaPulse {
+    0%, 100% {
+      box-shadow:
+        0 0 0 2px rgba(255, 152, 181, 0.6),
+        0 0 30px rgba(255, 152, 181, 0.6),
+        0 8px 24px rgba(0,0,0,0.4);
+    }
+    50% {
+      box-shadow:
+        0 0 0 2px rgba(255, 152, 181, 0.9),
+        0 0 50px rgba(255, 152, 181, 0.9),
+        0 8px 24px rgba(0,0,0,0.4);
+    }
+  }
+  .play-cta:hover {
+    transform: translateY(-2px);
+  }
+  .play-cta:active {
+    transform: translateY(1px);
+  }
+  .play-cta .arrow {
+    display: inline-block;
+    margin-left: 10px;
+    animation: arrowBob 1s ease-in-out infinite;
+  }
+  @keyframes arrowBob {
+    0%, 100% { transform: translateX(0); }
+    50%      { transform: translateX(6px); }
+  }
+
+  /* === Footer credits === */
+  .footer {
+    margin-top: auto;
+    padding: 20px 12px;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-size: clamp(11px, 1.1vw, 14px);
+    color: var(--rose-mid);
+    line-height: 1.7;
+    text-shadow: 0 0 4px rgba(208, 130, 148, 0.3);
+  }
+  .footer .heart {
+    color: var(--rose-glow);
+    text-shadow: 0 0 8px var(--rose-glow);
+  }
+  .footer .designed-by {
+    margin-top: 6px;
+    font-style: italic;
+    opacity: 0.85;
+  }
+
+  /* === Compact (mobile) === */
+  @media (max-width: 740px) {
+    .page { padding: 16px 8px; }
+    .crt-menu { padding: 16px 20px; }
+    .play-cta { padding: 18px 24px; }
+  }
+
+  /* === Reduced motion === */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- TITLE -->
+  <header class="crt-header">
+    <div class="game-title">PINK OREGON TRAIL</div>
+    <div class="game-subtitle">★  A  H I S T O R Y  G A M E  ★</div>
+    <div class="game-tagline">Independence, Missouri to Oregon City — 2,000 miles by wagon, 1848.</div>
+  </header>
+
+  <!-- CRT SCENE — pixel-art wagon over horizon, in pink phosphor -->
+  <div class="crt-scene" aria-hidden="true">
+    <svg viewBox="0 0 960 360" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- soft phosphor glow filter for pink elements -->
+        <filter id="phosphor" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1a0810"/>
+          <stop offset="100%" stop-color="#0a0408"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Sky background -->
+      <rect x="0" y="0" width="960" height="360" fill="url(#skyGrad)"/>
+
+      <!-- Distant pixelated mountain silhouette (dot-matrix style) -->
+      <g fill="#7a3850" filter="url(#phosphor)" opacity="0.55">
+        <!-- Each "pixel" is an 8x8 rect -->
+        <rect x="80"  y="120" width="8" height="8"/>
+        <rect x="88"  y="112" width="8" height="8"/>
+        <rect x="96"  y="104" width="8" height="8"/>
+        <rect x="104" y="96"  width="8" height="8"/>
+        <rect x="112" y="88"  width="8" height="8"/>
+        <rect x="120" y="96"  width="8" height="8"/>
+        <rect x="128" y="104" width="8" height="8"/>
+        <rect x="136" y="112" width="8" height="8"/>
+        <rect x="144" y="104" width="8" height="8"/>
+        <rect x="152" y="96"  width="8" height="8"/>
+        <rect x="160" y="88"  width="8" height="8"/>
+        <rect x="168" y="80"  width="8" height="8"/>
+        <rect x="176" y="72"  width="8" height="8"/>
+        <rect x="184" y="80"  width="8" height="8"/>
+        <rect x="192" y="88"  width="8" height="8"/>
+        <rect x="200" y="96"  width="8" height="8"/>
+        <rect x="208" y="104" width="8" height="8"/>
+        <rect x="216" y="112" width="8" height="8"/>
+        <rect x="224" y="120" width="8" height="8"/>
+        <rect x="232" y="128" width="8" height="8"/>
+        <rect x="240" y="120" width="8" height="8"/>
+        <rect x="248" y="112" width="8" height="8"/>
+        <rect x="256" y="104" width="8" height="8"/>
+        <rect x="264" y="96"  width="8" height="8"/>
+        <rect x="272" y="88"  width="8" height="8"/>
+        <rect x="280" y="80"  width="8" height="8"/>
+        <rect x="288" y="72"  width="8" height="8"/>
+        <rect x="296" y="64"  width="8" height="8"/>
+        <rect x="304" y="72"  width="8" height="8"/>
+        <rect x="312" y="80"  width="8" height="8"/>
+        <rect x="320" y="88"  width="8" height="8"/>
+        <rect x="328" y="96"  width="8" height="8"/>
+        <rect x="336" y="104" width="8" height="8"/>
+        <rect x="344" y="112" width="8" height="8"/>
+        <rect x="352" y="120" width="8" height="8"/>
+        <rect x="360" y="128" width="8" height="8"/>
+        <rect x="368" y="120" width="8" height="8"/>
+        <rect x="376" y="112" width="8" height="8"/>
+        <rect x="384" y="104" width="8" height="8"/>
+        <rect x="392" y="96"  width="8" height="8"/>
+        <rect x="400" y="104" width="8" height="8"/>
+        <rect x="408" y="112" width="8" height="8"/>
+        <rect x="416" y="104" width="8" height="8"/>
+        <rect x="424" y="96"  width="8" height="8"/>
+        <rect x="432" y="88"  width="8" height="8"/>
+        <rect x="440" y="80"  width="8" height="8"/>
+        <rect x="448" y="72"  width="8" height="8"/>
+        <rect x="456" y="64"  width="8" height="8"/>
+        <rect x="464" y="56"  width="8" height="8"/>
+        <rect x="472" y="64"  width="8" height="8"/>
+        <rect x="480" y="72"  width="8" height="8"/>
+        <rect x="488" y="80"  width="8" height="8"/>
+        <rect x="496" y="88"  width="8" height="8"/>
+        <rect x="504" y="96"  width="8" height="8"/>
+        <rect x="512" y="104" width="8" height="8"/>
+        <rect x="520" y="112" width="8" height="8"/>
+        <rect x="528" y="120" width="8" height="8"/>
+        <rect x="536" y="128" width="8" height="8"/>
+        <rect x="544" y="120" width="8" height="8"/>
+        <rect x="552" y="112" width="8" height="8"/>
+        <rect x="560" y="104" width="8" height="8"/>
+        <rect x="568" y="96"  width="8" height="8"/>
+        <rect x="576" y="104" width="8" height="8"/>
+        <rect x="584" y="112" width="8" height="8"/>
+        <rect x="592" y="120" width="8" height="8"/>
+        <rect x="600" y="128" width="8" height="8"/>
+        <rect x="608" y="120" width="8" height="8"/>
+        <rect x="616" y="112" width="8" height="8"/>
+        <rect x="624" y="104" width="8" height="8"/>
+        <rect x="632" y="96"  width="8" height="8"/>
+        <rect x="640" y="88"  width="8" height="8"/>
+        <rect x="648" y="80"  width="8" height="8"/>
+        <rect x="656" y="72"  width="8" height="8"/>
+        <rect x="664" y="80"  width="8" height="8"/>
+        <rect x="672" y="88"  width="8" height="8"/>
+        <rect x="680" y="96"  width="8" height="8"/>
+        <rect x="688" y="104" width="8" height="8"/>
+        <rect x="696" y="112" width="8" height="8"/>
+        <rect x="704" y="120" width="8" height="8"/>
+        <rect x="712" y="128" width="8" height="8"/>
+        <rect x="720" y="120" width="8" height="8"/>
+        <rect x="728" y="112" width="8" height="8"/>
+        <rect x="736" y="120" width="8" height="8"/>
+        <rect x="744" y="128" width="8" height="8"/>
+        <rect x="752" y="120" width="8" height="8"/>
+        <rect x="760" y="112" width="8" height="8"/>
+        <rect x="768" y="104" width="8" height="8"/>
+        <rect x="776" y="96"  width="8" height="8"/>
+        <rect x="784" y="88"  width="8" height="8"/>
+        <rect x="792" y="96"  width="8" height="8"/>
+        <rect x="800" y="104" width="8" height="8"/>
+        <rect x="808" y="112" width="8" height="8"/>
+        <rect x="816" y="120" width="8" height="8"/>
+        <rect x="824" y="128" width="8" height="8"/>
+        <rect x="832" y="120" width="8" height="8"/>
+        <rect x="840" y="112" width="8" height="8"/>
+        <rect x="848" y="104" width="8" height="8"/>
+        <rect x="856" y="96"  width="8" height="8"/>
+        <rect x="864" y="104" width="8" height="8"/>
+        <rect x="872" y="112" width="8" height="8"/>
+        <rect x="880" y="120" width="8" height="8"/>
+      </g>
+
+      <!-- Filled mountain body below silhouette ridge -->
+      <g fill="#5a283c" opacity="0.5" filter="url(#phosphor)">
+        <rect x="0"   y="136" width="960" height="60"/>
+      </g>
+
+      <!-- Dotted ground line / horizon (Apple II dot-matrix nostalgia) -->
+      <g fill="#FF98B5" filter="url(#phosphor)">
+        <!-- evenly spaced 4x4 dots for dot-matrix horizon -->
+        <g id="dotrow">
+          <rect x="0"   y="220" width="4" height="4"/>
+          <rect x="16"  y="220" width="4" height="4"/>
+          <rect x="32"  y="220" width="4" height="4"/>
+          <rect x="48"  y="220" width="4" height="4"/>
+          <rect x="64"  y="220" width="4" height="4"/>
+          <rect x="80"  y="220" width="4" height="4"/>
+          <rect x="96"  y="220" width="4" height="4"/>
+          <rect x="112" y="220" width="4" height="4"/>
+          <rect x="128" y="220" width="4" height="4"/>
+          <rect x="144" y="220" width="4" height="4"/>
+          <rect x="160" y="220" width="4" height="4"/>
+          <rect x="176" y="220" width="4" height="4"/>
+          <rect x="192" y="220" width="4" height="4"/>
+          <rect x="208" y="220" width="4" height="4"/>
+          <rect x="224" y="220" width="4" height="4"/>
+          <rect x="240" y="220" width="4" height="4"/>
+          <rect x="256" y="220" width="4" height="4"/>
+          <rect x="272" y="220" width="4" height="4"/>
+          <rect x="288" y="220" width="4" height="4"/>
+          <rect x="304" y="220" width="4" height="4"/>
+          <rect x="320" y="220" width="4" height="4"/>
+          <rect x="336" y="220" width="4" height="4"/>
+          <rect x="352" y="220" width="4" height="4"/>
+          <rect x="368" y="220" width="4" height="4"/>
+          <rect x="384" y="220" width="4" height="4"/>
+          <rect x="400" y="220" width="4" height="4"/>
+          <rect x="416" y="220" width="4" height="4"/>
+          <rect x="432" y="220" width="4" height="4"/>
+          <rect x="448" y="220" width="4" height="4"/>
+          <rect x="464" y="220" width="4" height="4"/>
+          <rect x="480" y="220" width="4" height="4"/>
+          <rect x="496" y="220" width="4" height="4"/>
+          <rect x="512" y="220" width="4" height="4"/>
+          <rect x="528" y="220" width="4" height="4"/>
+          <rect x="544" y="220" width="4" height="4"/>
+          <rect x="560" y="220" width="4" height="4"/>
+          <rect x="576" y="220" width="4" height="4"/>
+          <rect x="592" y="220" width="4" height="4"/>
+          <rect x="608" y="220" width="4" height="4"/>
+          <rect x="624" y="220" width="4" height="4"/>
+          <rect x="640" y="220" width="4" height="4"/>
+          <rect x="656" y="220" width="4" height="4"/>
+          <rect x="672" y="220" width="4" height="4"/>
+          <rect x="688" y="220" width="4" height="4"/>
+          <rect x="704" y="220" width="4" height="4"/>
+          <rect x="720" y="220" width="4" height="4"/>
+          <rect x="736" y="220" width="4" height="4"/>
+          <rect x="752" y="220" width="4" height="4"/>
+          <rect x="768" y="220" width="4" height="4"/>
+          <rect x="784" y="220" width="4" height="4"/>
+          <rect x="800" y="220" width="4" height="4"/>
+          <rect x="816" y="220" width="4" height="4"/>
+          <rect x="832" y="220" width="4" height="4"/>
+          <rect x="848" y="220" width="4" height="4"/>
+          <rect x="864" y="220" width="4" height="4"/>
+          <rect x="880" y="220" width="4" height="4"/>
+          <rect x="896" y="220" width="4" height="4"/>
+          <rect x="912" y="220" width="4" height="4"/>
+          <rect x="928" y="220" width="4" height="4"/>
+          <rect x="944" y="220" width="4" height="4"/>
+          <rect x="960" y="220" width="4" height="4"/>
+        </g>
+      </g>
+
+      <!-- Pink-flowers / prairie dots (subtle scatter on the ground) -->
+      <g fill="#F4D3DA" opacity="0.7" filter="url(#phosphor)">
+        <rect x="64"  y="280" width="4" height="4"/>
+        <rect x="120" y="296" width="4" height="4"/>
+        <rect x="180" y="284" width="4" height="4"/>
+        <rect x="240" y="304" width="4" height="4"/>
+        <rect x="320" y="288" width="4" height="4"/>
+        <rect x="412" y="304" width="4" height="4"/>
+        <rect x="500" y="294" width="4" height="4"/>
+        <rect x="580" y="282" width="4" height="4"/>
+        <rect x="640" y="306" width="4" height="4"/>
+        <rect x="720" y="290" width="4" height="4"/>
+        <rect x="800" y="302" width="4" height="4"/>
+        <rect x="868" y="288" width="4" height="4"/>
+      </g>
+
+      <!-- Ground texture: light dot scatter -->
+      <g fill="#7a3850" opacity="0.5" filter="url(#phosphor)">
+        <rect x="20"  y="260" width="4" height="4"/>
+        <rect x="100" y="240" width="4" height="4"/>
+        <rect x="200" y="260" width="4" height="4"/>
+        <rect x="280" y="240" width="4" height="4"/>
+        <rect x="380" y="260" width="4" height="4"/>
+        <rect x="460" y="240" width="4" height="4"/>
+        <rect x="540" y="260" width="4" height="4"/>
+        <rect x="660" y="240" width="4" height="4"/>
+        <rect x="760" y="260" width="4" height="4"/>
+        <rect x="860" y="240" width="4" height="4"/>
+      </g>
+
+      <!--
+        BIG PIXEL WAGON, glowing pink, walking right.
+        Each "pixel" is 8x8 viewBox units. The wagon is composed of rectangles.
+        Composition: ox in front, yoke, wagon body, canvas top with vertical ribs, two wheels.
+      -->
+      <g fill="#FF98B5" filter="url(#phosphor)">
+        <!-- =========================
+             OX (in front, on the right)
+             ========================= -->
+        <!-- ox body block -->
+        <rect x="710" y="218" width="8" height="8"/>
+        <rect x="718" y="218" width="8" height="8"/>
+        <rect x="726" y="218" width="8" height="8"/>
+        <rect x="734" y="218" width="8" height="8"/>
+        <rect x="742" y="218" width="8" height="8"/>
+        <rect x="710" y="226" width="8" height="8"/>
+        <rect x="718" y="226" width="8" height="8"/>
+        <rect x="726" y="226" width="8" height="8"/>
+        <rect x="734" y="226" width="8" height="8"/>
+        <rect x="742" y="226" width="8" height="8"/>
+        <rect x="750" y="226" width="8" height="8"/>
+        <!-- ox head -->
+        <rect x="750" y="218" width="8" height="8"/>
+        <rect x="758" y="218" width="8" height="8"/>
+        <rect x="758" y="210" width="8" height="8"/>
+        <!-- ox horn -->
+        <rect x="766" y="210" width="8" height="8"/>
+        <!-- ox legs -->
+        <rect x="714" y="234" width="8" height="8"/>
+        <rect x="714" y="242" width="8" height="8"/>
+        <rect x="730" y="234" width="8" height="8"/>
+        <rect x="730" y="242" width="8" height="8"/>
+        <rect x="746" y="234" width="8" height="8"/>
+        <rect x="746" y="242" width="8" height="8"/>
+
+        <!-- =========================
+             YOKE (rope from ox to wagon)
+             ========================= -->
+        <rect x="694" y="222" width="8" height="4"/>
+        <rect x="702" y="222" width="8" height="4"/>
+
+        <!-- =========================
+             WAGON BODY (rectangle, behind the ox)
+             ========================= -->
+        <!-- Wagon bed -->
+        <rect x="558" y="218" width="8" height="8"/>
+        <rect x="566" y="218" width="8" height="8"/>
+        <rect x="574" y="218" width="8" height="8"/>
+        <rect x="582" y="218" width="8" height="8"/>
+        <rect x="590" y="218" width="8" height="8"/>
+        <rect x="598" y="218" width="8" height="8"/>
+        <rect x="606" y="218" width="8" height="8"/>
+        <rect x="614" y="218" width="8" height="8"/>
+        <rect x="622" y="218" width="8" height="8"/>
+        <rect x="630" y="218" width="8" height="8"/>
+        <rect x="638" y="218" width="8" height="8"/>
+        <rect x="646" y="218" width="8" height="8"/>
+        <rect x="654" y="218" width="8" height="8"/>
+        <rect x="662" y="218" width="8" height="8"/>
+        <rect x="670" y="218" width="8" height="8"/>
+        <rect x="678" y="218" width="8" height="8"/>
+        <rect x="686" y="218" width="8" height="8"/>
+
+        <rect x="558" y="226" width="8" height="8"/>
+        <rect x="686" y="226" width="8" height="8"/>
+
+        <!-- =========================
+             CANVAS TOP (rounded arch, with rib lines)
+             ========================= -->
+        <!-- top ridge (highest) -->
+        <rect x="606" y="178" width="8" height="8"/>
+        <rect x="614" y="178" width="8" height="8"/>
+        <rect x="622" y="178" width="8" height="8"/>
+        <rect x="630" y="178" width="8" height="8"/>
+        <rect x="638" y="178" width="8" height="8"/>
+        <rect x="646" y="178" width="8" height="8"/>
+
+        <!-- second-down -->
+        <rect x="590" y="186" width="8" height="8"/>
+        <rect x="598" y="186" width="8" height="8"/>
+        <rect x="606" y="186" width="8" height="8"/>
+        <rect x="614" y="186" width="8" height="8"/>
+        <rect x="622" y="186" width="8" height="8"/>
+        <rect x="630" y="186" width="8" height="8"/>
+        <rect x="638" y="186" width="8" height="8"/>
+        <rect x="646" y="186" width="8" height="8"/>
+        <rect x="654" y="186" width="8" height="8"/>
+        <rect x="662" y="186" width="8" height="8"/>
+
+        <!-- third-down -->
+        <rect x="582" y="194" width="8" height="8"/>
+        <rect x="590" y="194" width="8" height="8"/>
+        <rect x="598" y="194" width="8" height="8"/>
+        <rect x="606" y="194" width="8" height="8"/>
+        <rect x="614" y="194" width="8" height="8"/>
+        <rect x="622" y="194" width="8" height="8"/>
+        <rect x="630" y="194" width="8" height="8"/>
+        <rect x="638" y="194" width="8" height="8"/>
+        <rect x="646" y="194" width="8" height="8"/>
+        <rect x="654" y="194" width="8" height="8"/>
+        <rect x="662" y="194" width="8" height="8"/>
+        <rect x="670" y="194" width="8" height="8"/>
+
+        <!-- bottom of canvas, sides only -->
+        <rect x="574" y="202" width="8" height="8"/>
+        <rect x="678" y="202" width="8" height="8"/>
+        <rect x="574" y="210" width="8" height="8"/>
+        <rect x="678" y="210" width="8" height="8"/>
+
+        <!-- =========================
+             WAGON WHEELS (front + back)
+             ========================= -->
+        <!-- back wheel -->
+        <rect x="574" y="234" width="8" height="8"/>
+        <rect x="582" y="234" width="8" height="8"/>
+        <rect x="590" y="234" width="8" height="8"/>
+        <rect x="566" y="242" width="8" height="8"/>
+        <rect x="598" y="242" width="8" height="8"/>
+        <rect x="566" y="250" width="8" height="8"/>
+        <rect x="598" y="250" width="8" height="8"/>
+        <rect x="574" y="258" width="8" height="8"/>
+        <rect x="582" y="258" width="8" height="8"/>
+        <rect x="590" y="258" width="8" height="8"/>
+        <rect x="582" y="246" width="8" height="4"/> <!-- spoke -->
+
+        <!-- front wheel -->
+        <rect x="650" y="234" width="8" height="8"/>
+        <rect x="658" y="234" width="8" height="8"/>
+        <rect x="666" y="234" width="8" height="8"/>
+        <rect x="642" y="242" width="8" height="8"/>
+        <rect x="674" y="242" width="8" height="8"/>
+        <rect x="642" y="250" width="8" height="8"/>
+        <rect x="674" y="250" width="8" height="8"/>
+        <rect x="650" y="258" width="8" height="8"/>
+        <rect x="658" y="258" width="8" height="8"/>
+        <rect x="666" y="258" width="8" height="8"/>
+        <rect x="658" y="246" width="8" height="4"/> <!-- spoke -->
+      </g>
+
+    </svg>
+  </div>
+
+  <!-- TERMINAL-STYLE MENU -->
+  <div class="crt-menu">
+    <div class="prompt-line">&gt; The trail awaits. You may:</div>
+    <div class="menu-line">
+      <span class="num">1.</span><a href="https://tinyurl.com/pink-oregon-trail">begin the journey</a>
+    </div>
+    <div class="menu-line">
+      <span class="num">2.</span><a href="#about">learn more</a>
+    </div>
+    <div class="menu-line">
+      <span class="num">3.</span><a href="https://github.com/nkasdaglis/pink-oregon-trail" target="_blank" rel="noopener noreferrer">see the source</a>
+    </div>
+    <div class="prompt-line" style="margin-top:14px;">What is your choice?<span class="blink-cursor"></span></div>
+  </div>
+
+  <!-- BIG PLAY BUTTON -->
+  <a class="play-cta" href="https://tinyurl.com/pink-oregon-trail">
+    PLAY NOW <span class="arrow">▶</span>
+  </a>
+
+  <!-- ABOUT BLOCK -->
+  <section id="about" style="max-width: min(720px, 92vw); margin: 0 auto 28px; padding: 24px 28px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255, 152, 181, 0.2); border-radius: 4px; font-family: Georgia, serif; color: var(--cream); line-height: 1.65; font-size: clamp(14px, 1.4vw, 17px);">
+    <h2 style="font-family: 'Courier New', monospace; color: var(--rose-glow); text-shadow: 0 0 6px var(--rose-glow); font-size: clamp(18px, 2vw, 24px); margin-bottom: 14px; letter-spacing: 0.1em;">ABOUT THE GAME</h2>
+    <p style="margin-bottom: 12px;">A hybrid printable-board and browser game. Players move wagon tokens on a printed paper trail board while a browser app handles the simulation: a coupled-resource model that produces the historical 1-in-10 trail-death rate through emergence, with state-aware members, profession-aware narratives, a 5-channel audio system, and a final history quiz at the trail's end.</p>
+    <p style="margin-bottom: 12px;">It is one self-contained HTML file. It runs offline. It works from a USB stick on a school Chromebook with WiFi off.</p>
+    <p style="font-style: italic; opacity: 0.85; margin-top: 16px;">Designed by Gabby Kasdaglis for her sixth-grade history class.</p>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div>made with <span class="heart">♥</span> in 1848</div>
+    <div class="designed-by">Pink Oregon Trail · A Kasdaglis production</div>
+  </footer>
+
+</div>
+</body>
+</html>
