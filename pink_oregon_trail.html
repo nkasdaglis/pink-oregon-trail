@@ -5772,6 +5772,22 @@ function parseOutcome(text, isLowMorale) {
   return fx;
 }
 
+// v2.2 flat-key modifiers (Part 3 — 7b): convert {money, food, morale, ...}
+// into gain/lose effect entries. v2.2 encounter events (doctor_for_pay,
+// musician_camp, etc.) use this shape; legacy events use modifier.effect
+// text strings handled by applyModifierToEffects.
+function flatKeysToEffects(obj) {
+  if (!obj) return [];
+  const keys = ['money','food','water','supplies','hides','morale','health'];
+  const out = [];
+  for (const k of keys) {
+    const v = obj[k];
+    if (v == null || v === 0) continue;
+    out.push({ kind: v > 0 ? 'gain' : 'lose', target: k, amount: Math.abs(v) });
+  }
+  return out;
+}
+
 function applyModifierToEffects(effects, modifier) {
   if (!modifier || !modifier.effect) return effects;
   const t = String(modifier.effect).toLowerCase();
@@ -7903,6 +7919,18 @@ function resolveNarrativeEvent(w, space, event) {
   // Apply weakened-strength weighting if needed (currently handled by the modifier itself; visible in narrative)
   let effects = parseOutcome((event.outcomes || []).join('; '), w.resources.morale <= 2);
   if (chosenMod) effects = applyModifierToEffects(effects, chosenMod);
+  // v2.2 flat-key modifier support (Part 3 — 7b): append gain/lose effects
+  // for any modifier that uses {money, food, morale, ...} instead of an
+  // effect text string. Both forms can co-exist on the same modifier;
+  // applyModifierToEffects handles the textual rules first, then we add
+  // the explicit flat amounts.
+  if (chosenMod) effects = effects.concat(flatKeysToEffects(chosenMod));
+  // If no profession modifier matched but the event has a default_outcome
+  // payload, apply that. This is how v2.2 encounter events express the
+  // "you don't have a Doctor — minus 1 morale" branch.
+  if (!chosenMod && event.default_outcome) {
+    effects = effects.concat(flatKeysToEffects(event.default_outcome));
+  }
   if (w.protectedNext) { effects = effects.filter(e => e.kind !== 'lose' && e.kind !== 'risk' && e.kind !== 'delay'); w.protectedNext = false; }
   if (w.worseNext) { effects = effects.map(e => (e.kind === 'lose' && e.amount) ? Object.assign({}, e, { amount: e.amount + 1 }) : e); w.worseNext = false; }
 
