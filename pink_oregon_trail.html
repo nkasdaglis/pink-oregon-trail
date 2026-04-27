@@ -7551,13 +7551,10 @@ function renderWagonScreen() {
   wagonNameInput.addEventListener('input', e => { w.wagonName = e.target.value; refreshContinueButton(); });
   wrap.appendChild(wagonNameInput);
 
-  // Teacher Mode toggle (only on first wagon screen)
-  if (setupState.currentWagonIdx === 0) {
-    const trow = el('div', { class: 'actions', style: 'margin-top:8px;justify-content:flex-start;' });
-    trow.appendChild(el('label', { style: 'margin:0;display:flex;align-items:center;gap:8px;font-weight:normal;', html:
-      '<input type="checkbox" id="teacher-mode-toggle" ' + (setupState.teacherMode ? 'checked' : '') + '/> <span>Teacher Mode (generates a printable rubric report at end of game)</span>' }));
-    wrap.appendChild(trow);
-  }
+  // Teacher Mode toggle moved to renderConfirmScreen per
+  // teacher_mode_use_cases.ui_setup_screen_copy.placement (Part 6 — Stage 9):
+  // it now sits on the "Ready to roll" screen as the LAST item, with the
+  // spec's full explanation copy.
 
   // Stage 1: profession selection
   if (w.stage !== 'naming') {
@@ -7613,10 +7610,9 @@ function renderWagonScreen() {
   } }));
   const next = el('button', { class: 'primary', id: 'wagon-next-btn', textContent: w.stage === 'naming' ? (setupState.currentWagonIdx === total - 1 ? 'Confirm Team →' : 'Next Wagon →') : 'Continue →',
     onclick: () => { audioController.playSfx('click');
-      if (setupState.currentWagonIdx === 0) {
-        const tm = $('teacher-mode-toggle');
-        if (tm) setupState.teacherMode = tm.checked;
-      }
+      // Teacher Mode toggle now lives on the confirm screen — the
+      // wagon-screen handler that read #teacher-mode-toggle was removed
+      // along with the markup (Part 6 — Stage 9).
       if (w.stage === 'select') {
         if (w.professions.length !== 7 || !w.playerName.trim()) return;
         w.stage = 'naming';
@@ -7668,9 +7664,41 @@ function renderConfirmScreen() {
     wrap.appendChild(card);
   });
 
+  // Teacher Mode toggle (Part 6 — Stage 9). Last item before the action
+  // buttons per teacher_mode_use_cases.ui_setup_screen_copy.placement.
+  // The label and explanation copy come straight from the JSON spec.
+  const tmCopy = ((GAME_DATA.teacher_mode_use_cases || {}).ui_setup_screen_copy) || {};
+  const tmLabel = tmCopy.label       || 'Teacher Mode (off by default)';
+  const tmExplain = tmCopy.explanation ||
+    'Turn this on ONLY if today’s play is being graded.';
+  const tmBox = el('div', {
+    class: 'teacher-mode-toggle',
+    style: 'margin: 18px 0 8px; padding: 12px 14px; border: 1px dashed #b8895c; border-radius: 8px; background: rgba(212,175,55,0.06);'
+  });
+  tmBox.appendChild(el('label', {
+    style: 'display:flex;align-items:center;gap:8px;font-weight:600;cursor:pointer;', html:
+      '<input type="checkbox" id="teacher-mode-toggle" ' +
+      (setupState.teacherMode ? 'checked' : '') + ' /> ' +
+      '<span>' + escapeHtml(tmLabel) + '</span>'
+  }));
+  tmBox.appendChild(el('p', {
+    style: 'margin:6px 0 0; font-size:12px; line-height:1.4; color:var(--brown); opacity:0.85;',
+    textContent: tmExplain
+  }));
+  wrap.appendChild(tmBox);
+  // Live-bind the toggle so the state is captured the moment the user
+  // checks it, not only when Begin Journey is clicked.
+  setTimeout(() => {
+    const tm = $('teacher-mode-toggle');
+    if (tm) tm.addEventListener('change', () => { setupState.teacherMode = tm.checked; });
+  }, 0);
+
   const actions = el('div', { class: 'actions' });
   actions.appendChild(el('button', { class: 'ghost', textContent: '← Back', onclick: () => { setupState.currentWagonIdx = setupState.wagonCount - 1; setupState.wagons[setupState.currentWagonIdx].stage = 'naming'; showScreen('screen-wagon'); renderWagonScreen(); } }));
   actions.appendChild(el('button', { class: 'primary', textContent: 'Begin Journey →', onclick: () => {
+    // Capture toggle state defensively in case the change handler missed
+    const tm = $('teacher-mode-toggle');
+    if (tm) setupState.teacherMode = tm.checked;
     audioController.init(); audioController.resume();
     audioController.playSfx('arrive');
     audioController.startMusic();
