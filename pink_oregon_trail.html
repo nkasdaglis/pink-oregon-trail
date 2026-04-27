@@ -5916,12 +5916,18 @@ function applyEndOfTurnStateTransitions(w) {
       }
     }
   }
-  // Per-state per-turn death checks — collect candidates first, then apply
-  // the v2.2 death-per-turn cap: at most ONE member dies through natural
-  // state-machine progression per turn. Catastrophic events (river drownings,
-  // bandit ambush, cholera epidemic, winter ending) call transitionMember
-  // with to_state='lost' directly and bypass this cap by design — the spec
-  // permits multiple deaths only when the player CHOSE the risk.
+}
+
+// Per-state per-turn death checks — split out from
+// applyEndOfTurnStateTransitions so a Part 2 — 6c intervention event can
+// fire BETWEEN state transitions and deaths. Returns the array of members
+// who actually died this turn (max 1 by the cap rule).
+//
+// Catastrophic events (river drownings, bandit ambush, cholera epidemic,
+// winter ending) call transitionMember(..., 'lost', ...) directly and
+// bypass this function entirely — the spec permits multiple deaths only
+// when the player CHOSE the risk.
+function applyEndOfTurnDeathChecks(w) {
   const deathCandidates = [];
   for (const m of w.team) {
     if (m.state === 'lost') continue;
@@ -5930,7 +5936,7 @@ function applyEndOfTurnStateTransitions(w) {
       deathCandidates.push(m);
     }
   }
-  if (deathCandidates.length === 0) return;
+  if (deathCandidates.length === 0) return [];
   // Most-progressed wins: dying > sick > injured > weakened, then longer in
   // current state (smaller state_since_day). Ties broken randomly among the
   // top cohort.
@@ -5952,6 +5958,7 @@ function applyEndOfTurnStateTransitions(w) {
     logToWagon(w, '… ' + survived.length + ' other member' + (survived.length === 1 ? '' : 's') +
                   ' came close to death but held on. Tomorrow may not be so kind.');
   }
+  return [chosen];
 }
 function describeCause(cause) {
   if (!cause) return 'the trail';
@@ -6057,6 +6064,154 @@ function processWarningEvents(w, onDone) {
     showAcknowledgeBanner('', html, next);
   }
   next();
+}
+
+// ===== Pre-death intervention (Part 2 — 6c) =====
+// When a member is in 'dying' state at the end of turn, the simulation
+// pauses and the player gets a 5-choice event. The choice resolves into
+// either a recovery transition or the member stays in 'dying' for next
+// turn (where the death-check cap may then claim them, giving the
+// player one more window).
+function pickDyingMember(w) {
+  // Most-progressed dying member wins; tiebreak random.
+  const dying = w.team.filter(m => m.state === 'dying');
+  if (dying.length === 0) return null;
+  if (dying.length === 1) return dying[0];
+  let bestDay = Infinity;
+  for (const m of dying) {
+    const d = m.state_since_day != null ? m.state_since_day : w.daysTraveled;
+    if (d < bestDay) bestDay = d;
+  }
+  const tier = dying.filter(m => (m.state_since_day != null ? m.state_since_day : w.daysTraveled) === bestDay);
+  return tier[rand(tier.length)];
+}
+
+// Distance in spaces from current position to the next fort along the trail.
+// Used by the race_to_fort choice availability.
+function distanceToNextFort(w) {
+  const trail = GAME_DATA.trails[gameState.trailLength];
+  for (let p = w.position; p <= trail.length; p++) {
+    const sp = trail[p - 1];
+    if (sp && sp.type === 'fort') return p - w.position;
+  }
+  return Infinity;
+}
+
+// Build the choice list for the intervention event. JSON drives labels,
+// effects, and narratives; we evaluate available_when guards here.
+function buildInterventionChoices(w, member) {
+  const ws = (GAME_DATA.warning_escalation_system || {}).pre_death_intervention;
+  if (!ws) return [];
+  const distFort = distanceToNextFort(w);
+  const hasDoctor = !!activeProtectorMember(w, 'Doctor');
+  const hasPriest = !!activeProtectorMember(w, 'Priest');
+  const difficulty = (gameState.difficulty || 'Medium');
+  const revivalsLeft = w.revival_charges_remaining || 0;
+  return ws.choices.filter(c => {
+    if (c.id === 'race_to_fort')      return distFort <= 3;
+    if (c.id === 'use_revival_charge') return difficulty === 'Easy' && revivalsLeft > 0;
+    return true;
+  }).map(c => Object.assign({}, c, { _hasDoctor: hasDoctor, _hasPriest: hasPriest }));
+}
+
+// Resolve a chosen intervention. Mutates wagon and member state, returns
+// a string narrative for the resolution screen.
+function resolveInterventionChoice(w, member, choice) {
+  const eff = choice.effects || {};
+  const hasDoctor = choice._hasDoctor;
+  const hasPriest = choice._hasPriest;
+  // 1. Apply day & resource costs
+  if (eff.days_added)    w.daysTraveled += eff.days_added;
+  if (eff.food_change)   w.resources.food   = Math.max(0, w.resources.food   + eff.food_change);
+  if (eff.water_change)  w.resources.water  = Math.max(0, w.resources.water  + eff.water_change);
+  if (eff.morale_change != null)              w.resources.morale = clamp(w.resources.morale + eff.morale_change, 0, RESOURCES_BY_NAME.morale.max);
+  if (eff.morale_change_with_priest != null    && hasPriest) w.resources.morale = clamp(w.resources.morale + eff.morale_change_with_priest, 0, RESOURCES_BY_NAME.morale.max);
+  if (eff.morale_change_without_priest != null && !hasPriest) w.resources.morale = clamp(w.resources.morale + eff.morale_change_without_priest, 0, RESOURCES_BY_NAME.morale.max);
+  if (eff.revival_charges_spent && w.revival_charges_remaining > 0) w.revival_charges_remaining -= eff.revival_charges_spent;
+  // 2. Compute recovery probability
+  let p = 0;
+  if (eff.recovery_probability != null) p = eff.recovery_probability;
+  else if (hasDoctor && eff.recovery_probability_with_doctor != null) p = eff.recovery_probability_with_doctor;
+  else if (hasPriest && eff.recovery_probability_with_priest != null) p = eff.recovery_probability_with_priest;
+  else if (eff.recovery_probability_base != null) p = eff.recovery_probability_base;
+  // Doctor adds +0.15 to non-stop_and_tend choices when present (but not
+  // for use_revival_charge which already has p=1, and not for stop_and_tend
+  // which has its own with_doctor branch).
+  if (hasDoctor && choice.id !== 'stop_and_tend' && choice.id !== 'use_revival_charge') p = Math.min(1, p + 0.15);
+  // 3. Roll
+  const survived = Math.random() < p;
+  if (survived) {
+    const toState = eff.recovery_state || 'sick';
+    transitionMember(member, toState, w.daysTraveled, 'intervention:' + choice.id);
+    audioController.playSfx('gain');
+    let key = 'narrative_success';
+    if (choice.id === 'pray_and_continue') key = hasPriest ? 'narrative_success_with_priest' : 'narrative_success_without_priest';
+    let txt = choice[key] || choice.narrative_success || '{name} pulled through.';
+    txt = txt.replace(/\{name\}/g, escapeHtml(member.name));
+    if (hasPriest) {
+      const priest = activeProtectorMember(w, 'Priest');
+      if (priest) txt = txt.replace(/\{Priest_name\}/g, escapeHtml(priest.name));
+    }
+    logToWagon(w, '★ Intervention: ' + member.name + ' recovered (' + choice.id + ').');
+    return { recovered: true, html: '<div class="narrative-text">' + txt + '</div>' };
+  } else {
+    // Member stays in dying; the natural death-check cap will then
+    // resolve whether they survive the night.
+    audioController.playSfx('loss');
+    let txt = (choice.narrative_failure || '{name} did not survive.').replace(/\{name\}/g, escapeHtml(member.name));
+    logToWagon(w, '… Intervention failed: ' + member.name + ' (' + choice.id + ').');
+    return { recovered: false, html: '<div class="narrative-text">' + txt + '</div>' };
+  }
+}
+
+// Present the intervention modal. ui_pacing per spec: hold the intro for
+// 3 seconds before showing choices. After resolution, show a 4–5s narrative
+// callout, then the continuation runs.
+function processInterventionEvent(w, onDone) {
+  const member = pickDyingMember(w);
+  if (!member) { onDone(); return; }
+  const ws = (GAME_DATA.warning_escalation_system || {}).pre_death_intervention;
+  if (!ws) { onDone(); return; }
+  // Duck music while the dying member's oof_oof_oof loop continues
+  audioController.duckMusic();
+  const intro = (ws.narrative_intro_template || '{name} the {profession} is gravely ill.')
+    .replace(/\{name\}/g,       escapeHtml(member.name))
+    .replace(/\{profession\}/g, escapeHtml(member.profession));
+  const introHtml = '<div class="event-title">A Member Is Dying</div>' +
+                    '<div class="event-intro">' + intro + '</div>' +
+                    '<div class="option-buttons" id="intervention-opts" style="opacity:0.4;pointer-events:none;"></div>';
+  renderNarrativeCallout(introHtml);
+  const bar = $('action-buttons');
+  bar.classList.add('continue-mode');
+  bar.innerHTML = '';
+  // Hold intro 3s before revealing choices
+  setTimeout(() => populateInterventionChoices(w, member, onDone), 3000);
+}
+
+function populateInterventionChoices(w, member, onDone) {
+  const choices = buildInterventionChoices(w, member);
+  const list = $('intervention-opts');
+  if (!list) { onDone(); return; }
+  list.style.opacity = '1';
+  list.style.pointerEvents = 'auto';
+  list.innerHTML = '';
+  for (const c of choices) {
+    const label = (c.label || '').replace(/\{name\}/g, member.name);
+    const desc  = (c.description || '').replace(/\{name\}/g, member.name);
+    const o = el('div', { class: 'choice-option', onclick: () => {
+      audioController.playSfx('choice');
+      // Replace the option list with an outcome modal
+      const result = resolveInterventionChoice(w, member, c);
+      audioController.unduckMusic();
+      const outcomeHtml = '<div class="event-title">' + escapeHtml(member.name) + ' — ' +
+        escapeHtml(c.label.replace(/\{name\}/g, member.name)) + '</div>' + result.html;
+      // delayMs gives the result a 4s read before Continue activates
+      showOutcomeCallout('', outcomeHtml, onDone, { delayMs: 4000 });
+    }});
+    o.innerHTML = '<div class="opt-label">' + escapeHtml(label) + '</div>' +
+                  '<div class="opt-hint">'  + escapeHtml(desc)  + '</div>';
+    list.appendChild(o);
+  }
 }
 
 // Banner is a single Acknowledge button on a frozen scene — like
@@ -8306,7 +8461,22 @@ function endTurn(w) {
   // can underscore the "fallen ill" banner audibly.
   audioController.updateStateLoops(w.team);
   audioController.syncMoodToWagon(w);
-  processWarningEvents(w, () => completeEndTurn(w));
+  // 1. Drain transition warnings (toasts + banners)
+  processWarningEvents(w, () => {
+    // 2. If anyone is dying, present the intervention event (Part 2 — 6c)
+    processInterventionEvent(w, () => {
+      // 3. Apply the death-per-turn cap (Part 2 — 6a) — at most one
+      //    natural death per turn. The intervention's recovery roll has
+      //    already moved survivors out of dying state, so the cap only
+      //    fires on members who refused to recover.
+      applyEndOfTurnDeathChecks(w);
+      // Refresh audio + mood — a death may shift mood to somber and
+      //   end an oof_oof_oof loop for the deceased member.
+      audioController.updateStateLoops(w.team);
+      audioController.syncMoodToWagon(w);
+      completeEndTurn(w);
+    });
+  });
 }
 
 function completeEndTurn(w) {
