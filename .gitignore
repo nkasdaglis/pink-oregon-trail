@@ -24,3 +24,10 @@ package-lock.json
 *.tmp.json
 *.tmp.html
 *.tmp.js
+
+# v2.5 — keep dev artifacts out of the public docs/ folder.
+# docs/ is for GitHub Pages public consumption only; NOTES + BUILD_REPORTs
+# + .claude harness state stay at the repo root for the dev workflow.
+docs/.claude/
+docs/NOTES_v*.md
+docs/BUILD_REPORT_v*.md
