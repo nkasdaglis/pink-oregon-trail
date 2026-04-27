@@ -7584,8 +7584,20 @@ function renderWagonScreen() {
       const card = el('div', { class: 'prof-card' + (idx >= 0 ? ' selected' : ''),
         onclick: () => {
           audioController.playSfx('click');
-          if (idx >= 0) w.professions.splice(idx, 1);
-          else if (w.professions.length < 7) w.professions.push(p.name);
+          // Issue 6 (v2.3) — lock-step splice/push so names and skinTones
+          // stay aligned with professions across back-nav. Without this,
+          // deselecting Carpenter (index 2) shifted Cook into slot 2 but
+          // left "Carla" (the Carpenter's name) at names[2] — the in-game
+          // Cook then displayed as "Carla". See team_alignment_fix in JSON.
+          if (idx >= 0) {
+            w.professions.splice(idx, 1);
+            w.names.splice(idx, 1);
+            w.skinTones.splice(idx, 1);
+          } else if (w.professions.length < 7) {
+            w.professions.push(p.name);
+            w.names.push('');
+            w.skinTones.push(pickRandom(['light','medium','dark']));
+          }
           renderWagonScreen();
         }
       });
@@ -7602,6 +7614,14 @@ function renderWagonScreen() {
 
   // Stage 2: name the team
   if (w.professions.length === 7 && w.stage === 'naming') {
+    // Issue 6 (v2.3) defensive reconciliation: if anything earlier left
+    // names/skinTones longer or shorter than professions (e.g. legacy
+    // saves, future direct mutations), pad with empty/random and truncate
+    // so the invariant w.names.length === w.professions.length holds.
+    while (w.names.length < w.professions.length)     w.names.push('');
+    while (w.skinTones.length < w.professions.length) w.skinTones.push(pickRandom(['light','medium','dark']));
+    if (w.names.length > w.professions.length)        w.names.length = w.professions.length;
+    if (w.skinTones.length > w.professions.length)    w.skinTones.length = w.professions.length;
     wrap.appendChild(el('label', { textContent: 'Name Your Team — these are real people. Give them real names.' }));
     const grid = el('div', { class: 'naming-grid' });
     w.professions.forEach((profName, i) => {
