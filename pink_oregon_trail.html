@@ -353,6 +353,23 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
 }
 
 .event-illustration { display: block; margin: 0 auto 10px; width: 80px; height: 56px; }
+/* Historical illustration (Part 7 — Stage 10) — daguerreotype-styled oval
+   image shown alongside the Did You Know card for the 9 named landmarks/forts.
+   Caption sits below in serif italic. */
+.historical-illustration {
+  margin: 4px auto 12px;
+  max-width: min(320px, 90%);
+  text-align: center;
+}
+.historical-illustration svg { display: block; max-width: 100%; height: auto; }
+.historical-illustration .dag-caption {
+  margin-top: 6px;
+  padding: 4px 8px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 12px; font-style: italic; line-height: 1.4;
+  color: var(--brown);
+  opacity: 0.85;
+}
 .event-title {
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(20px, 2.5vw, 28px); font-style: italic; font-weight: 500;
@@ -8230,6 +8247,175 @@ function formatJournalLine(space, event, hero, mod, lost, messages) {
 }
 
 // Event illustration (uses category)
+// ===== Historical illustrations (Part 7 — Stage 10) =====
+// Daguerreotype-style SVG illustrations for the 9 named landmarks/forts
+// per historical_illustrations.locations. The default style is an oval
+// sepia frame with a period-appropriate subject silhouette.
+//
+// Upgrade path: populate HISTORICAL_PHOTOS_OVERRIDE with base64-encoded
+// data URLs keyed by location id (e.g. {'fort_laramie': 'data:image/jpeg;base64,...'})
+// to swap any illustration for a real public-domain photograph at runtime.
+const HISTORICAL_PHOTOS_OVERRIDE = {};
+
+// Map space.name → historical_illustrations.location id
+function historicalLocationIdFor(name) {
+  const map = {
+    'Fort Laramie':       'fort_laramie',
+    'Chimney Rock':       'chimney_rock',
+    'Independence Rock':  'independence_rock',
+    'Soda Springs':       'soda_springs',
+    'South Pass':         'south_pass',
+    'Fort Bridger':       'fort_bridger',
+    'Whitman Mission':    'whitman_mission',
+    'The Dalles':         'the_dalles',
+    'Oregon City':        'oregon_city'
+  };
+  return map[name] || null;
+}
+
+// Sepia subject panel — viewBox 0 0 300 230 to match the spec's frame.
+// Each subject is a stylized silhouette in the daguerreotype palette
+// (#5C4A36 darks, #A89070 mids, #D4C19E highlights, #FBF6F0 paper).
+function _daguerreotypeSubject(id) {
+  const dark = '#5C4A36', mid = '#A89070', hi = '#D4C19E';
+  const sky = '<rect x="20" y="20" width="260" height="120" fill="' + hi + '"/>' +
+              '<rect x="20" y="140" width="260" height="70" fill="#C9B58F"/>';
+  switch (id) {
+    case 'fort_laramie':
+      return sky +
+        '<rect x="80" y="80" width="140" height="60" fill="' + mid + '" stroke="' + dark + '" stroke-width="1.5"/>' +
+        '<rect x="135" y="62" width="30" height="78" fill="' + dark + '"/>' + // blockhouse
+        '<line x1="150" y1="62" x2="150" y2="40" stroke="' + dark + '" stroke-width="1.5"/>' +
+        '<polygon points="150,40 175,46 150,52" fill="#C8956D"/>' + // flag
+        '<polygon points="20,140 70,90 100,110 130,80 170,100 220,75 280,135 280,210 20,210" fill="#8a7860" opacity="0.6"/>' + // mountains
+        '<g transform="translate(40 158)" fill="' + dark + '" opacity="0.9"><ellipse cx="0" cy="6" rx="12" ry="4"/><polygon points="-12,6 -8,-4 8,-4 12,6"/></g>'; // wagon silhouette
+    case 'chimney_rock':
+      return sky +
+        '<polygon points="135,40 165,40 158,140 142,140" fill="' + mid + '" stroke="' + dark + '" stroke-width="1.2"/>' +
+        '<polygon points="100,140 200,140 230,210 70,210" fill="' + mid + '" opacity="0.7"/>' +
+        '<g transform="translate(50 178)" fill="' + dark + '" opacity="0.85"><ellipse cx="0" cy="6" rx="9" ry="3"/><polygon points="-9,6 -6,-3 6,-3 9,6"/></g>' +
+        '<g transform="translate(80 184)" fill="' + dark + '" opacity="0.85"><ellipse cx="0" cy="6" rx="9" ry="3"/><polygon points="-9,6 -6,-3 6,-3 9,6"/></g>';
+    case 'independence_rock':
+      return sky +
+        '<ellipse cx="150" cy="160" rx="100" ry="40" fill="' + mid + '" stroke="' + dark + '" stroke-width="1.5"/>' +
+        '<path d="M75 158 Q100 130 150 124 Q200 130 225 158" fill="none" stroke="' + dark + '" stroke-width="1"/>' +
+        '<path d="M40 195 Q100 178 160 188 Q220 198 280 188" fill="none" stroke="#5B7FA8" stroke-width="2" opacity="0.7"/>' + // sweetwater river
+        '<text x="120" y="155" font-family="serif" font-size="8" fill="' + dark + '" opacity="0.7" font-style="italic">A.S.  1849</text>';
+    case 'soda_springs':
+      return sky +
+        '<ellipse cx="100" cy="170" rx="22" ry="6" fill="' + dark + '" opacity="0.6"/>' +
+        '<ellipse cx="160" cy="175" rx="28" ry="7" fill="' + dark + '" opacity="0.6"/>' +
+        '<ellipse cx="220" cy="170" rx="20" ry="5" fill="' + dark + '" opacity="0.6"/>' +
+        // steam wisps
+        '<path d="M100 160 Q98 140 105 130 M160 165 Q165 140 158 125 M220 162 Q224 140 218 130" fill="none" stroke="#D4C19E" stroke-width="2" opacity="0.65"/>' +
+        // pines on hills
+        '<polygon points="50,150 60,120 70,150" fill="' + dark + '" opacity="0.7"/>' +
+        '<polygon points="240,150 250,118 260,150" fill="' + dark + '" opacity="0.7"/>';
+    case 'south_pass':
+      return sky +
+        '<polygon points="20,140 110,80 150,110 190,80 280,140 280,210 20,210" fill="' + mid + '" opacity="0.85"/>' +
+        '<polygon points="20,210 280,210 280,170 150,160 20,180" fill="#9b8569" opacity="0.7"/>' +
+        '<g transform="translate(70 195)" fill="' + dark + '" opacity="0.85"><ellipse cx="0" cy="6" rx="10" ry="3"/><polygon points="-10,6 -7,-3 7,-3 10,6"/></g>' +
+        '<g transform="translate(110 200)" fill="' + dark + '" opacity="0.85"><ellipse cx="0" cy="6" rx="10" ry="3"/><polygon points="-10,6 -7,-3 7,-3 10,6"/></g>' +
+        '<g transform="translate(155 202)" fill="' + dark + '" opacity="0.85"><ellipse cx="0" cy="6" rx="10" ry="3"/><polygon points="-10,6 -7,-3 7,-3 10,6"/></g>';
+    case 'fort_bridger':
+      return sky +
+        '<polygon points="40,160 60,140 80,160 100,140 120,160 140,140 160,160 180,140 200,160 220,140 240,160 260,140 280,160 280,210 40,210" fill="' + mid + '" stroke="' + dark + '" stroke-width="1.2"/>' +
+        '<rect x="120" y="170" width="60" height="40" fill="' + dark + '"/>' +
+        '<polygon points="0,170 280,170 280,210 0,210" fill="#9b8569" opacity="0.6"/>';
+    case 'whitman_mission':
+      return sky +
+        '<rect x="100" y="100" width="100" height="80" fill="#FBF6F0" stroke="' + dark + '" stroke-width="1.5"/>' +
+        '<polygon points="100,100 150,75 200,100" fill="' + mid + '" stroke="' + dark + '" stroke-width="1.5"/>' +
+        '<line x1="150" y1="75" x2="150" y2="55" stroke="' + dark + '" stroke-width="2"/>' +
+        '<line x1="143" y1="63" x2="157" y2="63" stroke="' + dark + '" stroke-width="2"/>' + // cross
+        '<rect x="134" y="140" width="32" height="40" fill="' + dark + '"/>' + // door
+        '<rect x="60" y="170" width="35" height="20" fill="#7B8A66" opacity="0.7"/>'; // garden
+    case 'the_dalles':
+      return sky +
+        '<polygon points="20,80 80,120 80,210 20,210" fill="' + dark + '"/>' +
+        '<polygon points="280,80 220,120 220,210 280,210" fill="' + dark + '"/>' +
+        '<rect x="80" y="140" width="140" height="70" fill="#5B7FA8"/>' +
+        '<path d="M80 145 Q120 138 150 148 Q180 158 220 145" fill="none" stroke="#FBF6F0" stroke-width="2" opacity="0.85"/>' +
+        '<path d="M80 165 Q120 158 150 168 Q180 178 220 165" fill="none" stroke="#FBF6F0" stroke-width="2" opacity="0.7"/>' +
+        '<g transform="translate(95 148)"><line x1="0" y1="0" x2="0" y2="-12" stroke="' + dark + '" stroke-width="1.4"/><circle cx="0" cy="-15" r="3" fill="' + dark + '"/></g>'; // fisherman
+    case 'oregon_city':
+      return sky +
+        '<rect x="50" y="140" width="40" height="40" fill="' + mid + '" stroke="' + dark + '" stroke-width="1"/>' +
+        '<polygon points="50,140 70,120 90,140" fill="' + dark + '"/>' +
+        '<rect x="100" y="135" width="35" height="45" fill="#FBF6F0" stroke="' + dark + '" stroke-width="1"/>' +
+        '<polygon points="100,135 117,110 135,135" fill="' + dark + '"/>' +
+        '<line x1="117" y1="110" x2="117" y2="95" stroke="' + dark + '" stroke-width="1.5"/>' + // spire
+        '<rect x="145" y="148" width="30" height="32" fill="' + mid + '" stroke="' + dark + '" stroke-width="1"/>' +
+        '<rect x="180" y="155" width="30" height="25" fill="' + mid + '" stroke="' + dark + '" stroke-width="1"/>' +
+        // willamette falls
+        '<rect x="220" y="140" width="60" height="40" fill="#5B7FA8"/>' +
+        '<rect x="220" y="180" width="60" height="6" fill="#FBF6F0" opacity="0.85"/>' +
+        '<path d="M220 180 L240 210 M250 180 L268 210 M270 180 L278 210" stroke="#FBF6F0" stroke-width="1.5" opacity="0.7"/>' +
+        // forested hills
+        '<polygon points="20,140 50,118 80,140 100,118 130,140 280,140 280,90 20,90" fill="#7B8A66" opacity="0.55"/>';
+    default: return sky;
+  }
+}
+
+// Build the full daguerreotype: oval frame + grain texture + vignette
+// + subject + corner ornament with the year. Returns an SVG string.
+function buildDaguerreotype(loc) {
+  if (!loc) return '';
+  const id = loc.id;
+  // Override path: a manifest entry replaces the SVG with an <img>.
+  if (HISTORICAL_PHOTOS_OVERRIDE[id]) {
+    return '<div class="historical-illustration"><img src="' + HISTORICAL_PHOTOS_OVERRIDE[id] +
+           '" alt="' + escapeHtml(loc.name) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50% / 40%;filter:sepia(0.6) contrast(1.05);"/>' +
+           '<div class="dag-caption">' + escapeHtml(loc.caption || '') + '</div></div>';
+  }
+  const year = loc.year_referenced || '1849';
+  const filterId = 'dag-grain-' + id;
+  const clipId   = 'dag-clip-'   + id;
+  return '<div class="historical-illustration">' +
+    '<svg viewBox="0 0 300 230" preserveAspectRatio="xMidYMid meet" width="100%" height="auto" role="img" aria-label="' + escapeHtml(loc.name + ' — ' + year) + '">' +
+      '<defs>' +
+        '<clipPath id="' + clipId + '"><ellipse cx="150" cy="115" rx="135" ry="100"/></clipPath>' +
+        '<filter id="' + filterId + '" x="0" y="0" width="100%" height="100%">' +
+          '<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3"/>' +
+          '<feColorMatrix type="matrix" values="0 0 0 0 0.30  0 0 0 0 0.24  0 0 0 0 0.18  0 0 0 0.08 0"/>' +
+          '<feComposite in2="SourceGraphic" operator="in"/>' +
+        '</filter>' +
+        '<radialGradient id="vignette-' + id + '" cx="50%" cy="50%" r="70%">' +
+          '<stop offset="55%" stop-color="rgba(0,0,0,0)"/>' +
+          '<stop offset="100%" stop-color="rgba(60,42,22,0.55)"/>' +
+        '</radialGradient>' +
+      '</defs>' +
+      // Outer cream border + sepia rim + black inner edge per spec
+      '<rect x="0" y="0" width="300" height="230" fill="#FBF6F0"/>' +
+      '<ellipse cx="150" cy="115" rx="138" ry="103" fill="none" stroke="#8a7553" stroke-width="2"/>' +
+      '<ellipse cx="150" cy="115" rx="135" ry="100" fill="none" stroke="#1a1208" stroke-width="1"/>' +
+      // Subject clipped to the oval
+      '<g clip-path="url(#' + clipId + ')">' +
+        _daguerreotypeSubject(id) +
+        '<rect x="0" y="0" width="300" height="230" fill="url(#vignette-' + id + ')"/>' +
+        '<rect x="0" y="0" width="300" height="230" filter="url(#' + filterId + ')"/>' +
+      '</g>' +
+      // Corner flourish with year
+      '<g transform="translate(245 200)">' +
+        '<path d="M0 0 q-6 -10 -16 -8 q5 -2 8 -10 q-2 7 8 12" fill="none" stroke="#5C4A36" stroke-width="1.2"/>' +
+        '<text x="-30" y="14" font-family="Georgia, serif" font-size="10" font-style="italic" fill="#5C4A36">' + escapeHtml(year) + '</text>' +
+      '</g>' +
+    '</svg>' +
+    '<div class="dag-caption">' + escapeHtml(loc.caption || '') + '</div>' +
+    '</div>';
+}
+
+// Public entry point — given a space name, return the full daguerreotype
+// HTML or '' if the space is not one of the 9 historical locations.
+function historicalIllustrationFor(spaceName) {
+  const id = historicalLocationIdFor(spaceName);
+  if (!id) return '';
+  const locs = ((GAME_DATA.historical_illustrations || {}).locations) || [];
+  const loc = locs.find(l => l.id === id);
+  return buildDaguerreotype(loc);
+}
+
 function eventIllustration(cat) {
   const map = { water: 'river', wagonDamage: 'repair', sickness: 'illness', campfire: 'campfire', people: 'people', fort: 'fort', wildlife: 'wildlife', mountain: 'mountain', weather: 'weather', trail: 'trail' };
   const k = map[cat] || cat;
@@ -8397,7 +8583,14 @@ function resolveFort(w, sp) {
     const carp = activeProtectorMember(w, 'Carpenter');
     const merchMult = merch ? 1.5 : 1;
     const inv = computeSellableInventory(w, merchMult);
-    let html = '<div class="event-title">' + escapeHtml(sp.name) + '</div>';
+    // Daguerreotype illustration if this fort is one of the 9 historical
+    // locations (Part 7 — Stage 10). Sits at the top of the fort menu
+    // above the title, only on first arrival each session — re-renders
+    // are silent so the illustration doesn't dominate the menu loop.
+    const dag = (trackerUsedAction.Buy || trackerUsedAction.Sell || trackerUsedAction.Hire ||
+                 trackerUsedAction.Repair || trackerUsedAction.Rest || trackerUsedAction.News ||
+                 trackerUsedAction.Letter) ? '' : historicalIllustrationFor(sp.name);
+    let html = (dag || '') + '<div class="event-title">' + escapeHtml(sp.name) + '</div>';
     if (sp.info) html += '<div class="event-flavor">"' + escapeHtml(sp.info) + '"</div>';
     html += '<div class="event-intro">A trader at the gate. The smell of woodsmoke. What will you do?</div>';
     // Sellable-goods tip card per money_economy.ui_visibility (Part 3 — 7d)
@@ -8704,7 +8897,12 @@ function resolveLandmark(w, sp) {
   renderSceneCharacters({ wagonScale: 0.7, wagonX: 540, wagonY: 380, extra: hidden ?
     '<g transform="translate(80 280)" opacity="0.85"><circle cx="0" cy="0" r="8" fill="#5C4A36"/><rect x="-5" y="8" width="10" height="20" fill="#7C5E3F"/></g>' : '' });
 
-  let html = eventIllustration('trail') + '<div class="event-title">' + escapeHtml(sp.name) + '</div>';
+  // Daguerreotype illustration if this is one of the 9 historical
+  // locations (Part 7 — Stage 10). Shown above the title for visual
+  // weight; falls back to the small trail illustration otherwise.
+  const dag = historicalIllustrationFor(sp.name);
+  let html = (dag || eventIllustration('trail')) +
+             '<div class="event-title">' + escapeHtml(sp.name) + '</div>';
   if (sp.info) html += '<div class="event-flavor">"' + escapeHtml(sp.info) + '"</div>';
   audioController.playCue('oooh-ahhh');
   html += '<div class="dyk-card"><h3>Did You Know? — ' + escapeHtml(fact.title) + '</h3>' +
