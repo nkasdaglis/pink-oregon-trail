@@ -5704,6 +5704,17 @@ const TRANSITION_RULES = SIM.state_transitions.rules;
 const RESOURCES_BY_NAME = {};
 GAME_DATA.resources.forEach(r => RESOURCES_BY_NAME[r.name.toLowerCase()] = r);
 const TRAIL_END = { short: 25, extended: 50 };
+// Issue 14 (v2.3) — 6 distinct wagon accent colors used on the action
+// menu border, mini-map marker, and turn banner so kids can track which
+// wagon belongs to which player at a glance.
+const WAGON_COLOR_PALETTE = [
+  '#B85770', // 1 — rose       (matches the brand pink)
+  '#D4AF37', // 2 — gold
+  '#3A5C7A', // 3 — navy
+  '#3D5A3D', // 4 — forest
+  '#7A4D6E', // 5 — plum
+  '#A87850'  // 6 — copper
+];
 const DAYS_PER_TURN = CAL.days_per_turn;
 const WINTER_WARNING_DAY = CAL.winter_warning_day;
 const WINTER_DEADLINE_DAY = CAL.winter_deadline_day;
@@ -7588,15 +7599,30 @@ function renderDifficultyScreen() {
 }
 function renderCountScreen() {
   const wrap = $('count-buttons'); wrap.innerHTML = '';
-  [2,3,4].forEach(n => {
+  // Issue 14 (v2.3) — 2-6 wagons supported. The max is read from
+  // GAME_DATA.meta.max_wagon_count_competitive (default 6).
+  const max = (GAME_DATA.meta && GAME_DATA.meta.max_wagon_count_competitive) || 6;
+  for (let n = 2; n <= max; n++) {
     wrap.appendChild(el('button', { textContent: n + ' wagons', class: setupState.wagonCount === n ? 'primary' : '',
       onclick: () => { audioController.playSfx('click'); setupState.wagonCount = n; setupState.currentWagonIdx = 0; ensureWagonSlots(); showScreen('screen-wagon'); renderWagonScreen(); }
     }));
+  }
+  // Class-period note for big games (Issue 14)
+  const existingNote = $('count-note');
+  if (existingNote) existingNote.remove();
+  const note = el('p', { id: 'count-note',
+    style: 'margin: 14px auto 0; max-width: 540px; font-size: 13px; font-style: italic; color: var(--brown); opacity: 0.8;',
+    textContent: '5 or 6 wagons make a long game — recommended for the Short Journey only so it fits a class period.'
   });
+  wrap.parentNode.insertBefore(note, wrap.nextSibling);
 }
 function ensureWagonSlots() {
+  // Stage 1 (v2.3) — initialize names + skinTones as EMPTY arrays so the
+  // lock-step invariant (names.length === professions.length) holds from
+  // the very first selection. v2.2 pre-filled names with 7 empties; that
+  // worked but was misaligned to professions=[] until 7 picks landed.
   while (setupState.wagons.length < setupState.wagonCount) {
-    setupState.wagons.push({ playerName: '', wagonName: '', professions: [], names: ['','','','','','',''], skinTones: [], stage: 'select' });
+    setupState.wagons.push({ playerName: '', wagonName: '', professions: [], names: [], skinTones: [], stage: 'select' });
   }
   setupState.wagons.length = setupState.wagonCount;
 }
@@ -7805,7 +7831,13 @@ function renderConfirmScreen() {
 // SECTION 8 — GAME FLOW, ACTION SCENES, SPACE RESOLUTION, EVENTS
 // =====================================================================
 function beginJourney() {
-  const wagons = setupState.wagons.map((s, i) => { const w = newWagonState(s); w.id = i; return w; });
+  const wagons = setupState.wagons.map((s, i) => {
+    const w = newWagonState(s);
+    w.id = i;
+    // Issue 14 (v2.3) — wagon-specific accent color
+    w.color = WAGON_COLOR_PALETTE[i % WAGON_COLOR_PALETTE.length];
+    return w;
+  });
   gameState = {
     trailLength: setupState.trailLength,
     mode: setupState.mode,

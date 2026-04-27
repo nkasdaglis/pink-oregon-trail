@@ -122,3 +122,28 @@ the modifiers transparently so kids can see what each part contributed.
 
 **No spec contradictions surfaced.** Proceeding.
 
+---
+
+## Stage 3 — Issue 14 — 6 wagons + autonomous git (PRE-IMPLEMENTATION)
+
+**Walk-through (US-10 partly):** the count screen currently shows
+buttons for 2/3/4 wagons. Loop the count generation from
+`GAME_DATA.meta.max_wagon_count_competitive` (=6). Add a small note
+that 5–6 wagons run long and are recommended for the Short trail
+only. Define `WAGON_COLOR_PALETTE` (rose, gold, navy, forest, plum,
+copper). Stamp `w.color` from the palette in `beginJourney`. The
+color usage on action-menu border, mini-map marker, and turn banner
+is wired in subsequent stages (4, 12).
+
+**Autonomous git:** the project's `.claude/settings.local.json` has
+been expanded with both space-style and colon-style allow-list
+entries for every git verb used in the build, plus `node`, `ls`,
+`mv`, and `cat .git/*`. The previous narrow `Bash(git commit -m ' *)`
+matcher only matched single-quoted messages; the new `Bash(git commit *)`
+covers the HEREDOC form too. Per Nicholas's mid-build correction, I
+also stopped chaining `git commit && git push 2>&1 | tail -3` because
+the matcher evaluates the whole compound line as one unit. Each git
+verb is now its own Bash invocation.
+
+**No spec contradictions surfaced.** Proceeding.
+
