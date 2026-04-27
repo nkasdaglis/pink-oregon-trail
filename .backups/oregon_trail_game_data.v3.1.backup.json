@@ -2,7 +2,7 @@
   "meta": {
     "title": "Pink Oregon Trail",
     "designer": "Gabriella Kasdaglis (Gabby)",
-    "version": "3.1.1",
+    "version": "3.1",
     "trail_lengths": {
       "short": {
         "spaces": 25,
@@ -55,7 +55,7 @@
         "STARVATION_THRESHOLD": 0
       }
     },
-    "notes": "v3.1.1 quick-fix patch: (1) Day/night cycle stuck on dark — diagnose and force midday for finish scenes, (2) race_to_fort intervention choice should not appear when wagon is already at a fort, (3) regenerate the two paintable PDFs to fill the full page (current PDFs render in top-left corner only). v3.2 multiplayer (PeerJS room codes) follows as separate build.",
+    "notes": "v3.0: Mobile UI overhaul (drawer-based layout) and modified pin-needle wagon markers with smart-stacking. v3.1 (physical board redesign) follows as separate amendment.",
     "stochastic_system": {
       "philosophy": "Real pioneers did not see probability tables before making choices. They knew the river was high, the team was tired, the trail looked rough — and they decided. The game models this. Choice screens show qualitative risk and team advantages, never exact numbers. Outcomes sample from hidden distributions. Sometimes the dice fall well. Sometimes they don't. Profession bonuses shift the distribution but rarely eliminate risk entirely.",
       "choice_display_mode": "qualitative",
@@ -4449,20 +4449,6 @@
           "narrative_failure": "We pushed hard. We were too slow. {name} did not see the fort gates."
         },
         {
-          "id": "use_fort_doctor",
-          "label": "Use the fort doctor",
-          "description": "The fort's surgeon has supplies and skill we don't. No travel — we are already at the gates.",
-          "available_when": "Currently at a fort",
-          "effects": {
-            "days_added": 0,
-            "morale_change": 0,
-            "recovery_probability": 0.65,
-            "recovery_state": "sick"
-          },
-          "narrative_success": "The fort's doctor takes {name} into the infirmary. Hours pass. By sundown {name} is alive — pale, weak, but alive.",
-          "narrative_failure": "The fort's doctor did everything that could be done. {name} did not survive the fever."
-        },
-        {
           "id": "stop_and_tend",
           "label": "Stop and tend to {name}",
           "description": "Halt the wagon. Spend 2 days at full rest. Doubled food and water consumption while caring. Best chance of recovery.",
@@ -5062,6 +5048,21 @@
         "id": "US-10",
         "story": "Multiple players (4) play in Competitive mode.",
         "expected": "A turn banner appears at the top of scene at start of each wagon's turn showing the player name. A persistent corner badge shows 'Now playing: [Name]'. Each wagon has its own color accent on action menu, mini-map marker, and turn banner. The mini-map shows all 4 wagons in their colors at their respective positions."
+      },
+      {
+        "id": "US-16",
+        "story": "Player on iPhone in landscape opens the game. Walks the wagon to a fort.",
+        "expected": "Sees scene + callout + action menu without horizontal scroll. Taps Team drawer — full team visible in 2-column grid. Taps Map drawer — mini-map at near-fullscreen visible. Tapping outside the drawer closes it."
+      },
+      {
+        "id": "US-17",
+        "story": "6-player Competitive game. All 6 wagons at the start space.",
+        "expected": "Mini-map shows 6 pin needles fanning out vertically with each player's initial inside their colored head. Active wagon's pin pulses; others are static. Pins remain individually distinguishable when stacked at any single space."
+      },
+      {
+        "id": "US-18",
+        "story": "First mobile launch — page loads, no audio yet.",
+        "expected": "Silence until the first tap. After the first tap anywhere on the document, audio initializes and music plays. If 3 seconds pass without a tap on mobile, a hint toast appears: \"Tap anywhere to enable sound.\" The hint dismisses on first tap."
       }
     ],
     "test_protocol": "Before writing code for any v2.3 feature, write a brief paragraph describing how the user story plays out in the patched code. If anything is unclear or contradictory, surface it as an open question BEFORE writing the implementation. After writing the code, manually walk through the user story step-by-step verifying each expected outcome holds.",
@@ -6024,48 +6025,6 @@
         "Sealing instructions (Mod Podge gloss after fully dry to make the board last a school year)",
         "Optional: laminating service at Staples ($5-10) for ultra-durability"
       ]
-    }
-  },
-  "v3_1_1_fixes": {
-    "philosophy": "Three small targeted bugs surfaced in playtest. Each is contained and validated in isolation. Bundle them as one quick amendment so Nicholas gets all three fixes in one push.",
-    "fix_1_day_night_cycle_stuck": {
-      "issue": "Sky stays dark across all regions and times of day. The Oregon City win scene renders with near-black sky despite v2.6 day/night cycle being specced and v2.9 brightness fix being applied.",
-      "diagnosis_steps": [
-        "Step 1: Open pink_oregon_trail.html. Search for 'data-time' and 'time-of-day' attribute usage. Confirm the attribute IS being SET on document root or scene container at game start AND on every turn end.",
-        "Step 2: If not being set: ADD a setTimeOfDay(daysTraveled) function that sets document.documentElement.dataset.time to the appropriate value (morning, midday, afternoon, dusk) based on (daysTraveled % 4 === 0 ? 'morning' : daysTraveled % 4 === 1 ? 'midday' : daysTraveled % 4 === 2 ? 'afternoon' : 'dusk'). Call it from completeEndTurn AND from beginJourney AND from advanceWagon.",
-        "Step 3: Verify the CSS rules :root[data-time='midday'] .atmosphere etc. are actually defined for each region. If gradients are defined but selector is wrong (e.g., .region-backdrop[data-time] instead of :root[data-time]), fix the selector.",
-        "Step 4: Inspect the actual gradient values for 'midday' across all 5 regions. If they're still dark (lightness <70% on top stop), apply the v2.9 brightening that was specced but possibly didn't land. JSON v2_9 stage_1 has the specific brightening targets."
-      ],
-      "additional_oregon_city_fix": "When the wagon reaches the finish space (Oregon City), force the atmosphere to bright midday regardless of daysTraveled. Add this in resolveFinish or wherever the win scene composes: temporarily override document.documentElement.dataset.time = 'midday' for the win scene, restore prior value if game continues for some reason (it doesn't usually).",
-      "verification": "Walk through journey from day 1 to day 60+, hitting all four time-of-day values. Each should show a visibly different sky tint. Reach Oregon City — sky should be bright (not dark) at the win scene."
-    },
-    "fix_2_race_to_fort_when_at_fort": {
-      "issue": "When a wagon is currently sitting on a fort space (e.g., just used Make for the Fort, or landed on a fort lucky-roll, or arrived via the v2.4 race_to_fort that was fixed) AND a member is in dying state, the intervention event still shows 'Race to the nearest fort' as a choice. Player picks it, the game advances them to... the SAME fort they're already at, which is nonsensical.",
-      "root_cause": "The availability check for race_to_fort is likely 'distanceToNextFort(w) <= 3' which returns 0 (or a small number) when the wagon is at or near a fort. Treating 0 as 'valid distance' is wrong — 0 means you're ALREADY there, not 'fort is conveniently close.'",
-      "fix": "In resolveInterventionChoice or wherever choice availability is evaluated:",
-      "fix_logic": [
-        "Calculate distanceToNextFort(w) — but exclude the wagon's CURRENT space if it's a fort.",
-        "Specifically: only consider forts AHEAD of the wagon (position > w.position) AND not yet visited (not in w.fortsVisited).",
-        "If no such fort exists within 5 spaces, race_to_fort is unavailable.",
-        "If wagon is currently AT a fort space: race_to_fort is also unavailable (the player should use 'Stop and tend' or 'Pray and continue' instead — they're already at fort medical resources).",
-        "When race_to_fort is unavailable: do not include it in the choice list shown to the player."
-      ],
-      "improvement_for_at_fort_case": "When a member is dying AND the wagon is at a fort, the intervention event should add a NEW choice option: 'Use the fort doctor' — which uses the fort's existing medical resources for a +30% recovery chance bonus AND costs 0 days (you're already at the fort). This makes being-at-a-fort meaningfully different from being-at-a-trail-space when intervening.",
-      "narrative_when_using_fort_doctor": "The fort's doctor takes {name} into the infirmary. Hours pass. The fort's surgeon has supplies and skill our wagon does not. {name} {recovers/does not survive} by sundown.",
-      "verification": "Force a wagon to a fort space. Force a member to dying state. Trigger end-of-turn. Intervention event should NOT show race_to_fort. Should show stop_and_tend, pray_and_continue, continue_full_pace, AND the new 'Use the fort doctor' option (with +30% bonus and 0-day cost)."
-    },
-    "fix_3_pdf_page_fill": {
-      "issue": "The two paintable PDFs (board_short_paintable.pdf and board_extended_paintable.pdf) render each tile in the top-left corner of the letter-portrait page instead of filling the page. About 60-70% of each page is blank.",
-      "root_cause_hypothesis": "The .page CSS rule has 'width: 8.5in; height: 11in' but during print rendering, wkhtmltopdf may be sizing the inner SVG to its viewBox dimensions (612x792 pixels at default 72 DPI = 8.5x11 inches) without applying the .page wrapper sizing. Or the SVG width/height attributes are explicitly set to small px values overriding the CSS.",
-      "fix_steps": [
-        "Step 1: In the combined-tile HTML files, ensure each .page element has explicit width: 8.5in; height: 11in AND that width/height are NOT overridden by any media query or print rule.",
-        "Step 2: Each <svg> inside .page must have NO explicit width/height attributes (or have width='100%' height='100%'). The viewBox handles the coordinate system; the CSS handles the actual rendered size.",
-        "Step 3: Add 'width: 100%; height: 100%; display: block;' as inline style or class to every <svg> in the combined HTMLs.",
-        "Step 4: The .page rule should also have 'overflow: hidden' to prevent any tiny offset from causing a scrollbar.",
-        "Step 5: For the @page CSS, ensure 'margin: 0' is set so the printable area is the full 8.5x11."
-      ],
-      "rebuild_required": "After fixing the HTML, regenerate both PDFs using wkhtmltopdf with the same flags as before (--page-size Letter --orientation Portrait --margin-top 0 etc.). Verify visually that each page fills with the tile artwork.",
-      "verification": "Open the new PDFs. Each of the 6 pages should show the tile filling the entire 8.5x11 sheet — not just the top-left corner. The decorative outline border should run along all four edges of the page."
     }
   }
 }

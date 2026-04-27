@@ -6390,6 +6390,20 @@ const GAME_DATA = {
           "narrative_failure": "We pushed hard. We were too slow. {name} did not see the fort gates."
         },
         {
+          "id": "use_fort_doctor",
+          "label": "Use the fort doctor",
+          "description": "The fort's surgeon has supplies and skill we don't. No travel — we are already at the gates.",
+          "available_when": "Currently at a fort",
+          "effects": {
+            "days_added": 0,
+            "morale_change": 0,
+            "recovery_probability": 0.65,
+            "recovery_state": "sick"
+          },
+          "narrative_success": "The fort's doctor takes {name} into the infirmary. Hours pass. By sundown {name} is alive — pale, weak, but alive.",
+          "narrative_failure": "The fort's doctor did everything that could be done. {name} did not survive the fever."
+        },
+        {
           "id": "stop_and_tend",
           "label": "Stop and tend to {name}",
           "description": "Halt the wagon. Spend 2 days at full rest. Doubled food and water consumption while caring. Best chance of recovery.",
@@ -7774,6 +7788,15 @@ function distanceToNextFort(w) {
   return Infinity;
 }
 
+// v3.1.1 — true if the wagon is currently sitting on a fort space.
+// Race-to-fort is irrelevant when the wagon is already at one; the
+// `use_fort_doctor` intervention choice replaces it in that case.
+function currentSpaceIsFort(w) {
+  const trail = GAME_DATA.trails[gameState.trailLength];
+  const sp = trail && trail[w.position - 1];
+  return !!(sp && sp.type === 'fort');
+}
+
 // v2.4 — Stage 1 helpers for fort_visit_system.
 // Returns { position, distance, name } of the next unvisited fort
 // strictly AHEAD of w.position, or null if none. Used by Path 2
@@ -7891,12 +7914,17 @@ function buildInterventionChoices(w, member) {
   const ws = (GAME_DATA.warning_escalation_system || {}).pre_death_intervention;
   if (!ws) return [];
   const distFort = distanceToNextFort(w);
+  const atFort = currentSpaceIsFort(w);
   const hasDoctor = !!activeProtectorMember(w, 'Doctor');
   const hasPriest = !!activeProtectorMember(w, 'Priest');
   const difficulty = (gameState.difficulty || 'Medium');
   const revivalsLeft = w.revival_charges_remaining || 0;
   return ws.choices.filter(c => {
-    if (c.id === 'race_to_fort')      return distFort <= 3;
+    // v3.1.1 — race_to_fort is hidden when wagon is already at a fort
+    // (distFort=0 used to leak through `distFort <= 3`). The new
+    // use_fort_doctor choice replaces it in that case.
+    if (c.id === 'race_to_fort')       return !atFort && distFort > 0 && distFort <= 3;
+    if (c.id === 'use_fort_doctor')    return atFort;
     if (c.id === 'use_revival_charge') return difficulty === 'Easy' && revivalsLeft > 0;
     return true;
   }).map(c => Object.assign({}, c, { _hasDoctor: hasDoctor, _hasPriest: hasPriest }));
@@ -9125,11 +9153,17 @@ function paintScenery(w) {
   if (lbl) lbl.innerHTML = '<span class="pr-label">Region</span> <span class="pr-value">' + region + '</span>';
 }
 
-// v2.6 Stage 4 — pure helper, set on document root
+// v2.6 Stage 4 — pure helper, set on document root.
+// v3.1.1 — phase formula was `daysTraveled % 4`. With daysPerTurn=14
+// (short trail) only phases[1] and phases[3] ever hit, so the cycle
+// alternated midday↔dusk and never saw morning/afternoon. Now uses
+// `Math.floor(daysTraveled / daysPerTurn) % 4` — exactly one phase
+// shift per turn, all four phases visible across the journey.
 function setTimeOfDayFromWagon(w) {
   if (!w) return;
   const phases = ['morning', 'midday', 'afternoon', 'dusk'];
-  const phase = phases[Math.floor((w.daysTraveled || 1) / 1) % 4];
+  const phaseDuration = (typeof gameState !== 'undefined' && gameState && gameState.daysPerTurn) || 14;
+  const phase = phases[Math.floor((w.daysTraveled || 1) / phaseDuration) % 4];
   if (typeof document !== 'undefined' && document.documentElement) {
     document.documentElement.setAttribute('data-time', phase);
   }
@@ -12552,6 +12586,12 @@ function completeEndTurn(w) {
     w.daysTraveled += gameState.daysPerTurn;
     logToWagon(w, 'Stalled and rested — no progress.');
   }
+  // v3.1.1 — refresh time-of-day after the calendar advance. Pre-fix,
+  // this only ran from paintScenery (game start + Competitive wagon
+  // rotation), so a Single-Player journey stayed stuck on whatever
+  // phase day 1 set. Calling it here cycles the sky every turn for
+  // every game mode without re-painting the whole scenery layer.
+  setTimeOfDayFromWagon(w);
   // Winter check
   if (w.daysTraveled >= WINTER_DEADLINE_DAY && !w.finished) return triggerWinterEnding(w);
   if (w.daysTraveled >= WINTER_WARNING_DAY && !w.winterWarned) { w.winterWarned = true; return showWinterWarning(w); }
