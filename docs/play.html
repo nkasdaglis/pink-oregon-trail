@@ -1271,6 +1271,20 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
 /* compact density restores the taller stacked-row mini-map height */
 :root[data-ui-density="compact"] .mini-map svg { height: 180px; }
 .mini-map .wagon-marker .marker-halo { animation: minimapPulse 1.4s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+/* v3.0 Stage 2 — active wagon's pin needle pulses gently. Keyframe
+   targets the <g> so the line + head + initial scale together. */
+.wagon-pin[data-active="true"] {
+  animation: wagonPinPulse 1.5s ease-in-out infinite;
+  transform-origin: 50% 100%;
+  transform-box: fill-box;
+}
+@keyframes wagonPinPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.12); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wagon-pin[data-active="true"] { animation: none; }
+}
 @keyframes minimapPulse { 0%,100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.25); } }
 @media (prefers-reduced-motion: reduce) { .mini-map .wagon-marker .marker-halo { animation: none; } }
 /* Click-to-expand fullscreen mini-map overlay */
@@ -1652,6 +1666,161 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
   padding: 10px 12px;
   max-height: 42vh;
   overflow-y: auto;
+}
+
+/* v3.0 Stage 1D — main layout overrides at mobile density.
+   Bottom bar hidden (children moved into drawers and interaction panel
+   by _syncMobileLayout). #screen-game reserves padding-bottom for the
+   fixed interaction panel + tab strip so the scene canvas never flows
+   under them. */
+:root[data-ui-density="mobile"] .bottom-bar { display: none; }
+:root[data-ui-density="mobile"] #screen-game {
+  grid-template-rows: auto auto 1fr;
+  padding-bottom: calc(42vh + 32px);
+}
+:root[data-ui-density="mobile"] .resource-ribbon {
+  padding: 6px 10px; gap: 6px;
+}
+:root[data-ui-density="mobile"] .pace-ration-strip {
+  padding: 4px 10px; gap: 6px;
+}
+:root[data-ui-density="mobile"] .res-item { min-width: 64px; padding: 3px 6px; }
+/* Action buttons inside the interaction panel: 2-column grid so labels
+   and descriptions remain legible at 414px. */
+:root[data-ui-density="mobile"] .action-buttons {
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+:root[data-ui-density="mobile"] .action-buttons.with-fort-march { grid-template-columns: 1fr 1fr; }
+:root[data-ui-density="mobile"] .action-buttons.continue-mode  { grid-template-columns: 1fr; }
+:root[data-ui-density="mobile"] .action-btn {
+  min-height: var(--action-btn-height, 56px);
+  padding: 8px 10px;
+}
+/* Team strip in the team drawer: stack portraits 2-column instead of
+   horizontal scroll. Mini-map drawer fills its body. */
+:root[data-ui-density="mobile"] .drawer-team .team-strip {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+  overflow-x: visible;
+  overflow-y: visible;
+}
+:root[data-ui-density="mobile"] .drawer-team .team-portrait {
+  width: 100%;
+  padding: 8px;
+}
+:root[data-ui-density="mobile"] .drawer-team .team-portrait svg {
+  width: 64px; height: 70px;
+}
+:root[data-ui-density="mobile"] .drawer-map .mini-map {
+  border: none;
+  padding: 0;
+}
+:root[data-ui-density="mobile"] .drawer-map .mini-map svg { height: 56vh; }
+:root[data-ui-density="mobile"] .drawer-map .mini-map-label { display: none; }
+
+/* v3.0 Stage 3 — setup screen mobile reflow.
+   Profession picker becomes a 2-column grid; naming rows stack
+   full-width with 16px font (16px is the iOS Safari zoom-on-focus
+   threshold — anything smaller triggers the auto-zoom that breaks
+   layout); difficulty / mode / count cards stack vertically; the
+   Begin Journey button gets a 60px tall full-width hit target.
+   Selector keys off data-ui-density="mobile" so iPad mini portrait
+   uses these rules too (raw @media (max-width:740px) would miss it). */
+:root[data-ui-density="mobile"] .profession-grid {
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  max-height: 60vh;
+  padding: 8px;
+}
+:root[data-ui-density="mobile"] .prof-card {
+  padding: 8px 6px;
+  min-height: 90px;
+}
+:root[data-ui-density="mobile"] .prof-card svg.character {
+  width: 56px; height: 76px;
+}
+:root[data-ui-density="mobile"] .prof-card strong { font-size: 13px; }
+:root[data-ui-density="mobile"] .prof-card .skills { font-size: 10.5px; }
+
+:root[data-ui-density="mobile"] .naming-grid {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+:root[data-ui-density="mobile"] .naming-row {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 8px 10px;
+}
+:root[data-ui-density="mobile"] .naming-row .role {
+  min-width: auto; flex: 0 0 auto; font-size: 13px;
+}
+:root[data-ui-density="mobile"] .naming-row input[type="text"] {
+  width: 100%;
+  min-height: 50px;
+  font-size: 16px;
+  padding: 10px 12px;
+  flex: 1 1 100%;
+}
+
+:root[data-ui-density="mobile"] .cards-grid {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+:root[data-ui-density="mobile"] .big-card { padding: 18px; }
+:root[data-ui-density="mobile"] .big-card h3 { font-size: 19px; }
+:root[data-ui-density="mobile"] .big-card .icon-svg { max-width: 96px; height: 64px; }
+
+/* Begin Journey + other primary action buttons on setup screens get
+   a generous tap target on mobile. */
+:root[data-ui-density="mobile"] .actions {
+  flex-direction: column-reverse;
+  gap: 8px;
+  align-items: stretch;
+}
+:root[data-ui-density="mobile"] .actions button {
+  width: 100%;
+  min-height: 60px;
+  font-size: 17px;
+}
+
+/* Setup screens get more breathing room around the title at mobile so
+   long-press scroll feels natural. */
+:root[data-ui-density="mobile"] .screen { padding: 14px 14px 24px; }
+:root[data-ui-density="mobile"] .title    { font-size: 28px; }
+:root[data-ui-density="mobile"] .subtitle { font-size: 15px; margin-bottom: 12px; }
+
+/* v3.0 Stage 1E — mobile hint toasts (audio gate, save notice,
+   orientation hint). Centered top, gentle fade-in, auto-dismiss
+   driven from JS. Always above drawers so they read clearly. */
+.mobile-hint {
+  position: fixed;
+  top: 14px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(61, 40, 23, 0.92);
+  color: var(--cream);
+  font-family: Georgia, serif;
+  font-size: 14px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--rose);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  z-index: 320;
+  max-width: calc(100vw - 32px);
+  text-align: center;
+  animation: mobileHintIn 0.32s ease-out;
+}
+@keyframes mobileHintIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-hint { animation: none; }
 }
 
 </style>
@@ -9768,19 +9937,32 @@ function pulseHero(memberIndex) {
 // Oregon City, projected onto the minimap viewBox. Used by both the
 // trail polyline and the wagon-position projection so the wagon glides
 // along the same curve the trail draws.
+//
+// v3.0.1 — geographic orientation fix. Original v2.9 placed
+// Independence MO on the LEFT and Oregon City on the RIGHT, which is
+// backwards for an educational map (real maps put east on the right
+// because north is up). All x-coordinates here have been flipped via
+// `x' = 800 - x` so:
+//   - Independence MO (east end of trail) sits on the RIGHT (east)
+//   - Oregon City (west end of trail) sits on the LEFT (west)
+//   - Trail flows right-to-left as the wagon progresses west
+// State blocks, river paths, mountain ridges, and label x-coordinates
+// in `_buildHistoricalMapSvgBody` were flipped in lockstep. Compass
+// rose stays at top-right (now empty space, since Oregon City moved
+// to top-left). The compass's N pointer stays vertical (north is up).
 const _TRAIL_WAYPOINTS = [
-  { x:  70, y: 400, name: 'Independence' },
-  { x: 160, y: 380, name: 'Platte Crossing' },
-  { x: 240, y: 360, name: 'Fort Kearny' },
-  { x: 320, y: 330, name: 'Chimney Rock' },
-  { x: 380, y: 310, name: 'Fort Laramie' },
-  { x: 460, y: 280, name: 'Independence Rock' },
-  { x: 510, y: 250, name: 'South Pass' },
-  { x: 580, y: 220, name: 'Fort Hall' },
-  { x: 640, y: 195, name: 'Snake Oxbow' },
-  { x: 690, y: 175, name: 'Fort Boise' },
-  { x: 730, y: 150, name: 'The Dalles' },
-  { x: 760, y: 120, name: 'Oregon City' }
+  { x: 730, y: 400, name: 'Independence' },
+  { x: 640, y: 380, name: 'Platte Crossing' },
+  { x: 560, y: 360, name: 'Fort Kearny' },
+  { x: 480, y: 330, name: 'Chimney Rock' },
+  { x: 420, y: 310, name: 'Fort Laramie' },
+  { x: 340, y: 280, name: 'Independence Rock' },
+  { x: 290, y: 250, name: 'South Pass' },
+  { x: 220, y: 220, name: 'Fort Hall' },
+  { x: 160, y: 195, name: 'Snake Oxbow' },
+  { x: 110, y: 175, name: 'Fort Boise' },
+  { x:  70, y: 150, name: 'The Dalles' },
+  { x:  40, y: 120, name: 'Oregon City' }
 ];
 // Linear interpolation along the polyline of waypoints. fraction in [0,1].
 function _trailPointAtFraction(fraction) {
@@ -9822,12 +10004,15 @@ function _buildHistoricalMapSvgBody(activeWagon) {
             '<polygon points="-20,0 0,4 20,0 0,-4" fill="#D4C19E" stroke="#3D2817" stroke-width="0.5"/>' +
             '<text x="0" y="-26" font-family="Georgia, serif" font-size="9" fill="#3D2817" text-anchor="middle">N</text>' +
           '</g>';
-  // State outlines — simplified blocks behind the trail
+  // State outlines — simplified blocks behind the trail.
+  // v3.0.1 — flipped: each block's new x = 800 − (old_x + w) so
+  // Kansas/Nebraska sits on the east (right) edge and Oregon Country
+  // on the west (left) edge. Width and height unchanged.
   const stateBlocks = [
-    { x:  40, y: 360, w: 200, h: 130, label: 'Kansas / Nebraska' },
-    { x: 240, y: 280, w: 180, h: 200, label: 'Wyoming' },
-    { x: 420, y: 200, w: 200, h: 250, label: 'Idaho Territory' },
-    { x: 620, y:  90, w: 165, h: 280, label: 'Oregon Country' }
+    { x: 560, y: 360, w: 200, h: 130, label: 'Kansas / Nebraska' },
+    { x: 380, y: 280, w: 180, h: 200, label: 'Wyoming' },
+    { x: 180, y: 200, w: 200, h: 250, label: 'Idaho Territory' },
+    { x:  15, y:  90, w: 165, h: 280, label: 'Oregon Country' }
   ];
   stateBlocks.forEach(s => {
     body += '<rect x="' + s.x + '" y="' + s.y + '" width="' + s.w + '" height="' + s.h +
@@ -9835,16 +10020,22 @@ function _buildHistoricalMapSvgBody(activeWagon) {
     body += '<text x="' + (s.x + s.w / 2) + '" y="' + (s.y + 22) + '" font-family="Georgia, serif" font-size="13" font-style="italic" fill="#5C4A36" text-anchor="middle" opacity="0.75">' +
             s.label + '</text>';
   });
-  // Major rivers — Platte, Snake, Columbia. Thin blue curves.
-  body += '<path d="M 60 415 Q 200 410 360 395 T 480 320" fill="none" stroke="#5B7FA8" stroke-width="2.4" opacity="0.6" stroke-linecap="round"/>'; // Platte
-  body += '<text x="220" y="430" font-family="Georgia, serif" font-style="italic" font-size="11" fill="#3F5F87" opacity="0.7">Platte River</text>';
-  body += '<path d="M 480 240 Q 560 235 620 215 T 700 175" fill="none" stroke="#5B7FA8" stroke-width="2.4" opacity="0.6" stroke-linecap="round"/>'; // Snake
-  body += '<text x="540" y="255" font-family="Georgia, serif" font-style="italic" font-size="11" fill="#3F5F87" opacity="0.7">Snake River</text>';
-  body += '<path d="M 700 145 Q 740 130 770 105" fill="none" stroke="#5B7FA8" stroke-width="2.4" opacity="0.6" stroke-linecap="round"/>'; // Columbia
-  body += '<text x="710" y="100" font-family="Georgia, serif" font-style="italic" font-size="11" fill="#3F5F87" opacity="0.7">Columbia</text>';
-  // Mountain ridge marks across the Rockies (Wyoming → Idaho)
+  // Major rivers — Platte (east), Snake (mid), Columbia (west).
+  // v3.0.1 — flipped: each path coordinate's x' = 800 − x. Text labels
+  // moved to match the new river positions; text characters themselves
+  // are not mirrored (they read left-to-right as normal).
+  body += '<path d="M 740 415 Q 600 410 440 395 T 320 320" fill="none" stroke="#5B7FA8" stroke-width="2.4" opacity="0.6" stroke-linecap="round"/>'; // Platte
+  body += '<text x="540" y="430" font-family="Georgia, serif" font-style="italic" font-size="11" fill="#3F5F87" opacity="0.7">Platte River</text>';
+  body += '<path d="M 320 240 Q 240 235 180 215 T 100 175" fill="none" stroke="#5B7FA8" stroke-width="2.4" opacity="0.6" stroke-linecap="round"/>'; // Snake
+  body += '<text x="200" y="255" font-family="Georgia, serif" font-style="italic" font-size="11" fill="#3F5F87" opacity="0.7">Snake River</text>';
+  body += '<path d="M 100 145 Q  60 130  30 105" fill="none" stroke="#5B7FA8" stroke-width="2.4" opacity="0.6" stroke-linecap="round"/>'; // Columbia
+  body += '<text x="46" y="100" font-family="Georgia, serif" font-style="italic" font-size="11" fill="#3F5F87" opacity="0.7">Columbia</text>';
+  // Mountain ridge marks across the Rockies (Wyoming → Idaho on the
+  // flipped map: ridges march east-to-west across the middle band).
+  // Each triangle's vertices are mirrored — visually identical because
+  // the triangle is symmetric across the center vertex.
   for (let i = 0; i < 6; i++) {
-    const mx = 380 + i * 32, my = 200 - (i % 2) * 6;
+    const mx = 396 - i * 32, my = 200 - (i % 2) * 6;
     body += '<polygon points="' + mx + ',' + my + ' ' + (mx + 12) + ',' + (my - 14) + ' ' + (mx + 24) + ',' + my + '" fill="#A88B5B" stroke="#5C4A36" stroke-width="0.5" opacity="0.65"/>';
   }
   // Trail polyline — curved through historical waypoints. Drawn first
@@ -9880,28 +10071,65 @@ function _buildHistoricalMapSvgBody(activeWagon) {
             '" font-family="Georgia, serif" font-size="11" font-weight="600" fill="#3D2817" text-anchor="middle">' +
             escapeHtml(lp.name) + '</text>';
   }
-  // Wagon markers — every wagon, colored with player initial. Active
-  // wagon has a pulsing halo (CSS .marker-halo keyframe).
+  // v3.0 Stage 2 — replace the v2.9 colored-circle wagon markers with
+  // pin needles. Smart-stacking fans wagons sharing the same trail
+  // space out vertically (and slightly horizontally) so 4-6 players
+  // at one space remain individually visible.
   const wagons = (gameState && gameState.wagons) || [];
-  for (const wg of wagons) {
-    if (wg.eliminated || wg.finished) continue;
+  body += _buildWagonPinMarkers(wagons, total, activeWagon);
+  return body;
+}
+
+// v3.0 Stage 2 — pin-needle wagon marker renderer.
+// Stacking algorithm:
+//   1. Group living wagons by their `position` (trail space index).
+//   2. Within each group, sort by id for stable cross-render order.
+//   3. Assign stackRank 0..N-1.
+//   4. Needle length per rank: 16 / 24 / 32 / 40 / 48 / 56 (six tiers).
+//   5. Horizontal offset per rank: (rank − (groupSize−1)/2) · 5
+//      (1 wagon: 0; 2 wagons: −2.5,+2.5; 6 wagons: −12.5..+12.5).
+// Each marker is a vertical line from the trail dot up to a colored
+// head circle carrying the player's initial. The active wagon's <g>
+// is tagged data-active="true" so .wagon-pin[data-active="true"]
+// pulses gently via CSS.
+function _buildWagonPinMarkers(wagons, total, activeWagon) {
+  const live = wagons.filter(w => !w.eliminated && !w.finished);
+  if (live.length === 0) return '';
+  // Group by space index (an integer key dedupes across rounding errors)
+  const groups = {};
+  live.forEach(w => {
+    const key = String(w.position);
+    (groups[key] || (groups[key] = [])).push(w);
+  });
+  Object.keys(groups).forEach(k => groups[k].sort((a, b) => (a.id || 0) - (b.id || 0)));
+  const NEEDLE_LENGTHS = [16, 24, 32, 40, 48, 56];
+  let out = '';
+  live.forEach(wg => {
+    const group = groups[String(wg.position)];
+    const stackRank = Math.min(NEEDLE_LENGTHS.length - 1, group.indexOf(wg));
+    const groupSize = group.length;
+    const needleLength = NEEDLE_LENGTHS[stackRank];
+    const xOffset = (stackRank - (groupSize - 1) / 2) * 5;
     const frac = total <= 1 ? 0 : (wg.position - 1) / (total - 1);
     const p = _trailPointAtFraction(frac);
+    const headX = p.x + xOffset;
+    const headY = p.y - needleLength;
     const initial = (wg.playerName || 'P').charAt(0).toUpperCase();
+    const color   = wg.color || '#B85770';
     const isActive = (wg === activeWagon);
-    const color = wg.color || '#B85770';
-    const scale = isActive ? 1.3 : 1.0;
-    const radius = 11 * scale;
-    body += '<g class="wagon-marker" transform="translate(' + p.x.toFixed(1) + ' ' + p.y.toFixed(1) + ')">';
-    if (isActive) {
-      body += '<circle class="marker-halo" cx="0" cy="0" r="' + (radius + 5).toFixed(1) + '" fill="' + color + '" opacity="0.4"/>';
-    }
-    body += '<circle cx="0" cy="0" r="' + radius.toFixed(1) + '" fill="' + color + '" stroke="white" stroke-width="2"/>';
-    body += '<text x="0" y="' + (4 * scale).toFixed(1) + '" font-family="system-ui, sans-serif" font-size="' + (13 * scale).toFixed(1) +
-            '" font-weight="700" fill="white" text-anchor="middle">' + escapeHtml(initial) + '</text>';
-    body += '</g>';
-  }
-  return body;
+    out += '<g class="wagon-pin" data-wagon-id="' + (wg.id != null ? wg.id : 0) +
+           '" data-active="' + (isActive ? 'true' : 'false') + '">' +
+             '<line x1="' + p.x.toFixed(1) + '" y1="' + p.y.toFixed(1) +
+                  '" x2="' + headX.toFixed(1) + '" y2="' + headY.toFixed(1) +
+                  '" stroke="' + color + '" stroke-width="2" stroke-linecap="round"/>' +
+             '<circle cx="' + headX.toFixed(1) + '" cy="' + headY.toFixed(1) +
+                    '" r="6" fill="' + color + '" stroke="#FBF6F0" stroke-width="1.5"/>' +
+             '<text x="' + headX.toFixed(1) + '" y="' + (headY + 2).toFixed(1) +
+                  '" text-anchor="middle" font-size="7" font-weight="700" font-family="system-ui, sans-serif" fill="#FBF6F0">' +
+                  escapeHtml(initial) + '</text>' +
+           '</g>';
+  });
+  return out;
 }
 
 function renderMinimap() {
@@ -12717,18 +12945,174 @@ function printTeacherReport() {
 // v3.0 Stage 1A — added the `mobile` tier. Picked first because the
 // later mobile rules also fire at narrow-portrait tablet sizes (iPad
 // mini portrait); `compact` handles narrow-landscape laptops.
+//
+// Detection covers three cases:
+//   1. Narrow viewport (w<740) — phones in portrait, very small windows.
+//   2. Narrow-portrait tablet (w<1024 AND h>w) — iPad mini portrait.
+//   3. Phone-in-landscape (w<1100 AND h<500) — iPhone landscape (852×393).
+//      Spec acceptance covers this case; the spec's own rule snippet
+//      missed the third clause, so we extend it here. The w<1100 cap
+//      keeps cropped 1920px desktop windows out of the mobile tier.
 function updateUIDensity() {
   if (typeof window === 'undefined' || !window.innerWidth) return;
   const w = window.innerWidth;
   const h = window.innerHeight || w;
   let density = 'standard';
-  if (w < 740 || (w < 1024 && h > w)) density = 'mobile';
+  if (w < 740 || (w < 1024 && h > w) || (w < 1100 && h < 500)) density = 'mobile';
   else if (w < 1280) density = 'compact';
   else if (w >= 2560) density = 'jumbo';
   else if (w >= 1920) density = 'large';
   if (typeof document !== 'undefined' && document.documentElement) {
     document.documentElement.setAttribute('data-ui-density', density);
   }
+}
+
+// =====================================================================
+// SECTION 11b — v3.0 mobile drawer + layout sync
+// =====================================================================
+// On mobile (data-ui-density="mobile"), team-strip / mini-map / action-
+// buttons relocate from `.bottom-bar` into a slide-up drawer + a fixed
+// interaction panel. Single source of truth: the existing renderTeamStrip
+// and renderMinimap continue to write to #team-strip / #minimap-container,
+// which now live inside drawer bodies on mobile. We MOVE the DOM nodes
+// rather than cloning to avoid double-render bookkeeping.
+function _syncMobileLayout() {
+  if (typeof document === 'undefined') return;
+  const isMobile = document.documentElement.getAttribute('data-ui-density') === 'mobile';
+  const teamStrip = $('team-strip');
+  const minimap   = $('minimap-container');
+  const buttons   = $('action-buttons');
+  const bottomBar = document.querySelector('.bottom-bar');
+  const drawerTeamBody = $('drawer-team-body');
+  const drawerMapBody  = $('drawer-map-body');
+  const interaction    = $('mobile-interaction-panel');
+  if (!teamStrip || !minimap || !buttons || !bottomBar) return;
+  if (isMobile) {
+    if (drawerTeamBody && teamStrip.parentNode !== drawerTeamBody) drawerTeamBody.appendChild(teamStrip);
+    if (drawerMapBody  && minimap.parentNode   !== drawerMapBody)  drawerMapBody.appendChild(minimap);
+    if (interaction    && buttons.parentNode   !== interaction)    interaction.appendChild(buttons);
+  } else {
+    // Restore standard layout: all three back into the bottom bar in
+    // their original sibling order (team-strip · mini-map · buttons).
+    if (teamStrip.parentNode !== bottomBar) bottomBar.appendChild(teamStrip);
+    if (minimap.parentNode   !== bottomBar) bottomBar.appendChild(minimap);
+    if (buttons.parentNode   !== bottomBar) bottomBar.appendChild(buttons);
+  }
+}
+
+function _openDrawer(which) {
+  const d = $('drawer-' + which);
+  const ov = $('drawer-overlay');
+  // Close the other drawer first so they don't both render at once
+  const other = which === 'team' ? 'map' : 'team';
+  const od = $('drawer-' + other);
+  if (od) od.classList.remove('open');
+  if (d)  d.classList.add('open');
+  if (ov) ov.classList.add('open');
+}
+function _closeDrawers() {
+  document.querySelectorAll('.drawer.open').forEach(d => d.classList.remove('open'));
+  const ov = $('drawer-overlay'); if (ov) ov.classList.remove('open');
+}
+function _wireDrawers() {
+  const tt = $('drawer-tab-team'); if (tt) tt.addEventListener('click', () => { _openDrawer('team'); audioController.playSfx('click'); });
+  const tm = $('drawer-tab-map');  if (tm) tm.addEventListener('click', () => { _openDrawer('map');  audioController.playSfx('click'); });
+  const ov = $('drawer-overlay');  if (ov) ov.addEventListener('click', _closeDrawers);
+  // Keyboard fallback — Enter/Space on the focused tab opens it; Esc closes.
+  ['drawer-tab-team','drawer-tab-map'].forEach(id => {
+    const el = $(id); if (!el) return;
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _openDrawer(id === 'drawer-tab-team' ? 'team' : 'map'); }
+    });
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') _closeDrawers(); });
+}
+
+// =====================================================================
+// SECTION 11c — v3.0 mobile behaviors
+//   audio gate · save-state notice · tap-elsewhere tooltip dismiss ·
+//   orientation hint. Each is small and independent so a regression in
+//   one doesn't take the others down.
+// =====================================================================
+function _isMobileDensity() {
+  return typeof document !== 'undefined' &&
+         document.documentElement.getAttribute('data-ui-density') === 'mobile';
+}
+
+// Audio gate. iOS Safari requires a user gesture before audio plays.
+// On the first tap or click anywhere, init the audio controller. If
+// 3 seconds pass on mobile without that gesture, surface a hint toast;
+// auto-dismiss when the gesture finally happens.
+function _wireAudioGate() {
+  let gated = true;
+  let hintEl = null;
+  const removeHint = () => { if (hintEl && hintEl.parentNode) hintEl.parentNode.removeChild(hintEl); hintEl = null; };
+  const onFirstGesture = () => {
+    if (!gated) return;
+    gated = false;
+    try { audioController.init(); audioController.resume && audioController.resume(); } catch (e) {}
+    removeHint();
+    document.removeEventListener('click', onFirstGesture, true);
+    document.removeEventListener('touchstart', onFirstGesture, true);
+    document.removeEventListener('keydown', onFirstGesture, true);
+  };
+  document.addEventListener('click', onFirstGesture, true);
+  document.addEventListener('touchstart', onFirstGesture, { capture: true, passive: true });
+  document.addEventListener('keydown', onFirstGesture, true);
+  // Mobile-only nudge after 3 seconds of silence
+  setTimeout(() => {
+    if (!gated || !_isMobileDensity()) return;
+    hintEl = el('div', { class: 'mobile-hint mobile-hint-audio',
+      textContent: 'Tap anywhere to enable sound.' });
+    document.body.appendChild(hintEl);
+  }, 3000);
+}
+
+// First-launch save-state notice on mobile. Uses localStorage flag.
+// Runs once after init has settled, only if mobile density is active.
+function _maybeShowSaveNotice() {
+  try {
+    if (!_isMobileDensity()) return;
+    if (localStorage.getItem('mobileNoticeShown') === '1') return;
+    const note = el('div', { class: 'mobile-hint mobile-hint-save',
+      textContent: 'Your progress saves on this device. Different devices keep separate journeys.' });
+    document.body.appendChild(note);
+    localStorage.setItem('mobileNoticeShown', '1');
+    setTimeout(() => { try { note.remove(); } catch (e) {} }, 6000);
+  } catch (e) { /* localStorage may be blocked; silently skip */ }
+}
+
+// Orientation hint — once per session, on mobile in portrait, suggest
+// (don't force) rotating to landscape. Skip if already in landscape or
+// if we've shown it this session.
+function _maybeShowOrientationHint() {
+  try {
+    if (!_isMobileDensity()) return;
+    if (sessionStorage.getItem('orientationHintShown') === '1') return;
+    if (window.innerWidth >= window.innerHeight) return;  // already landscape
+    sessionStorage.setItem('orientationHintShown', '1');
+    setTimeout(() => {
+      if (window.innerWidth >= window.innerHeight) return; // user rotated already
+      const note = el('div', { class: 'mobile-hint mobile-hint-orient',
+        textContent: 'Rotate your phone for the best experience.' });
+      document.body.appendChild(note);
+      setTimeout(() => { try { note.remove(); } catch (e) {} }, 5500);
+    }, 2000);
+  } catch (e) { /* sessionStorage may be blocked; silently skip */ }
+}
+
+// Tap anywhere outside a team portrait closes any open tooltip. The
+// portrait's existing click handler (attachMemberTooltip) toggles its
+// own tooltip; this just closes others when the player taps the
+// background.
+function _wireTooltipDismiss() {
+  document.addEventListener('click', e => {
+    if (!e.target.closest || e.target.closest('.team-portrait')) return;
+    document.querySelectorAll('.member-tooltip.tooltip-open').forEach(tip => {
+      const card = tip.closest('.team-portrait');
+      if (card) hideMemberTooltip(card);
+    });
+  });
 }
 
 function init() {
@@ -12745,8 +13129,19 @@ function init() {
   $('count-back').addEventListener('click', () => { showScreen('screen-difficulty'); renderDifficultyScreen(); });
 
   // v2.7 Stage 1 — pick the initial density tier and watch for resizes.
+  // v3.0 — re-sync the mobile layout on every density change so rotation
+  // and DevTools resizes hand off cleanly between mobile and desktop.
   updateUIDensity();
-  window.addEventListener('resize', updateUIDensity);
+  _syncMobileLayout();
+  _wireDrawers();
+  // v3.0 Stage 1E — mobile behaviors. Audio gate fires for everyone (the
+  // hint surfaces only on mobile); save notice + orientation hint
+  // self-gate on density.
+  _wireAudioGate();
+  _wireTooltipDismiss();
+  _maybeShowSaveNotice();
+  _maybeShowOrientationHint();
+  window.addEventListener('resize', () => { updateUIDensity(); _syncMobileLayout(); });
 
   // Render the first screen
   renderLengthScreen();

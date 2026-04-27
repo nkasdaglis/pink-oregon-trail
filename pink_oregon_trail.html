@@ -9937,19 +9937,32 @@ function pulseHero(memberIndex) {
 // Oregon City, projected onto the minimap viewBox. Used by both the
 // trail polyline and the wagon-position projection so the wagon glides
 // along the same curve the trail draws.
+//
+// v3.0.1 — geographic orientation fix. Original v2.9 placed
+// Independence MO on the LEFT and Oregon City on the RIGHT, which is
+// backwards for an educational map (real maps put east on the right
+// because north is up). All x-coordinates here have been flipped via
+// `x' = 800 - x` so:
+//   - Independence MO (east end of trail) sits on the RIGHT (east)
+//   - Oregon City (west end of trail) sits on the LEFT (west)
+//   - Trail flows right-to-left as the wagon progresses west
+// State blocks, river paths, mountain ridges, and label x-coordinates
+// in `_buildHistoricalMapSvgBody` were flipped in lockstep. Compass
+// rose stays at top-right (now empty space, since Oregon City moved
+// to top-left). The compass's N pointer stays vertical (north is up).
 const _TRAIL_WAYPOINTS = [
-  { x:  70, y: 400, name: 'Independence' },
-  { x: 160, y: 380, name: 'Platte Crossing' },
-  { x: 240, y: 360, name: 'Fort Kearny' },
-  { x: 320, y: 330, name: 'Chimney Rock' },
-  { x: 380, y: 310, name: 'Fort Laramie' },
-  { x: 460, y: 280, name: 'Independence Rock' },
-  { x: 510, y: 250, name: 'South Pass' },
-  { x: 580, y: 220, name: 'Fort Hall' },
-  { x: 640, y: 195, name: 'Snake Oxbow' },
-  { x: 690, y: 175, name: 'Fort Boise' },
-  { x: 730, y: 150, name: 'The Dalles' },
-  { x: 760, y: 120, name: 'Oregon City' }
+  { x: 730, y: 400, name: 'Independence' },
+  { x: 640, y: 380, name: 'Platte Crossing' },
+  { x: 560, y: 360, name: 'Fort Kearny' },
+  { x: 480, y: 330, name: 'Chimney Rock' },
+  { x: 420, y: 310, name: 'Fort Laramie' },
+  { x: 340, y: 280, name: 'Independence Rock' },
+  { x: 290, y: 250, name: 'South Pass' },
+  { x: 220, y: 220, name: 'Fort Hall' },
+  { x: 160, y: 195, name: 'Snake Oxbow' },
+  { x: 110, y: 175, name: 'Fort Boise' },
+  { x:  70, y: 150, name: 'The Dalles' },
+  { x:  40, y: 120, name: 'Oregon City' }
 ];
 // Linear interpolation along the polyline of waypoints. fraction in [0,1].
 function _trailPointAtFraction(fraction) {
@@ -9991,12 +10004,15 @@ function _buildHistoricalMapSvgBody(activeWagon) {
             '<polygon points="-20,0 0,4 20,0 0,-4" fill="#D4C19E" stroke="#3D2817" stroke-width="0.5"/>' +
             '<text x="0" y="-26" font-family="Georgia, serif" font-size="9" fill="#3D2817" text-anchor="middle">N</text>' +
           '</g>';
-  // State outlines — simplified blocks behind the trail
+  // State outlines — simplified blocks behind the trail.
+  // v3.0.1 — flipped: each block's new x = 800 − (old_x + w) so
+  // Kansas/Nebraska sits on the east (right) edge and Oregon Country
+  // on the west (left) edge. Width and height unchanged.
   const stateBlocks = [
-    { x:  40, y: 360, w: 200, h: 130, label: 'Kansas / Nebraska' },
-    { x: 240, y: 280, w: 180, h: 200, label: 'Wyoming' },
-    { x: 420, y: 200, w: 200, h: 250, label: 'Idaho Territory' },
-    { x: 620, y:  90, w: 165, h: 280, label: 'Oregon Country' }
+    { x: 560, y: 360, w: 200, h: 130, label: 'Kansas / Nebraska' },
+    { x: 380, y: 280, w: 180, h: 200, label: 'Wyoming' },
+    { x: 180, y: 200, w: 200, h: 250, label: 'Idaho Territory' },
+    { x:  15, y:  90, w: 165, h: 280, label: 'Oregon Country' }
   ];
   stateBlocks.forEach(s => {
     body += '<rect x="' + s.x + '" y="' + s.y + '" width="' + s.w + '" height="' + s.h +
@@ -10004,16 +10020,22 @@ function _buildHistoricalMapSvgBody(activeWagon) {
     body += '<text x="' + (s.x + s.w / 2) + '" y="' + (s.y + 22) + '" font-family="Georgia, serif" font-size="13" font-style="italic" fill="#5C4A36" text-anchor="middle" opacity="0.75">' +
             s.label + '</text>';
   });
-  // Major rivers — Platte, Snake, Columbia. Thin blue curves.
-  body += '<path d="M 60 415 Q 200 410 360 395 T 480 320" fill="none" stroke="#5B7FA8" stroke-width="2.4" opacity="0.6" stroke-linecap="round"/>'; // Platte
-  body += '<text x="220" y="430" font-family="Georgia, serif" font-style="italic" font-size="11" fill="#3F5F87" opacity="0.7">Platte River</text>';
-  body += '<path d="M 480 240 Q 560 235 620 215 T 700 175" fill="none" stroke="#5B7FA8" stroke-width="2.4" opacity="0.6" stroke-linecap="round"/>'; // Snake
-  body += '<text x="540" y="255" font-family="Georgia, serif" font-style="italic" font-size="11" fill="#3F5F87" opacity="0.7">Snake River</text>';
-  body += '<path d="M 700 145 Q 740 130 770 105" fill="none" stroke="#5B7FA8" stroke-width="2.4" opacity="0.6" stroke-linecap="round"/>'; // Columbia
-  body += '<text x="710" y="100" font-family="Georgia, serif" font-style="italic" font-size="11" fill="#3F5F87" opacity="0.7">Columbia</text>';
-  // Mountain ridge marks across the Rockies (Wyoming → Idaho)
+  // Major rivers — Platte (east), Snake (mid), Columbia (west).
+  // v3.0.1 — flipped: each path coordinate's x' = 800 − x. Text labels
+  // moved to match the new river positions; text characters themselves
+  // are not mirrored (they read left-to-right as normal).
+  body += '<path d="M 740 415 Q 600 410 440 395 T 320 320" fill="none" stroke="#5B7FA8" stroke-width="2.4" opacity="0.6" stroke-linecap="round"/>'; // Platte
+  body += '<text x="540" y="430" font-family="Georgia, serif" font-style="italic" font-size="11" fill="#3F5F87" opacity="0.7">Platte River</text>';
+  body += '<path d="M 320 240 Q 240 235 180 215 T 100 175" fill="none" stroke="#5B7FA8" stroke-width="2.4" opacity="0.6" stroke-linecap="round"/>'; // Snake
+  body += '<text x="200" y="255" font-family="Georgia, serif" font-style="italic" font-size="11" fill="#3F5F87" opacity="0.7">Snake River</text>';
+  body += '<path d="M 100 145 Q  60 130  30 105" fill="none" stroke="#5B7FA8" stroke-width="2.4" opacity="0.6" stroke-linecap="round"/>'; // Columbia
+  body += '<text x="46" y="100" font-family="Georgia, serif" font-style="italic" font-size="11" fill="#3F5F87" opacity="0.7">Columbia</text>';
+  // Mountain ridge marks across the Rockies (Wyoming → Idaho on the
+  // flipped map: ridges march east-to-west across the middle band).
+  // Each triangle's vertices are mirrored — visually identical because
+  // the triangle is symmetric across the center vertex.
   for (let i = 0; i < 6; i++) {
-    const mx = 380 + i * 32, my = 200 - (i % 2) * 6;
+    const mx = 396 - i * 32, my = 200 - (i % 2) * 6;
     body += '<polygon points="' + mx + ',' + my + ' ' + (mx + 12) + ',' + (my - 14) + ' ' + (mx + 24) + ',' + my + '" fill="#A88B5B" stroke="#5C4A36" stroke-width="0.5" opacity="0.65"/>';
   }
   // Trail polyline — curved through historical waypoints. Drawn first

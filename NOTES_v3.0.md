@@ -222,3 +222,42 @@ screen tier) since the v2.7 compact tier already targets this
 range. Documented in build report.
 
 ## Stage 3 complete — setup screens are touch-optimized at mobile density
+
+---
+
+## v3.0.1 hotfix — historical map orientation (POST-IMPLEMENTATION)
+
+**Issue:** v2.9 Stage 7's historical map placed Independence MO on
+the left and Oregon City on the right. Real maps put east on the
+right (because north is up). Kids playing the game saw Oregon City
+on the right and intuitively thought they were heading east — bad
+for an educational geography game.
+
+**Fix:** flipped all geographic x-coordinates via `x' = 800 − x`:
+
+- `_TRAIL_WAYPOINTS` — all 12 entries flipped. Independence (730,
+  400), Oregon City (40, 120). Trail polyline, space dots, labels,
+  and wagon pin needles all re-project automatically.
+- State blocks — each block's new x = 800 − (old x + width).
+  Kansas/Nebraska now east (x=560), Oregon Country now west (x=15).
+- River paths (Platte / Snake / Columbia) — every coord's x flipped.
+- Mountain ridges — `mx = 396 − i*32` so the six triangles march
+  east-to-west across the middle.
+- Compass rose stays at top-right (now empty space). N pointer
+  remains vertical (north is up).
+
+No text characters mirrored — labels just move to flipped x's; the
+characters themselves still read left-to-right.
+
+The historical map uses pin needles, not a wagon SVG, so there's
+no map-wagon facing direction to flip. The scene canvas's wagon
+SVG (which faces right while traveling across a landscape) stays
+unchanged.
+
+**Verification:** Node sim — position 1 (Independence) projects to
+pin x=730 (right/east), position 11 (Oregon City) to pin x=40
+(left/west). Pin x decreases monotonically as the wagon advances,
+confirming westward motion on screen matches westward geographic
+progress. Coverage: inline mini-map + fullscreen overlay + mobile
+drawer-map all share `_buildHistoricalMapSvgBody`, so single-edit
+fix.
