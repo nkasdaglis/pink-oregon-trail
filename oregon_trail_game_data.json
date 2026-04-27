@@ -2,7 +2,7 @@
   "meta": {
     "title": "Pink Oregon Trail",
     "designer": "Gabriella Kasdaglis (Gabby)",
-    "version": "2.3",
+    "version": "2.6",
     "trail_lengths": {
       "short": {
         "spaces": 25,
@@ -26,12 +26,22 @@
     "calendar": {
       "start_date": "April 15, 1848",
       "days_per_turn": {
-        "short": 7,
-        "extended": 4
+        "short": 14,
+        "extended": 9
       },
       "winter_warning_day": 130,
       "winter_deadline_day": 165,
-      "historical_note": "The real Oregon Trail had brutal time pressure. Wagon trains that didn't reach Oregon by mid-October risked being trapped by mountain snow. The Donner Party in 1846 left too late \u2014 they were trapped in the Sierra Nevada and only half survived."
+      "historical_note": "The real Oregon Trail had brutal time pressure. Wagon trains that didn't reach Oregon by mid-October risked being trapped by mountain snow. The Donner Party in 1846 left too late \u2014 they were trapped in the Sierra Nevada and only half survived.",
+      "per_event_day_costs": {
+        "philosophy": "Real Oregon Trail events took TIME. A river crossing wasn't a 1-day affair \u2014 caulking and ferrying could take 2-3 days. Fort visits meant overnight stays. Landmark photos and journal entries meant the wagon stopped. Adding small day costs to events makes the calendar feel honest and the winter clock feel real.",
+        "river_crossing": 2,
+        "fort_visit": 1,
+        "landmark_visit": 1,
+        "major_event": 1,
+        "surprise_event": 0,
+        "applies_when": "After the event resolves, before the next Push On",
+        "narrative_hook": "Append to event resolution callouts: 'It cost us a day. The trail does not give time freely.'"
+      }
     },
     "difficulty_notes": {
       "default_pace": "Steady",
@@ -45,7 +55,7 @@
         "STARVATION_THRESHOLD": 0
       }
     },
-    "notes": "v2.3: Critical playability patch driven by 4-player playtest. Fixes skinTone persistence (the 'priest became the banker' bug), adds visible dice roll with 2d6 (max 12 spaces), water-from-river/Soda-Springs/forage-without-Scout, morale impacts, fixes turn-intro showing river-was-here illusion, expands music tempos and adds 4 more songs, replaces fly-by toasts with team-strip hover tooltips, expands player count to 6, makes Trail News functional, adds Day 67 surprise. Adds active scenario logic test framework via 'simulation_logic_validation' block.",
+    "notes": "v2.6: Major graphics overhaul. Layered parallax scenery, atmospheric gradients, time-of-day cycle, animated weather (rain/snow/dust devils), detailed character SVGs with state-dependent expressions, animated dice/wheels/water/fire. File grows from ~500KB to ~1.5MB. Stays single-file offline. Builds on v2.5 fixes.",
     "stochastic_system": {
       "philosophy": "Real pioneers did not see probability tables before making choices. They knew the river was high, the team was tired, the trail looked rough \u2014 and they decided. The game models this. Choice screens show qualitative risk and team advantages, never exact numbers. Outcomes sample from hidden distributions. Sometimes the dice fall well. Sometimes they don't. Profession bonuses shift the distribution but rarely eliminate risk entirely.",
       "choice_display_mode": "qualitative",
@@ -5064,5 +5074,333 @@
       "Apply the same lock-step principle to any future code that mutates professions."
     ],
     "non_destructive_alternative_to_consider": "An alternative architecture is to make team members objects from the start: w.team = [{profession, name, skinTone}, ...]. Splice operates on whole objects atomically \u2014 alignment becomes structural, not procedural. This is cleaner but a bigger refactor. The minimal fix is the lock-step splice approach above. Use your judgment."
+  },
+  "fort_visit_system": {
+    "philosophy": "v2.3 made fort visits mathematically rare (Monte Carlo: avg 0.52 forts of 4 visited per Short journey, 54% of journeys visited zero). The 2d6-capped-at-8 dice produces 42% of moves at exactly 8 spaces, causing systematic overshoot. Fix: three paths to a fort, each with different cost/agency. Forts (and only forts) become decision points instead of probabilistic landing zones.",
+    "three_paths": [
+      {
+        "id": "lucky_landing",
+        "trigger": "2d6 roll lands wagon EXACTLY on a fort space",
+        "cost": "none beyond normal turn",
+        "ui": "Wagon advances normally, fort menu opens automatically (existing v2.2 behavior)",
+        "preserves": "Existing resolveFort() flow"
+      },
+      {
+        "id": "voluntary_stop",
+        "trigger": "2d6 roll WOULD CARRY the wagon past a fort it has not visited yet on this journey",
+        "cost": "Forfeit unused movement (e.g., rolled 8, fort is 5 spaces ahead, stopping forfeits 3 spaces)",
+        "ui": "After dice settle but before wagon moves, popup callout: 'You see [Fort Name] ahead at space [N]. Your team is [pace_descriptor]. Stop here, or push past?' Two large buttons: 'Stop at the Fort' (forfeits N-D spaces of movement) / 'Push Past' (continues to original destination)",
+        "implementation_note": "Insert this prompt between the dice settle animation and the wagon position update in doActionPushOn. Once the player chooses, set wagon position accordingly and call resolveSpace.",
+        "fort_filter": "Only forts the wagon has not yet visited this journey. Re-visiting an already-visited fort doesn't trigger the prompt (keeps pacing brisk).",
+        "audio": "Soft chime when the prompt appears; click on either choice continues the turn"
+      },
+      {
+        "id": "forced_march",
+        "trigger": "Player clicks the new 'Make for the Fort' action button BEFORE rolling Push On dice. Available when an unvisited fort is within 5 spaces.",
+        "cost": "1 extra day per 3 spaces traveled (rounded up). Wagon advances directly to the fort regardless of dice. Skips the Push On dice roll entirely for this turn.",
+        "ui": "Fifth action button on the action bar (alongside Push On / Hunt / Rest / Forage), only shown when the trigger condition is met. Button label: 'Make for the Fort' with subtitle showing the cost: 'Push hard for [Fort Name] \u2014 [N] spaces, +[D] day(s)'.",
+        "members_dying_bonus": "If any member is in dying state, the day cost is reduced by 1 (minimum 1). Frame as 'urgency drives the team'.",
+        "narrative": "The wagon master sets a hard pace. We do not stop, even at dusk. We push for [Fort Name].",
+        "audio": "Louder dice rattle replaced by a steady drumbeat of hooves; wagon icon moves more aggressively across the mini-map"
+      }
+    ],
+    "rivers_landmarks_unaffected": "Voluntary-stop applies ONLY to forts. Rivers and landmarks are story beats \u2014 if your roll carries the wagon across a river or past a landmark, it resolves as normal. No 'skip past' option. Forts are the only decision-point space type because they are the only space type where the player gains discretionary mechanical benefits (buy/sell/repair/rest/letter).",
+    "expected_visit_rate": "Combined three paths should bring average fort visits per Short journey from 0.52 to ~2.5-3.0 of 4. Players with sick/dying members should reliably reach a fort via forced march. Average wagons on a quiet journey should still visit 2-3 forts via voluntary stops alone."
+  },
+  "race_to_fort_fix": {
+    "philosophy": "The intervention's race_to_fort choice currently adds 1 day and a +30% recovery bonus but never moves the wagon. Players who choose 'race to fort' for a dying member end up still at the same trail position with a member who recovered (or died) by some unexplained mechanism. The narrative lies about what happened. Fix: the choice actually moves the wagon to the fort.",
+    "implementation": [
+      "In resolveInterventionChoice, when choice.id === 'race_to_fort':",
+      "  1. Find the next unvisited fort via distanceToNextFort(w)",
+      "  2. Move wagon position directly: w.position = position_of_next_fort",
+      "  3. Add the day cost (existing eff.days_added)",
+      "  4. Roll the recovery probability (existing logic)",
+      "  5. After the recovery narrative resolves and the player clicks Continue, the next renderActionMenu naturally fires resolveSpace which triggers resolveFort because the wagon is now standing on a fort space",
+      "  6. The player gets full fort benefits (buy medicine, repair, rest, etc.) automatically"
+    ],
+    "narrative_hook": "Append a line to the recovery narrative: 'We pull into the gates of [Fort Name] at sundown.' On failure: 'We pull into the gates of [Fort Name]. {name} did not see them.'",
+    "interaction_with_path_3": "Forced march and race_to_fort use the same underlying movement \u2014 race_to_fort is essentially a forced march triggered by the intervention flow. Consider extracting a moveWagonToFort(w) helper that both code paths call."
+  },
+  "historical_photo_system_v2_4": {
+    "philosophy": "v2.3's URL-based fetcher hard-failed on zero successful URLs and exited without writing the override block. URLs to LoC images are also unstable \u2014 what worked when I wrote the spec may 404 a month later. Switch to a folder-based system as the primary mechanism.",
+    "primary_mechanism": "Local folder. Nicholas places JPG files in historical_photos/ at the project root. The fetcher script reads any files matching the 9 landmark IDs (fort_laramie.jpg, chimney_rock.jpg, etc.) and writes them as base64 into the override block. Files he doesn't include simply fall back to the daguerreotype SVG.",
+    "secondary_mechanism": "URL fallback. If a landmark has no local file, the script attempts to fetch a curated URL. If that fails, it skips silently and the SVG fallback is used.",
+    "key_behavioral_changes": [
+      "Script writes the override block ALWAYS, even if zero photos were obtained (so the consumer code reliably finds window.HISTORICAL_PHOTOS_OVERRIDE).",
+      "Verbose logging shows EXACTLY what was found, what was skipped, and where to download missing photos.",
+      "Idempotent: re-running with new files in the folder updates the block; removing the folder reverts to all-SVG.",
+      "Per-image diagnostics: dimensions, file size, base64 size."
+    ],
+    "filename_convention": [
+      "fort_laramie.jpg or .jpeg or .png",
+      "chimney_rock.jpg",
+      "independence_rock.jpg",
+      "soda_springs.jpg",
+      "south_pass.jpg",
+      "fort_bridger.jpg",
+      "whitman_mission.jpg",
+      "the_dalles.jpg",
+      "oregon_city.jpg"
+    ],
+    "recommended_sources_for_nicholas": [
+      "Library of Congress Photos (loc.gov/photos) \u2014 search the location name, click an image, click 'Download' \u2192 choose 'JPEG'. Public domain.",
+      "Wikimedia Commons (commons.wikimedia.org) \u2014 search the location name + 'historical', filter by 'public domain'. Right-click image \u2192 'Save Image As'.",
+      "Oregon-California Trails Association (octa-trails.org) \u2014 has historical photo archives.",
+      "If no period photo is available for a landmark (e.g., Whitman Mission was destroyed in 1847 and no daguerreotypes survived), use any historically-themed illustration or leave the SVG fallback."
+    ]
+  },
+  "bandit_overshoot_fix": {
+    "philosophy": "v2.3 set the bandit ambush to fire at exact equality on space 47 (Extended) or 23 (Short). Any wagon that overshoots that space due to dice never encounters the bandits \u2014 and never gets the climactic test of the historical content they were shown along the trail. This makes the educational climax of the game silently optional. Fix: when a Push On roll would carry the wagon past the unvisited bandit space, the bandits stop the wagon at their ambush space (forfeiting unused movement). The bandits are FORCED, not voluntary \u2014 they're literally blocking the trail.",
+    "implementation": [
+      "In doActionPushOn, after dice settle but before setting w.position:",
+      "1. Compute final destination = w.position + move",
+      "2. Check: would this carry the wagon past the unvisited bandit space?",
+      "3. If yes: set w.position = banditSpace, log 'The bandits stop the wagon at [name]', fire triggerBanditAmbush(w)",
+      "4. If the wagon LANDS exactly on the bandit space (existing behavior): same flow, bandits fire normally",
+      "5. The bandit ambush check should happen BEFORE the voluntary-fort-stop check (bandits are involuntary, take precedence)"
+    ],
+    "narrative_when_intercepted": "The bandits saw us coming. They have us cornered at [N] miles short of where we meant to camp. There is no choice but to face them.",
+    "edge_cases": [
+      "If the bandit space falls exactly on a fort or river: the bandit ambush fires first. Fort/river resolve afterward on next turn.",
+      "If a wagon is forced-marched (Path 3) past the bandit space: same overshoot logic applies. The bandits intercept.",
+      "If race_to_fort moves the wagon to a fort beyond the bandit space: bandits intercept. The dying member's intervention is paused; bandits fight first; intervention resolves after."
+    ]
+  },
+  "death_path_unification": {
+    "philosophy": "v2.3 introduced the 9-step death announcement protocol with the figure overlay, funeral hymn, and proper hold time. But it only fires for natural-progression deaths (state machine starvation/illness). Catastrophic deaths from rivers, bandits, and winter still use their old showOutcomeCallout flow with no figure overlay. Player sees those deaths only as text, not as a moment. Unify them.",
+    "scope": [
+      "River drowning failures (in resolveRiver doRiver function)",
+      "Bandit ambush member loss (in resolveBanditOutcome)",
+      "Winter ending deaths (in triggerWinterEnding)",
+      "Catastrophic event deaths (any event with 'lost_member' in narrative effects)",
+      "Morale-driven abandonment ('crisis morale' tier in v2.3)"
+    ],
+    "implementation_pattern": [
+      "Each catastrophic-death code path currently does: transitionMember(...) + showOutcomeCallout(...) + onContinue=>endTurn",
+      "Change to: 1) show the OUTCOME callout with the event narrative (river took them / bandits killed them) \u2192 2) on Continue click, route to processDeathAnnouncements(w, [deceased], () => endTurn) \u2192 3) protocol fires the figure overlay, funeral hymn, 4-second hold \u2192 4) on protocol Continue click, endTurn fires",
+      "Result: every member loss in the game produces the same visual beat: outcome text \u2192 figure overlay \u2192 'X has died' \u2192 continue"
+    ],
+    "overlay_prominence_upgrades": {
+      "figure_size": "Change from clamp(120px, 22%, 240px) wide to clamp(180px, 40%, 360px) wide \u2014 roughly double",
+      "hold_duration_ms_first_death": 4500,
+      "hold_duration_ms_subsequent_deaths": 3500,
+      "death_stamp_text": "Add a prominent 'X has died' or 'X is lost' centered overlay above the figure with weight 700, deep rose color, drop shadow",
+      "fade_in_ms": 1200,
+      "fade_out_ms": 0
+    },
+    "audio_unification": "Funeral hymn already plays once on first death (audioController.switchToFuneral). Subsequent deaths in the same journey reuse the same fade-to-funeral. Don't double-trigger."
+  },
+  "post_death_calendar_drift_fix": {
+    "philosophy": "Playtest leaderboard showed Daddy's Wagon ending at '0 of 7 alive, day 137' and Matthew's at 'day 154' \u2014 wagons that lost all members but kept the calendar advancing for many days afterward. Suspected cause: catastrophic deaths (river/bandit/winter) call transitionMember directly and route through showOutcomeCallout to endTurn, but the elimination check in completeEndTurn happens AFTER w.daysTraveled += gameState.daysPerTurn. So a wagon whose last member dies in a river drowning gets one more turn of calendar advance before being marked eliminated. In Competitive mode with rotation across multiple wagons, an eliminated-but-not-yet-flagged wagon may also get a few extra days while waiting for its turn to come back around.",
+    "fix": [
+      "Move the elimination check to BEFORE the w.daysTraveled increment in completeEndTurn",
+      "Also check elimination in the catastrophic-death code paths (river, bandit, winter) immediately after transitionMember \u2014 if livingMembers(w).length === 0, set w.eliminated = true synchronously, before any callout fires",
+      "The elimination scene callout still shows; it just shows AFTER the death announcement, with the days-traveled stamped at the actual day of last death \u2014 not days later"
+    ],
+    "expected_behavior": "A wagon whose last member dies on day N should show day N as the journey end day, not day N+4 or N+8. Across the full journey, eliminated wagons should never advance the calendar past the day the last member died."
+  },
+  "graphics_overhaul_v2_6": {
+    "philosophy": "Players described v2.5 graphics as 'pre-1980' \u2014 vector silhouettes with flat colors. The fix is dramatically richer SVG: layered parallax scenery, gradient atmospheres, animated weather, detailed character figures with state-dependent expressions, real day/night cycle, animated dice/wheels/water/fire. Stays within the single-file offline constraint. File grows from ~500KB to ~1.2-1.5MB. The aim is the visual register of Reigns / 80 Days / Florence \u2014 published indie game polish, not AAA realism.",
+    "scope_summary": [
+      "5 region backdrops (Plains, Foothills, Mountains, High Desert, Forest) with 3-layer parallax, gradient atmospheres, drifting clouds, time-of-day variation",
+      "23 detailed character SVGs with profession-specific accessories, clothing folds, face features that vary by health state",
+      "Animated dice with 3D-feeling settling rotation, pip patterns",
+      "Wagon wheel rotation that actually rolls forward (not just spins in place)",
+      "Particle systems: rain, snow, dust devils, campfire embers, river flow",
+      "Day/night ambient cycle: sky color and lighting shift with the calendar"
+    ],
+    "file_size_budget": {
+      "current": "~500KB",
+      "target_max": "1.5MB",
+      "still_offline_capable": true,
+      "still_single_file": true
+    },
+    "region_backdrop_specification": {
+      "implementation": "Each region backdrop is an SVG with 3 layered groups: .bg-far, .bg-mid, .bg-near. The CSS animates them at different rates when the wagon advances (slower for far, faster for near = parallax). Atmospheric overlay sits on top with a linear gradient that shifts with day count.",
+      "regions": [
+        {
+          "id": "plains",
+          "atmosphere": {
+            "morning": "linear-gradient(to bottom, #FFE4C4 0%, #FBF6F0 60%)",
+            "midday": "linear-gradient(to bottom, #B6D4E8 0%, #FBF6F0 70%)",
+            "dusk": "linear-gradient(to bottom, #E8957B 0%, #FBF6F0 70%)"
+          },
+          "far_layer": "Distant horizon line with two soft hill silhouettes, almost flat. Gradient from #C8B59A to #A89070",
+          "mid_layer": "Rolling prairie hills, more defined, with scattered sage clumps",
+          "near_layer": "Foreground tall grass blades (10-15 of them, slightly different heights), wagon ruts in the dirt",
+          "ambient_elements": [
+            "1-2 buffalo silhouettes grazing at random positions on the horizon, animated to slowly drift",
+            "3-5 birds in a loose V formation crossing the sky every ~30 seconds",
+            "Cloud layer: 4-6 soft clouds drifting at 0.3 of wagon advance speed",
+            "Wind effect: tall grass sways in a sine-wave loop"
+          ]
+        },
+        {
+          "id": "foothills",
+          "atmosphere": {
+            "morning": "linear-gradient(to bottom, #E8D9C0 0%, #C8B59A 70%)",
+            "midday": "linear-gradient(to bottom, #B0C8D8 0%, #C8B59A 70%)",
+            "dusk": "linear-gradient(to bottom, #C8957B 0%, #A88560 70%)"
+          },
+          "far_layer": "Soft brown hills, three layers, increasing height",
+          "mid_layer": "Closer hills with sparse trees (5-7 conifers in silhouette)",
+          "near_layer": "Rocky outcrops, sage brush, small pebbles",
+          "ambient_elements": [
+            "Hawk circling on thermals, wide slow loops",
+            "Wind through trees animation",
+            "Occasional deer silhouette appearing on a hilltop, lingering for 8 seconds, then exiting"
+          ]
+        },
+        {
+          "id": "mountains",
+          "atmosphere": {
+            "morning": "linear-gradient(to bottom, #D4C9D0 0%, #A8A0B0 50%, #8a8290 100%)",
+            "midday": "linear-gradient(to bottom, #B8C8D8 0%, #9890A0 60%)",
+            "dusk": "linear-gradient(to bottom, #B89070 0%, #8a7280 60%)",
+            "winter": "linear-gradient(to bottom, #E0E8F0 0%, #B8C0D0 60%, #FBF6F0 100%)"
+          },
+          "far_layer": "Snow-capped peaks, jagged silhouette, multiple parallax layers giving depth",
+          "mid_layer": "Closer mountainsides with rocky bands and treeline",
+          "near_layer": "Boulders, scree slopes, alpine grass",
+          "ambient_elements": [
+            "Snowflakes when day > 130 (winter trigger): 30-50 particles falling at varying speeds and angles",
+            "Eagle soaring high (very slow circles)",
+            "Cloud wisps clinging to peaks",
+            "Occasional falling rock animation (small rock tumbles down a slope)"
+          ]
+        },
+        {
+          "id": "high_desert",
+          "atmosphere": {
+            "morning": "linear-gradient(to bottom, #F4D2A8 0%, #D4C19E 60%)",
+            "midday": "linear-gradient(to bottom, #E8C898 0%, #C8B080 70%)",
+            "dusk": "linear-gradient(to bottom, #B85770 0%, #C89868 60%)"
+          },
+          "far_layer": "Mesa silhouettes, flat-topped buttes, distant haze",
+          "mid_layer": "Sage flats, occasional Joshua tree silhouette, dry creek beds",
+          "near_layer": "Cracked earth texture, small rocks, sun-bleached bones (faint)",
+          "ambient_elements": [
+            "Heat shimmer at the horizon (subtle wavy distortion)",
+            "Dust devil that occasionally appears, spirals across the screen, dissipates (every ~45 seconds)",
+            "Vulture circling slowly at high altitude",
+            "Tumbleweed rolling across foreground every ~20 seconds"
+          ]
+        },
+        {
+          "id": "forest",
+          "atmosphere": {
+            "morning": "linear-gradient(to bottom, #C8D8B8 0%, #98A888 70%)",
+            "midday": "linear-gradient(to bottom, #A8C0B8 0%, #788870 70%)",
+            "dusk": "linear-gradient(to bottom, #A87090 0%, #687060 70%)"
+          },
+          "far_layer": "Distant green ridges, layered, hint of mountains beyond",
+          "mid_layer": "Dense conifer forest in silhouette, varying tree heights",
+          "near_layer": "Detailed foreground pines with visible needles, undergrowth, mushrooms, fallen logs",
+          "ambient_elements": [
+            "Light filtering through tree canopy (god rays effect via SVG gradient)",
+            "Bird silhouettes between trees",
+            "Distant water stream visible through trees with salmon occasionally jumping",
+            "Wind rustles needle clusters"
+          ]
+        }
+      ]
+    },
+    "character_detail_specification": {
+      "implementation": "Each profession's full-body SVG is rebuilt with these elements (in order from back to front layering): boots, pants, torso, arms, hands, neck, head, hair, hat, profession accessory. Each layer has gradient fills (not flat colors) for shading. Face features include: eyes (with eye color and lash detail), nose (small triangular shadow), mouth (simple curve, varies by state), eyebrows (small lines, expressive). Hair has 3-4 strand groups for variation.",
+      "shading_pattern": "Use linearGradient with 2-3 stops per major shape. Light source from upper-left (so right side of body is shaded darker). 15-20% opacity black overlays for cast shadows.",
+      "state_variation": {
+        "healthy": {
+          "face": "neutral mouth curve, eyes open, normal eyebrows",
+          "posture": "standing upright, slight movement"
+        },
+        "weakened": {
+          "face": "tired eyes (slight droop), neutral mouth",
+          "posture": "shoulders slightly slumped"
+        },
+        "sick": {
+          "face": "closed eyes (blinking), small frown, paler skin tone (desaturate)",
+          "posture": "head slightly bowed",
+          "addition": "small sweat drop on forehead, occasional cough animation"
+        },
+        "injured": {
+          "face": "wincing eyes (eyebrows down)",
+          "posture": "leaning slightly",
+          "addition": "bandage on visible wound location"
+        },
+        "dying": {
+          "face": "eyes mostly closed, slight grimace",
+          "posture": "barely standing",
+          "addition": "deep desaturation overlay, slight sway animation"
+        },
+        "lost": "Full grayscale + cross icon overlay (existing v2.3)"
+      },
+      "profession_accessories_detailed": {
+        "Doctor": "White medical cap with red cross detail. Stethoscope draped around neck (curved tubing visible). Small black bag at side. White coat over blue shirt \u2014 gradient cream to white.",
+        "Hunter": "Brown wide-brim leather hat with crease detail. Leather bandolier across chest. Quiver of feathered arrows over shoulder. Compound bow held in one hand. Hunting knife at belt.",
+        "Carpenter": "Brown work cap. Hammer on belt loop. Tool belt with visible chisels and saws. Rolled-up sleeves on blue work shirt. Leather apron with pockets.",
+        "Cook": "Tall white chef hat with creases. Apron over dark gray clothing, possibly with flour stains. Wooden spoon in one hand, small cooking pot at feet (when standing).",
+        "Scout": "Coonskin cap with tail visible. Buckskin jacket with fringe. Spyglass in one hand. Leather pouch at hip.",
+        "Cowboy": "Tan cowboy hat with rolled brim. Bandana around neck. Vest over shirt. Boot spurs visible. Six-shooter holster at hip.",
+        "Priest": "Black robe with white collar visible. Cross necklace. Bible held in one hand. Short, neat hair.",
+        "Blacksmith": "Leather apron over heavy work clothes. Hammer in one hand. Soot smudges on face and arms (subtle dark patches).",
+        "Trapper": "Fur hat (probably beaver). Heavy fur-trim coat. Snare ropes coiled at side. Knife at belt.",
+        "Merchant": "Black bowler hat. Vest with watch chain. Coin pouch at side. Slightly fancier clothing than the workers.",
+        "Guide": "Wide-brim hat with feather. Long leather coat. Compass in hand. Sturdy boots.",
+        "Farmer": "Straw hat. Faded blue overalls over work shirt. Wheat sheaf in hand or hoe at side. Sunburned skin tone.",
+        "Seamstress": "Hair in a bun under bonnet. Long pink dress with apron. Sewing needle and thread visible. Small basket of fabric.",
+        "Musician": "Small jaunty cap. Maroon vest over white shirt. Fiddle held in one hand, bow in the other.",
+        "Artist": "Beret. Cream smock over regular clothes (with paint smudges). Paintbrush in hand, palette in other hand.",
+        "Language Teacher": "Wire-frame spectacles. Dark green coat. Open book in one hand.",
+        "Politician": "Tall top hat. Black formal suit with white shirt and bow tie. Speech scroll in hand. Walking cane.",
+        "Banker": "Top hat. Gray formal suit. Small money bag in hand. Pocket watch chain visible.",
+        "Actor": "Dramatic flowing scarf. Red velvet jacket. Theater mask held in one hand. Posed slightly theatrically.",
+        "Fashion Designer": "Stylish wide-brim hat with feathers. Bright pink dress with elaborate trim. Measuring tape around neck. Pin cushion at wrist.",
+        "Magician": "Black top hat with star detail. Long black cape. Wand in hand, possibly with small spark effect. Pencil mustache.",
+        "Influencer": "Stylish hat with bandana band. Bright colorful bandana shirt. Holds something the period kids would understand as 'their voice' \u2014 maybe a small handheld megaphone or hat-pass collection cup.",
+        "Food Critic": "Bowler hat. Dark suit. Fork in one hand, spoon in the other (crossed). Notebook tucked under arm."
+      }
+    },
+    "animation_specifications": {
+      "dice_settling": {
+        "duration_ms": 800,
+        "behavior": "Two dice tumble through 3D-rotating animation (rotateX + rotateY at varying speeds), settling into final faces. CSS transform-style: preserve-3d allows actual cube-like rotation. Each die has 6 face SVGs positioned in 3D space.",
+        "audio": "Wood-on-table cascade sample (existing 'dice' SFX), settling chime on stop"
+      },
+      "wagon_wheel_rotation": {
+        "current_bug": "Wheels spin in place but wagon translates as one unit, so wheels don't ROLL forward \u2014 they spin while the wagon slides over them",
+        "fix": "Synchronize wheel rotation with wagon translation. For every X pixels of horizontal movement, rotate wheels by (X / circumference) * 360 degrees. Implement via JavaScript animationframe sync, or via CSS keyframes that compose translate and rotate together."
+      },
+      "rain_particle_system": {
+        "trigger": "Storm event, also rain weather variant of any region",
+        "implementation": "30-50 small SVG line elements, each with its own CSS keyframe falling diagonally. Stagger animation-delay so they don't all start at the same time. Re-spawn at top when reaching bottom.",
+        "perf_note": "Use transform-only animations (translateY) \u2014 no width/height or top/left changes \u2014 so the browser can compose on GPU"
+      },
+      "snow_particle_system": {
+        "trigger": "day > 130 in mountains region, also winter ending",
+        "implementation": "40-60 small white circles, falling slower than rain, with gentle horizontal drift via sine wave. Some are larger and slower (foreground), others smaller and faster (background) for depth"
+      },
+      "dust_devil": {
+        "trigger": "high_desert region, randomly every 30-60 seconds",
+        "implementation": "Animated SVG group: 5-7 small particle elements rotating around a central point that translates across the screen. Lifetime ~3 seconds, then dissipates."
+      },
+      "campfire_embers": {
+        "trigger": "Rest action, any night scene",
+        "implementation": "8-12 small orange circles drifting upward from the fire, fading out. Each with a slightly different starting position and velocity. Looped."
+      },
+      "river_flow": {
+        "trigger": "River crossing scenes",
+        "implementation": "Multiple horizontal wave-shaped paths animated via stroke-dashoffset to create the illusion of moving water. Use 2-3 layers of waves at different speeds and opacities for depth."
+      }
+    },
+    "day_night_cycle": {
+      "philosophy": "Real journeys feel different at dawn than at noon. Vary the atmospheric tint based on calendar day to subtly mark passage of time.",
+      "implementation": "Compute time-of-day from (daysTraveled % 4): 0=morning, 1=midday, 2=afternoon, 3=dusk. Apply corresponding atmospheric gradient via CSS variable update. Transition smoothly over 0.8s when changing.",
+      "subtle_variations": [
+        "Morning: pinks and warm yellows",
+        "Midday: bright blues and high contrast",
+        "Afternoon: golden warm light, longer shadows",
+        "Dusk: oranges, reds, deep purples in distant horizons"
+      ]
+    }
   }
 }
