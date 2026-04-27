@@ -264,6 +264,120 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
 .scene-overlay { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
 .scene-overlay > * { pointer-events: auto; }
 
+/* v2.6 Stage 3 — particle systems. Inline absolute-positioned overlays
+   inside .scene-canvas. Activated by classes on .scene-canvas:
+     .weather-rain — rain on Storm events
+     .weather-snow — snow when daysTraveled > 130 in Mountains region
+     .scene-rest   — campfire embers during Rest action
+     .scene-desert — dust-devil at random intervals in High Desert
+   Spawn count is intentionally small enough for a 1366x768 Chromebook
+   to hold 60fps. prefers-reduced-motion disables every animation. */
+.particle-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 12; }
+.rain-drop {
+  position: absolute; width: 1px; height: 12px;
+  background: rgba(180, 200, 220, 0.62);
+  animation: rainfall 0.9s linear infinite;
+}
+@keyframes rainfall {
+  from { transform: translate(0, -20px); opacity: 0; }
+  10%  { opacity: 1; }
+  to   { transform: translate(-15px, 100vh); opacity: 0; }
+}
+.snowflake {
+  position: absolute; width: 4px; height: 4px;
+  background: #FBF6F0; border-radius: 50%;
+  opacity: 0.85;
+  animation: snowfall 4.2s linear infinite;
+}
+@keyframes snowfall {
+  0%   { transform: translate(0, -10px); opacity: 0; }
+  10%  { opacity: 1; }
+  50%  { transform: translate(20px, 50vh); }
+  100% { transform: translate(-12px, 100vh); opacity: 0; }
+}
+.ember {
+  position: absolute; width: 4px; height: 4px;
+  background: radial-gradient(circle, #F4A86B 0%, #C97A4D 60%, transparent 80%);
+  border-radius: 50%;
+  animation: emberRise 2.4s ease-out infinite;
+}
+@keyframes emberRise {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0; }
+  20%  { opacity: 0.9; }
+  60%  { opacity: 0.7; }
+  100% { transform: translate(calc(var(--ember-drift, 0) * 1px), -120px) scale(0.4); opacity: 0; }
+}
+.dust-devil {
+  position: absolute; bottom: 30%; left: -100px;
+  width: 80px; height: 100px;
+  animation: dustDevilSweep 4.5s ease-in-out forwards;
+}
+.dust-devil-particle { position: absolute; width: 4px; height: 4px; background: rgba(196, 152, 112, 0.6); border-radius: 50%; }
+@keyframes dustDevilSweep {
+  from { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  to   { transform: translate(110vw, -10px) rotate(720deg); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rain-drop, .snowflake, .ember, .dust-devil { animation: none; }
+}
+
+/* v2.6 Stage 1 — region backdrop parallax + ambient animations.
+   `--wagon-progress` is set on .scene-canvas (0..1, current pos / trail end).
+   Far layer translates least; near layer translates most. The atmosphere
+   gradient fill is driven by `data-time` on the document root (Stage 4). */
+.region-backdrop .atmosphere { transition: fill 0.8s ease; }
+:root[data-time="morning"]   .region-backdrop .atmosphere { fill: url(#atmo-morning); }
+:root[data-time="midday"]    .region-backdrop .atmosphere { fill: url(#atmo-midday); }
+:root[data-time="afternoon"] .region-backdrop .atmosphere { fill: url(#atmo-afternoon); }
+:root[data-time="dusk"]      .region-backdrop .atmosphere { fill: url(#atmo-dusk); }
+:root .region-backdrop .atmosphere { fill: url(#atmo-midday); } /* default */
+
+.region-backdrop .bg-far  { transform: translateX(calc(var(--wagon-progress, 0) * -60px)); }
+.region-backdrop .bg-mid  { transform: translateX(calc(var(--wagon-progress, 0) * -200px)); }
+.region-backdrop .bg-near { transform: translateX(calc(var(--wagon-progress, 0) * -520px)); }
+
+/* Cloud drift — slow continuous loop on top of the parallax offset */
+.region-backdrop .bg-clouds { animation: bgCloudDrift 80s linear infinite; }
+@keyframes bgCloudDrift { from { transform: translateX(0); } to { transform: translateX(120px); } }
+
+/* V-formation birds cross the sky every ~30s */
+.region-backdrop .bg-birds { animation: bgBirdsCross 32s linear infinite; opacity: 0.85; }
+@keyframes bgBirdsCross {
+  0%   { transform: translate(-200px, 0); opacity: 0; }
+  10%  { opacity: 0.85; }
+  90%  { opacity: 0.85; }
+  100% { transform: translate(2200px, -40px); opacity: 0; }
+}
+
+/* Tall grass blades sway with a sine-like keyframe */
+.region-backdrop .grass-blade { transform-origin: bottom center; transform-box: fill-box; animation: grassSway 4.4s ease-in-out infinite; }
+.region-backdrop .grass-blade[data-i="1"], .region-backdrop .grass-blade[data-i="6"], .region-backdrop .grass-blade[data-i="13"] { animation-delay: -1.0s; }
+.region-backdrop .grass-blade[data-i="2"], .region-backdrop .grass-blade[data-i="7"], .region-backdrop .grass-blade[data-i="14"] { animation-delay: -2.0s; }
+.region-backdrop .grass-blade[data-i="3"], .region-backdrop .grass-blade[data-i="8"], .region-backdrop .grass-blade[data-i="15"] { animation-delay: -2.8s; }
+@keyframes grassSway { 0%,100% { transform: rotate(-1.8deg); } 50% { transform: rotate(1.8deg); } }
+
+/* Foothills hawk circles slowly */
+.region-backdrop .bg-hawk { animation: hawkCircle 24s linear infinite; transform-origin: 800px 200px; }
+@keyframes hawkCircle { from { transform: translate(800px, 200px) rotate(0deg) translate(40px, 0); } to { transform: translate(800px, 200px) rotate(360deg) translate(40px, 0); } }
+
+/* High-desert vulture circles slowly */
+.region-backdrop .bg-vulture { animation: hawkCircle 30s linear infinite; transform-origin: 960px 160px; }
+
+/* God-rays subtle pulse */
+.region-backdrop .bg-godrays polygon { animation: godRaysPulse 6s ease-in-out infinite; }
+@keyframes godRaysPulse { 0%,100% { opacity: 0.16; } 50% { opacity: 0.24; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .region-backdrop .bg-clouds,
+  .region-backdrop .bg-birds,
+  .region-backdrop .grass-blade,
+  .region-backdrop .bg-hawk,
+  .region-backdrop .bg-vulture,
+  .region-backdrop .bg-godrays polygon { animation: none; }
+}
+
 /* Narrative callout — Part 1B responsive sizing.
    max-width: min(580px, 80vw) keeps the callout readable on Chromebook
    (1366x768) without overflowing on phones; clamp() in nested typography
@@ -391,7 +505,7 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
   position: relative;
   box-shadow: 0 4px 8px rgba(60, 42, 22, 0.25);
 }
-.die.tumbling { animation: dieTumble 0.6s ease-out; }
+.die.tumbling { animation: dieTumble 0.7s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
 .die-face { position: absolute; inset: 0; visibility: hidden; }
 .die-face.face-on { visibility: visible; }
 .die-face circle { fill: #3D2817; }
@@ -415,11 +529,12 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
 }
 @keyframes diceFadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes dieTumble {
-  0%   { transform: rotate(0deg) translateY(0); }
-  25%  { transform: rotate(-15deg) translateY(-6px); }
-  50%  { transform: rotate(15deg) translateY(0); }
-  75%  { transform: rotate(-10deg) translateY(-4px); }
-  100% { transform: rotate(0deg) translateY(0); }
+  0%   { transform: rotateX(0deg) rotateY(0deg) translateY(0) scale(1); }
+  20%  { transform: rotateX(360deg) rotateY(180deg) translateY(-10px) scale(1.08); }
+  40%  { transform: rotateX(720deg) rotateY(360deg) translateY(-6px) scale(1.06); }
+  60%  { transform: rotateX(900deg) rotateY(540deg) translateY(-2px) scale(1.04); }
+  80%  { transform: rotateX(1020deg) rotateY(720deg) translateY(0) scale(1.02); }
+  100% { transform: rotateX(1080deg) rotateY(720deg) translateY(0) scale(1); }
 }
 @media (prefers-reduced-motion: reduce) {
   .die.tumbling { animation: none; }
@@ -855,6 +970,32 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
 /* Eye blink animation on portraits */
 .eye-blink { transform-box: fill-box; transform-origin: center; animation: blink 5.5s ease-in-out infinite; }
 @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.08); } }
+
+/* v2.6 Stage 2 — character state variation. Drives face + posture
+   from the character SVG's data-state attribute. The state-overlay
+   layer (sweat / bandage) is hidden by default and shown for the
+   matching state. */
+.character .char-state-overlay > g { display: none; }
+.character[data-state="weakened"] .char-eyes { transform: scaleY(0.7); transform-origin: center; transform-box: fill-box; }
+.character[data-state="sick"] .char-eyes { animation: sickBlink 3s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+.character[data-state="sick"] .char-mouth { d: path('M 32 25 Q 36 23 40 25'); }
+.character[data-state="sick"] .char-state-overlay .char-sweat { display: block; animation: sweatDrop 2.4s ease-in-out infinite; }
+.character[data-state="sick"] .char-head circle { filter: saturate(0.75); }
+.character[data-state="injured"] .char-brow-l { transform: translateY(2px) rotate(15deg); transform-origin: 32px 16px; }
+.character[data-state="injured"] .char-brow-r { transform: translateY(2px) rotate(-15deg); transform-origin: 40px 16px; }
+.character[data-state="injured"] .char-state-overlay .char-bandage { display: block; }
+.character[data-state="injured"] { transform: rotate(-2deg); transform-origin: bottom center; }
+.character[data-state="dying"] { filter: saturate(0.4) brightness(0.85); animation: dyingSway 3.2s ease-in-out infinite; transform-origin: bottom center; }
+.character[data-state="dying"] .char-eyes { transform: scaleY(0.18); transform-origin: center; transform-box: fill-box; }
+.character[data-state="dying"] .char-mouth { d: path('M 32 25 Q 36 26 40 24.5'); }
+@keyframes sickBlink { 0%,80%,100% { transform: scaleY(0.4); } 88% { transform: scaleY(0.05); } }
+@keyframes sweatDrop { 0%,100% { transform: translateY(0); opacity: 0.8; } 50% { transform: translateY(2px); opacity: 1; } }
+@keyframes dyingSway { 0%,100% { transform: rotate(-1.4deg); } 50% { transform: rotate(1.4deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .character[data-state="dying"] { animation: none; }
+  .character[data-state="sick"] .char-eyes { animation: none; }
+  .character[data-state="sick"] .char-state-overlay .char-sweat { animation: none; }
+}
 
 /* ===== Action bar ===== */
 .action-bar {
@@ -7584,7 +7725,338 @@ function regionForPosition(trailLength, position) {
   if (position <= 39) return 'High Desert';
   return 'Forest';
 }
+// v2.6 Stage 1 — region backdrop system. Three-layer parallax SVG with
+// atmospheric gradient and ambient elements per
+// graphics_overhaul_v2_6.region_backdrop_specification. CSS variable
+// `--wagon-progress` (0..1) on the scene container drives parallax —
+// far moves slowest, near moves fastest.
+// v2.6 Stage 3 — particle spawn helpers. Idempotent: each helper finds
+// or creates a `.particle-layer` inside `.scene-canvas` and re-uses it.
+// Calling spawnRain(0) clears the rain layer (used to switch weather).
+function _ensureParticleLayer(kind) {
+  const canvas = $('scene-canvas');
+  if (!canvas) return null;
+  let layer = canvas.querySelector('.particle-layer.layer-' + kind);
+  if (!layer) {
+    layer = el('div', { class: 'particle-layer layer-' + kind });
+    canvas.appendChild(layer);
+  }
+  return layer;
+}
+
+function spawnRain(count) {
+  const layer = _ensureParticleLayer('rain');
+  if (!layer) return;
+  layer.innerHTML = '';
+  if (!count) return;
+  for (let i = 0; i < count; i++) {
+    const d = el('div', { class: 'rain-drop' });
+    d.style.left = Math.random() * 100 + '%';
+    d.style.top  = Math.random() * 30 + '%';
+    d.style.animationDelay = (Math.random() * 0.9).toFixed(2) + 's';
+    layer.appendChild(d);
+  }
+}
+
+function spawnSnow(count) {
+  const layer = _ensureParticleLayer('snow');
+  if (!layer) return;
+  layer.innerHTML = '';
+  if (!count) return;
+  for (let i = 0; i < count; i++) {
+    const d = el('div', { class: 'snowflake' });
+    d.style.left = Math.random() * 100 + '%';
+    d.style.top  = Math.random() * 20 + '%';
+    d.style.animationDelay = (Math.random() * 4.2).toFixed(2) + 's';
+    d.style.animationDuration = (3 + Math.random() * 2).toFixed(2) + 's';
+    d.style.opacity = (0.5 + Math.random() * 0.5).toFixed(2);
+    layer.appendChild(d);
+  }
+}
+
+function spawnEmbers(count) {
+  const layer = _ensureParticleLayer('ember');
+  if (!layer) return;
+  layer.innerHTML = '';
+  if (!count) return;
+  for (let i = 0; i < count; i++) {
+    const d = el('div', { class: 'ember' });
+    d.style.left = (45 + Math.random() * 10) + '%';
+    d.style.bottom = '12%';
+    d.style.setProperty('--ember-drift', (-15 + Math.random() * 30).toFixed(0));
+    d.style.animationDelay = (Math.random() * 2.4).toFixed(2) + 's';
+    layer.appendChild(d);
+  }
+}
+
+function spawnDustDevil() {
+  const layer = _ensureParticleLayer('dustdevil');
+  if (!layer) return;
+  // Remove any prior dust devil so they don't stack
+  layer.innerHTML = '';
+  const dd = el('div', { class: 'dust-devil' });
+  // Inner spinning particles
+  for (let i = 0; i < 7; i++) {
+    const p = el('div', { class: 'dust-devil-particle' });
+    p.style.left = (35 + Math.cos(i / 7 * Math.PI * 2) * 30) + 'px';
+    p.style.top  = (50 + Math.sin(i / 7 * Math.PI * 2) * 30) + 'px';
+    dd.appendChild(p);
+  }
+  layer.appendChild(dd);
+  setTimeout(() => { try { dd.remove(); } catch (e) {} }, 4800);
+}
+
+// v2.6 Stage 3 — wire weather to region + day count. Called from
+// paintScenery so the scene's particle state matches the wagon's
+// position/day. `_lastWeatherKey` avoids redundant re-spawns.
+let _lastWeatherKey = '';
+function refreshWeatherFromWagon(w) {
+  if (!w) return;
+  const region = (w.region || regionForPosition(gameState.trailLength, w.position) || '').toLowerCase();
+  const inMountains = region.includes('mountain');
+  const inDesert    = region.includes('desert');
+  const winter = (w.daysTraveled || 0) > 130;
+  let key = region + '|' + (winter ? 'w' : 's') + '|' + ((w._lastSurpriseKind === 'storm') ? 'r' : '');
+  if (key === _lastWeatherKey) return;
+  _lastWeatherKey = key;
+  // Default: clear all weather
+  spawnRain(0);
+  spawnSnow(0);
+  // Mountains in winter → snow
+  if (inMountains && winter) spawnSnow(40);
+  // Random dust devil in desert (~1 in 6 paint events)
+  if (inDesert && Math.random() < 0.16) spawnDustDevil();
+}
+
+function buildLayeredBackdrop(regionKey) {
+  // Normalize to lowercase id used by the JSON spec
+  const id = String(regionKey || '').toLowerCase().replace(/\s+/g, '_');
+  const builders = {
+    plains:        _bgPlains,
+    foothills:     _bgFoothills,
+    mountains:     _bgMountains,
+    high_desert:   _bgHighDesert,
+    forest:        _bgForest
+  };
+  const fn = builders[id] || _bgPlains;
+  return fn();
+}
+
+function _bgFrame(content) {
+  return '<svg class="region-backdrop" viewBox="0 0 1920 600" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">' +
+         '<defs>' +
+           '<radialGradient id="bg-vignette" cx="50%" cy="50%" r="75%">' +
+             '<stop offset="55%" stop-color="rgba(0,0,0,0)"/>' +
+             '<stop offset="100%" stop-color="rgba(40,28,12,0.30)"/>' +
+           '</radialGradient>' +
+           '<linearGradient id="atmo-morning" x1="0" y1="0" x2="0" y2="1">' +
+             '<stop offset="0%"  stop-color="#FFE4C4"/>' +
+             '<stop offset="55%" stop-color="#FBF6F0"/>' +
+           '</linearGradient>' +
+           '<linearGradient id="atmo-midday" x1="0" y1="0" x2="0" y2="1">' +
+             '<stop offset="0%"  stop-color="#B6D4E8"/>' +
+             '<stop offset="60%" stop-color="#FBF6F0"/>' +
+           '</linearGradient>' +
+           '<linearGradient id="atmo-afternoon" x1="0" y1="0" x2="0" y2="1">' +
+             '<stop offset="0%"  stop-color="#F0C99A"/>' +
+             '<stop offset="55%" stop-color="#FBF6F0"/>' +
+           '</linearGradient>' +
+           '<linearGradient id="atmo-dusk" x1="0" y1="0" x2="0" y2="1">' +
+             '<stop offset="0%"  stop-color="#E8957B"/>' +
+             '<stop offset="50%" stop-color="#B07A7A"/>' +
+             '<stop offset="100%" stop-color="#5C4A66"/>' +
+           '</linearGradient>' +
+         '</defs>' +
+         '<rect class="atmosphere" width="1920" height="600"/>' +
+         content +
+         '<rect class="vignette" width="1920" height="600" fill="url(#bg-vignette)" pointer-events="none"/>' +
+         '</svg>';
+}
+
+function _bgPlains() {
+  // Far: two soft hill silhouettes, near-flat
+  let far = '<g class="bg-far">' +
+    '<path d="M 0 380 Q 480 360 960 370 Q 1440 380 1920 366 L 1920 600 L 0 600 Z" fill="#C8B59A"/>' +
+    '<path d="M 0 410 Q 320 396 640 404 Q 1280 414 1920 400 L 1920 600 L 0 600 Z" fill="#A89070" opacity="0.85"/>' +
+    // Drifting clouds
+    '<g class="bg-clouds">' +
+      '<ellipse cx="240" cy="120" rx="70" ry="14" fill="#FBF6F0" opacity="0.8"/>' +
+      '<ellipse cx="640" cy="90"  rx="90" ry="16" fill="#FBF6F0" opacity="0.7"/>' +
+      '<ellipse cx="1100" cy="135" rx="60" ry="12" fill="#FBF6F0" opacity="0.85"/>' +
+      '<ellipse cx="1480" cy="105" rx="80" ry="14" fill="#FBF6F0" opacity="0.75"/>' +
+    '</g>' +
+    // V-formation birds (pure decoration; CSS animates the group)
+    '<g class="bg-birds" transform="translate(800 180)">' +
+      '<path d="M 0 0 q 8 -5 16 0 m -8 0 q 8 -5 16 0" stroke="#5C4A36" stroke-width="1.2" fill="none"/>' +
+      '<path d="M -16 6 q 8 -5 16 0" stroke="#5C4A36" stroke-width="1.2" fill="none"/>' +
+      '<path d="M 32 6 q 8 -5 16 0" stroke="#5C4A36" stroke-width="1.2" fill="none"/>' +
+    '</g>' +
+    // Buffalo silhouettes on horizon
+    '<g class="bg-buffalo" fill="#5C4A36" opacity="0.55">' +
+      '<g transform="translate(420 388)"><ellipse cx="0" cy="0" rx="22" ry="9"/><circle cx="-18" cy="-3" r="6"/><line x1="-12" y1="9" x2="-12" y2="18" stroke="#5C4A36" stroke-width="2"/><line x1="-2" y1="9" x2="-2" y2="18" stroke="#5C4A36" stroke-width="2"/><line x1="10" y1="9" x2="10" y2="18" stroke="#5C4A36" stroke-width="2"/></g>' +
+      '<g transform="translate(1280 396)"><ellipse cx="0" cy="0" rx="20" ry="8"/><circle cx="-16" cy="-3" r="5"/><line x1="-10" y1="8" x2="-10" y2="16" stroke="#5C4A36" stroke-width="2"/><line x1="0" y1="8" x2="0" y2="16" stroke="#5C4A36" stroke-width="2"/><line x1="10" y1="8" x2="10" y2="16" stroke="#5C4A36" stroke-width="2"/></g>' +
+    '</g>' +
+    '</g>';
+  // Mid: rolling prairie hills + scattered sage
+  let mid = '<g class="bg-mid">' +
+    '<path d="M 0 460 Q 480 420 960 450 Q 1440 470 1920 440 L 1920 600 L 0 600 Z" fill="#9B8569"/>' +
+    // Sage clumps
+    new Array(10).fill(0).map((_, i) => {
+      const x = 80 + i * 200; const y = 470 + ((i*13)%18);
+      return '<g transform="translate(' + x + ' ' + y + ')" fill="#7B8A66" opacity="0.7"><circle cx="0" cy="0" r="9"/><circle cx="-7" cy="3" r="6"/><circle cx="7" cy="3" r="6"/></g>';
+    }).join('') +
+    '</g>';
+  // Near: foreground tall grass + wagon ruts
+  let near = '<g class="bg-near">' +
+    '<path d="M 0 600 L 0 540 Q 960 528 1920 540 L 1920 600 Z" fill="#8B7355"/>' +
+    // Wagon ruts
+    '<path d="M 60 560 Q 960 550 1860 560" stroke="#5C4A36" stroke-width="3" fill="none" opacity="0.5"/>' +
+    '<path d="M 60 580 Q 960 570 1860 580" stroke="#5C4A36" stroke-width="3" fill="none" opacity="0.5"/>' +
+    // Tall grass blades — sway via CSS keyframe on .grass-blade
+    new Array(28).fill(0).map((_, i) => {
+      const x = 30 + i * 70 + ((i*7)%18);
+      const h = 18 + ((i*11)%26);
+      return '<path class="grass-blade" data-i="' + i + '" d="M ' + x + ' 600 L ' + (x+1) + ' ' + (600-h) + ' L ' + (x+2) + ' 600 Z" fill="#5C4A36" opacity="0.78"/>';
+    }).join('') +
+    '</g>';
+  return _bgFrame(far + mid + near);
+}
+
+function _bgFoothills() {
+  let far = '<g class="bg-far">' +
+    '<path d="M 0 360 Q 320 280 640 320 Q 960 360 1280 290 Q 1600 220 1920 320 L 1920 600 L 0 600 Z" fill="#A89070"/>' +
+    '<path d="M 0 400 Q 480 340 960 380 Q 1440 420 1920 370 L 1920 600 L 0 600 Z" fill="#8B7355" opacity="0.85"/>' +
+    '<path d="M 0 440 Q 640 400 1280 425 Q 1600 440 1920 420 L 1920 600 L 0 600 Z" fill="#75614A" opacity="0.75"/>' +
+    // Hawk circling — CSS animation moves the .bg-hawk group in a slow loop
+    '<g class="bg-hawk" transform="translate(800 200)"><path d="M -10 0 q 5 -4 10 0 q 5 4 10 0" stroke="#3D2817" stroke-width="1.5" fill="none"/></g>' +
+    '</g>';
+  let mid = '<g class="bg-mid">' +
+    '<path d="M 0 480 Q 480 450 960 470 Q 1440 490 1920 460 L 1920 600 L 0 600 Z" fill="#5C4A36" opacity="0.6"/>' +
+    // Sparse conifers
+    new Array(7).fill(0).map((_, i) => {
+      const x = 200 + i * 240 + ((i*17)%40);
+      return '<g transform="translate(' + x + ' 470)" fill="#3D2817"><polygon points="0,-30 -10,0 10,0"/><polygon points="0,-22 -8,-6 8,-6"/><rect x="-2" y="0" width="4" height="6"/></g>';
+    }).join('') +
+    '</g>';
+  let near = '<g class="bg-near">' +
+    '<path d="M 0 600 L 0 540 Q 960 530 1920 540 L 1920 600 Z" fill="#75614A"/>' +
+    // Rocky outcrops
+    new Array(5).fill(0).map((_, i) => {
+      const x = 120 + i * 380 + ((i*23)%50);
+      return '<g transform="translate(' + x + ' 558)" fill="#5C4A36"><ellipse cx="0" cy="0" rx="22" ry="6"/><polygon points="-18,0 -10,-12 -2,-4"/><polygon points="2,-4 10,-14 18,0"/></g>';
+    }).join('') +
+    '</g>';
+  return _bgFrame(far + mid + near);
+}
+
+function _bgMountains() {
+  let far = '<g class="bg-far">' +
+    // Snow-capped jagged peaks — three depth layers
+    '<polygon points="0,420 200,260 360,340 540,200 720,300 900,180 1080,290 1260,210 1440,330 1620,250 1800,310 1920,280 1920,600 0,600" fill="#7C7E92"/>' +
+    // Snow caps
+    '<polygon points="160,290 200,260 240,290 220,300 200,294 180,300" fill="#FBF6F0"/>' +
+    '<polygon points="500,230 540,200 580,230 560,238 540,232 520,238" fill="#FBF6F0"/>' +
+    '<polygon points="860,210 900,180 940,210 920,218 900,212 880,218" fill="#FBF6F0"/>' +
+    '<polygon points="1220,240 1260,210 1300,240 1280,248 1260,242 1240,248" fill="#FBF6F0"/>' +
+    '<polygon points="1580,280 1620,250 1660,280 1640,288 1620,282 1600,288" fill="#FBF6F0"/>' +
+    '<polygon points="0,460 240,360 480,420 720,330 960,400 1200,340 1440,420 1680,360 1920,400 1920,600 0,600" fill="#5C5868" opacity="0.9"/>' +
+    '</g>';
+  let mid = '<g class="bg-mid">' +
+    // Closer mountainsides with treeline
+    '<path d="M 0 480 Q 240 430 480 450 Q 720 470 960 440 Q 1200 410 1440 450 Q 1680 490 1920 460 L 1920 600 L 0 600 Z" fill="#3D2817"/>' +
+    // Conifers along treeline
+    new Array(12).fill(0).map((_, i) => {
+      const x = 100 + i * 150 + ((i*11)%28);
+      return '<g transform="translate(' + x + ' 470)" fill="#2A1F0F"><polygon points="0,-20 -8,0 8,0"/></g>';
+    }).join('') +
+    '</g>';
+  let near = '<g class="bg-near">' +
+    '<path d="M 0 600 L 0 540 Q 960 525 1920 540 L 1920 600 Z" fill="#5C5050"/>' +
+    // Boulders
+    new Array(6).fill(0).map((_, i) => {
+      const x = 80 + i * 320 + ((i*19)%40);
+      return '<g transform="translate(' + x + ' 558)" fill="#3A3438"><ellipse cx="0" cy="0" rx="24" ry="8"/><polygon points="-20,0 -14,-14 0,-6"/><polygon points="2,-8 14,-16 20,0"/></g>';
+    }).join('') +
+    '</g>';
+  return _bgFrame(far + mid + near);
+}
+
+function _bgHighDesert() {
+  let far = '<g class="bg-far">' +
+    // Mesa silhouettes
+    '<path d="M 0 380 L 200 380 L 200 320 L 360 320 L 360 380 L 540 380 L 540 280 L 700 280 L 700 380 L 900 380 L 900 340 L 1080 340 L 1080 380 L 1260 380 L 1260 300 L 1440 300 L 1440 380 L 1620 380 L 1620 340 L 1800 340 L 1800 380 L 1920 380 L 1920 600 L 0 600 Z" fill="#A89070"/>' +
+    '<path d="M 0 430 Q 480 410 960 425 Q 1440 440 1920 420 L 1920 600 L 0 600 Z" fill="#8B7355" opacity="0.8"/>' +
+    // Vulture (slow circle)
+    '<g class="bg-vulture" transform="translate(960 160)"><path d="M -14 0 q 7 -4 14 0 q 7 4 14 0" stroke="#3D2817" stroke-width="1.5" fill="none"/></g>' +
+    '</g>';
+  let mid = '<g class="bg-mid">' +
+    '<path d="M 0 480 Q 480 460 960 470 Q 1440 480 1920 465 L 1920 600 L 0 600 Z" fill="#C49870" opacity="0.7"/>' +
+    // Sage flats + Joshua trees
+    new Array(8).fill(0).map((_, i) => {
+      const x = 120 + i * 240;
+      const isJoshua = (i % 3 === 0);
+      if (isJoshua) {
+        return '<g transform="translate(' + x + ' 470)" fill="#5C5C42"><rect x="-2" y="-30" width="4" height="30"/><line x1="0" y1="-22" x2="-12" y2="-30" stroke="#5C5C42" stroke-width="3"/><line x1="0" y1="-18" x2="14" y2="-26" stroke="#5C5C42" stroke-width="3"/><polygon points="-14,-32 -10,-32 -12,-38"/></g>';
+      }
+      return '<g transform="translate(' + x + ' 478)" fill="#7B6F50" opacity="0.8"><circle cx="0" cy="0" r="9"/><circle cx="-7" cy="3" r="6"/><circle cx="7" cy="3" r="6"/></g>';
+    }).join('') +
+    '</g>';
+  let near = '<g class="bg-near">' +
+    '<path d="M 0 600 L 0 540 Q 960 525 1920 540 L 1920 600 Z" fill="#D4B58A"/>' +
+    // Cracked earth
+    '<path d="M 80 565 L 130 580 L 100 595" stroke="#8B7355" stroke-width="1.5" fill="none" opacity="0.6"/>' +
+    '<path d="M 600 555 L 640 580 L 620 600" stroke="#8B7355" stroke-width="1.5" fill="none" opacity="0.6"/>' +
+    '<path d="M 1280 568 L 1330 585 L 1300 600" stroke="#8B7355" stroke-width="1.5" fill="none" opacity="0.6"/>' +
+    // Sun-bleached bones (subtle)
+    '<g transform="translate(420 580)" fill="#E8DCC2" opacity="0.6"><ellipse cx="0" cy="0" rx="10" ry="3"/><ellipse cx="-8" cy="-1" rx="3" ry="2"/></g>' +
+    '<g transform="translate(1500 575)" fill="#E8DCC2" opacity="0.55"><ellipse cx="0" cy="0" rx="10" ry="3"/></g>' +
+    '</g>';
+  return _bgFrame(far + mid + near);
+}
+
+function _bgForest() {
+  let far = '<g class="bg-far">' +
+    '<path d="M 0 380 Q 480 320 960 360 Q 1440 400 1920 340 L 1920 600 L 0 600 Z" fill="#3A5C3A"/>' +
+    '<path d="M 0 420 Q 640 380 1280 410 Q 1600 430 1920 400 L 1920 600 L 0 600 Z" fill="#2D4A2D" opacity="0.9"/>' +
+    '</g>';
+  let mid = '<g class="bg-mid">' +
+    '<rect x="0" y="380" width="1920" height="220" fill="#1F3A1F" opacity="0.7"/>' +
+    new Array(14).fill(0).map((_, i) => {
+      const x = 60 + i * 130 + ((i*9)%28);
+      const h = 90 + ((i*13)%50);
+      return '<g transform="translate(' + x + ' 470)" fill="#2A402A">' +
+             '<polygon points="0,' + (-h) + ' -' + (h/4|0) + ',-' + (h/2|0) + ' ' + (h/4|0) + ',-' + (h/2|0) + '"/>' +
+             '<polygon points="0,' + (-h*0.7) + ' -' + ((h/4|0)+4) + ',-' + (h/4|0) + ' ' + ((h/4|0)+4) + ',-' + (h/4|0) + '"/>' +
+             '<polygon points="0,' + (-h*0.4) + ' -' + ((h/4|0)+8) + ',0 ' + ((h/4|0)+8) + ',0"/>' +
+             '<rect x="-3" y="0" width="6" height="6" fill="#1F1F1F"/>' +
+             '</g>';
+    }).join('') +
+    // God rays — translucent yellow stripes
+    '<g class="bg-godrays" opacity="0.16">' +
+      '<polygon points="400,140 600,400 380,400 360,140" fill="#FBF6F0"/>' +
+      '<polygon points="900,160 1100,420 880,420 860,160" fill="#FBF6F0"/>' +
+      '<polygon points="1400,180 1600,440 1380,440 1360,180" fill="#FBF6F0"/>' +
+    '</g>' +
+    '</g>';
+  let near = '<g class="bg-near">' +
+    '<path d="M 0 600 L 0 540 Q 960 525 1920 540 L 1920 600 Z" fill="#3D2817"/>' +
+    new Array(6).fill(0).map((_, i) => {
+      const x = 80 + i * 320;
+      return '<g transform="translate(' + x + ' 545)" fill="#1F3A1F"><polygon points="0,-30 -14,0 14,0"/><polygon points="0,-22 -10,-6 10,-6"/></g>';
+    }).join('') +
+    // Mushrooms + fallen log
+    '<g transform="translate(380 575)" fill="#A8654A"><ellipse cx="0" cy="0" rx="6" ry="3"/><rect x="-2" y="0" width="4" height="6" fill="#FBF6F0"/></g>' +
+    '<g transform="translate(1240 580)" fill="#5C4A36"><ellipse cx="0" cy="0" rx="40" ry="6"/></g>' +
+    '</g>';
+  return _bgFrame(far + mid + near);
+}
+
 function sceneryFor(region) {
+  // v2.6 Stage 1 — route every region through the layered backdrop.
+  return buildLayeredBackdrop(region);
+}
+
+function _legacy_sceneryFor_v2_5(region) {
   switch (region) {
     case 'Plains':
       return '<svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMax slice" width="100%" height="100%">' +
@@ -7770,38 +8242,144 @@ const PROFESSION_ACCESSORY = {
 };
 
 // Build a full-body character SVG
+// v2.6 Stage 2 — character SVG rebuild. Layered figure with shading
+// (linear gradients), profession-specific accessories from the existing
+// PROFESSION_ACCESSORY table, and state-dependent face/posture via the
+// `data-state` attribute (CSS rules drive sick/injured/dying variation).
+//
+// Backwards-compatible signature: every call site that uses
+// characterFullBody(profession, skinTone) keeps working — only internals
+// change. The PROFESSION_ACCESSORY.extra blob (hat + signature accessory
+// markup) renders ON TOP of the new base figure.
+function _skinPalette(skinTone) {
+  if (skinTone === 'light') return { hi: '#FBE4C2', mid: '#F4D2A8', lo: '#D8AE7A', shadow: '#A87E50' };
+  if (skinTone === 'dark')  return { hi: '#D4A074', mid: '#9B6B3F', lo: '#6F4528', shadow: '#3D2817' };
+  return { hi: '#F2C6A0', mid: '#E8B888', lo: '#C49870', shadow: '#8B5A2B' };
+}
+
 function characterFullBody(profession, skinTone, opts) {
   opts = opts || {};
-  const skinColor = skinTone === 'light' ? '#F4D2A8' : skinTone === 'dark' ? '#C89868' : '#E8B888';
+  const sk = _skinPalette(skinTone);
   const acc = PROFESSION_ACCESSORY[profession] || { torso:'#7C5E3F', extra:'' };
-  return '<svg viewBox="0 0 72 120" width="72" height="120" class="character">' +
-    '<circle cx="36" cy="20" r="13" fill="' + skinColor + '" stroke="#3D2817" stroke-width="0.6"/>' +
-    '<g class="eye-blink"><ellipse cx="32" cy="19" rx="1.4" ry="1.8" fill="#3D2817"/><ellipse cx="40" cy="19" rx="1.4" ry="1.8" fill="#3D2817"/></g>' +
-    '<path d="M 32 24 Q 36 26 40 24" stroke="#3D2817" stroke-width="0.8" fill="none"/>' +
-    '<rect x="33" y="32" width="6" height="6" fill="' + skinColor + '"/>' +
-    '<path d="M 22 38 L 50 38 L 52 78 L 20 78 Z" fill="' + acc.torso + '"/>' +
-    '<path d="M 22 40 L 14 70 L 18 72 L 26 44 Z" fill="' + acc.torso + '"/>' +
-    '<path d="M 50 40 L 58 70 L 54 72 L 46 44 Z" fill="' + acc.torso + '"/>' +
-    '<circle cx="16" cy="71" r="3" fill="' + skinColor + '"/>' +
-    '<circle cx="56" cy="71" r="3" fill="' + skinColor + '"/>' +
-    '<rect x="24" y="78" width="10" height="36" fill="#5C4A36"/>' +
-    '<rect x="38" y="78" width="10" height="36" fill="#5C4A36"/>' +
-    '<ellipse cx="29" cy="116" rx="6" ry="3" fill="#3D2817"/>' +
-    '<ellipse cx="43" cy="116" rx="6" ry="3" fill="#3D2817"/>' +
+  const torso = acc.torso || '#7C5E3F';
+  const torsoLo = _darken(torso, 0.18);
+  const profId = (profession || 'x').replace(/[^a-zA-Z0-9]/g, '');
+  const id = profId + '-' + (skinTone || 'medium') + '-' + (Math.random().toString(36).slice(2, 6));
+  return '<svg viewBox="0 0 72 120" width="72" height="120" class="character" data-state="' + (opts.state || 'healthy') + '">' +
+    '<defs>' +
+      '<linearGradient id="skin-' + id + '" x1="0" y1="0" x2="1" y2="1">' +
+        '<stop offset="0%" stop-color="' + sk.hi + '"/>' +
+        '<stop offset="55%" stop-color="' + sk.mid + '"/>' +
+        '<stop offset="100%" stop-color="' + sk.lo + '"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="torso-' + id + '" x1="0" y1="0" x2="0.7" y2="1">' +
+        '<stop offset="0%" stop-color="' + torso + '"/>' +
+        '<stop offset="100%" stop-color="' + torsoLo + '"/>' +
+      '</linearGradient>' +
+    '</defs>' +
+    // Boots
+    '<g class="char-boots">' +
+      '<ellipse cx="29" cy="116" rx="7" ry="3" fill="#1F1208"/>' +
+      '<ellipse cx="43" cy="116" rx="7" ry="3" fill="#1F1208"/>' +
+      '<rect x="22" y="106" width="14" height="9" rx="2" fill="#3D2817"/>' +
+      '<rect x="36" y="106" width="14" height="9" rx="2" fill="#3D2817"/>' +
+    '</g>' +
+    // Pants
+    '<g class="char-pants">' +
+      '<rect x="24" y="78" width="11" height="32" fill="#3D3328"/>' +
+      '<rect x="37" y="78" width="11" height="32" fill="#3D3328"/>' +
+      '<rect x="35.5" y="78" width="1" height="32" fill="#1F1208" opacity="0.6"/>' +
+    '</g>' +
+    // Torso
+    '<g class="char-torso">' +
+      '<path d="M 22 38 L 50 38 L 52 80 L 20 80 Z" fill="url(#torso-' + id + ')"/>' +
+      // Cast shadow under chin
+      '<ellipse cx="36" cy="38" rx="14" ry="2" fill="#000" opacity="0.18"/>' +
+      // Highlight stripe on left shoulder
+      '<path d="M 22 38 L 26 40 L 25 60 L 22 58 Z" fill="white" opacity="0.10"/>' +
+    '</g>' +
+    // Arms
+    '<g class="char-arms">' +
+      '<path d="M 22 40 L 14 72 L 18 74 L 26 44 Z" fill="' + torsoLo + '"/>' +
+      '<path d="M 50 40 L 58 72 L 54 74 L 46 44 Z" fill="' + torsoLo + '"/>' +
+    '</g>' +
+    // Hands
+    '<g class="char-hands">' +
+      '<circle cx="16" cy="73" r="3.5" fill="url(#skin-' + id + ')"/>' +
+      '<circle cx="56" cy="73" r="3.5" fill="url(#skin-' + id + ')"/>' +
+    '</g>' +
+    // Neck
+    '<g class="char-neck">' +
+      '<rect x="33" y="31" width="6" height="8" fill="' + sk.lo + '"/>' +
+      '<rect x="33" y="31" width="6" height="2" fill="#000" opacity="0.20"/>' +
+    '</g>' +
+    // Head
+    '<g class="char-head">' +
+      '<circle cx="36" cy="20" r="13" fill="url(#skin-' + id + ')" stroke="#3D2817" stroke-width="0.6"/>' +
+      // Cheek shading
+      '<ellipse cx="42" cy="22" rx="3" ry="2.5" fill="' + sk.lo + '" opacity="0.55"/>' +
+    '</g>' +
+    // Face
+    '<g class="char-face">' +
+      '<g class="char-eyes eye-blink">' +
+        '<ellipse class="eye-l" cx="32" cy="19" rx="1.4" ry="1.8" fill="#3D2817"/>' +
+        '<ellipse class="eye-r" cx="40" cy="19" rx="1.4" ry="1.8" fill="#3D2817"/>' +
+      '</g>' +
+      '<path class="char-mouth" d="M 32 24 Q 36 26 40 24" stroke="#3D2817" stroke-width="0.8" fill="none"/>' +
+      '<path class="char-brow-l" d="M 30 16 L 34 15.5" stroke="#3D2817" stroke-width="0.7" fill="none"/>' +
+      '<path class="char-brow-r" d="M 38 15.5 L 42 16" stroke="#3D2817" stroke-width="0.7" fill="none"/>' +
+    '</g>' +
+    // Hat + profession accessory (existing PROFESSION_ACCESSORY data)
     acc.extra +
+    // State overlay — sweat drop (sick) / bandage stripe (injured) shown via CSS
+    '<g class="char-state-overlay">' +
+      '<g class="char-sweat"><ellipse cx="44" cy="14" rx="1" ry="1.6" fill="#5B7FA8"/></g>' +
+      '<g class="char-bandage"><rect x="28" y="11" width="16" height="3" fill="#FBF6F0" stroke="#A89070" stroke-width="0.4"/><line x1="30" y1="12.5" x2="42" y2="12.5" stroke="#A87850" stroke-width="0.4"/></g>' +
+    '</g>' +
   '</svg>';
 }
-// Build a portrait (face only) SVG
-function characterPortrait(profession, skinTone) {
-  const skinColor = skinTone === 'light' ? '#F4D2A8' : skinTone === 'dark' ? '#C89868' : '#E8B888';
+
+// Build a portrait (face only) SVG. v2.6: same shading + state hooks, smaller frame.
+function characterPortrait(profession, skinTone, state) {
+  const sk = _skinPalette(skinTone);
   const acc = PROFESSION_ACCESSORY[profession] || { extra:'' };
-  // Simplified — just head + accessory parts that overlap the head
-  return '<svg viewBox="0 0 56 60" width="56" height="60">' +
-    '<circle cx="28" cy="30" r="14" fill="' + skinColor + '" stroke="#3D2817" stroke-width="0.6"/>' +
-    '<g class="eye-blink"><ellipse cx="23" cy="28" rx="1.4" ry="1.8" fill="#3D2817"/><ellipse cx="33" cy="28" rx="1.4" ry="1.8" fill="#3D2817"/></g>' +
-    '<path d="M 23 36 Q 28 38 33 36" stroke="#3D2817" stroke-width="0.7" fill="none"/>' +
+  const id = 'p-' + (skinTone || 'medium') + '-' + (Math.random().toString(36).slice(2, 6));
+  return '<svg viewBox="0 0 56 60" width="56" height="60" class="character portrait" data-state="' + (state || 'healthy') + '">' +
+    '<defs>' +
+      '<linearGradient id="skin-' + id + '" x1="0" y1="0" x2="1" y2="1">' +
+        '<stop offset="0%" stop-color="' + sk.hi + '"/>' +
+        '<stop offset="55%" stop-color="' + sk.mid + '"/>' +
+        '<stop offset="100%" stop-color="' + sk.lo + '"/>' +
+      '</linearGradient>' +
+    '</defs>' +
+    '<g class="char-head">' +
+      '<circle cx="28" cy="30" r="14" fill="url(#skin-' + id + ')" stroke="#3D2817" stroke-width="0.6"/>' +
+      '<ellipse cx="34" cy="32" rx="3" ry="2.5" fill="' + sk.lo + '" opacity="0.55"/>' +
+    '</g>' +
+    '<g class="char-face">' +
+      '<g class="char-eyes eye-blink">' +
+        '<ellipse class="eye-l" cx="23" cy="28" rx="1.4" ry="1.8" fill="#3D2817"/>' +
+        '<ellipse class="eye-r" cx="33" cy="28" rx="1.4" ry="1.8" fill="#3D2817"/>' +
+      '</g>' +
+      '<path class="char-mouth" d="M 23 36 Q 28 38 33 36" stroke="#3D2817" stroke-width="0.7" fill="none"/>' +
+    '</g>' +
     '<g transform="translate(-8, 8)">' + acc.extra + '</g>' +
+    '<g class="char-state-overlay">' +
+      '<g class="char-sweat"><ellipse cx="36" cy="22" rx="1" ry="1.6" fill="#5B7FA8"/></g>' +
+      '<g class="char-bandage"><rect x="20" y="20" width="16" height="3" fill="#FBF6F0" stroke="#A89070" stroke-width="0.4"/></g>' +
+    '</g>' +
   '</svg>';
+}
+
+// v2.6 — small color helper for shading. Linear darken on a hex.
+function _darken(hex, frac) {
+  if (!hex || hex.charAt(0) !== '#') return hex || '#000';
+  const h = hex.length === 4 ? '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3] : hex;
+  const r = Math.max(0, Math.round(parseInt(h.slice(1, 3), 16) * (1 - frac)));
+  const g = Math.max(0, Math.round(parseInt(h.slice(3, 5), 16) * (1 - frac)));
+  const b = Math.max(0, Math.round(parseInt(h.slice(5, 7), 16) * (1 - frac)));
+  const toHex = (n) => ('00' + n.toString(16)).slice(-2);
+  return '#' + toHex(r) + toHex(g) + toHex(b);
 }
 
 // Region scenery transition with banner
@@ -7871,9 +8449,35 @@ function paintScenery(w) {
   const region = regionForPosition(gameState.trailLength, w.position);
   w.region = region;
   const bg = $('scene-backdrop');
-  if (bg) bg.outerHTML = sceneryFor(region).replace('<svg ', '<svg id="scene-backdrop" class="scene-backdrop" ');
+  if (bg) bg.outerHTML = sceneryFor(region).replace('<svg ', '<svg id="scene-backdrop" class="scene-backdrop" data-region="' + region.toLowerCase().replace(/\s+/g, '_') + '" ');
+  // v2.6 Stage 1 — drive parallax via --wagon-progress (0..1) on the
+  // scene canvas. Each layer translates by a fraction proportional to
+  // depth (far slow, near fast). Re-applied on every paintScenery so
+  // wagon advances refresh the offset.
+  const canvas = $('scene-canvas');
+  if (canvas) {
+    const total = (gameState.trailEnd || 25);
+    const progress = Math.max(0, Math.min(1, (w.position - 1) / Math.max(1, total - 1)));
+    canvas.style.setProperty('--wagon-progress', progress.toFixed(4));
+  }
+  // v2.6 Stage 4 — set time-of-day on the document root from the
+  // wagon's day count. Cycles morning/midday/afternoon/dusk every 4
+  // simulated days. Atmosphere gradient transitions via CSS 0.8s ease.
+  setTimeOfDayFromWagon(w);
+  // v2.6 Stage 3 — particle systems track region + day count.
+  refreshWeatherFromWagon(w);
   const lbl = $('region-label');
   if (lbl) lbl.innerHTML = '<span class="pr-label">Region</span> <span class="pr-value">' + region + '</span>';
+}
+
+// v2.6 Stage 4 — pure helper, set on document root
+function setTimeOfDayFromWagon(w) {
+  if (!w) return;
+  const phases = ['morning', 'midday', 'afternoon', 'dusk'];
+  const phase = phases[Math.floor((w.daysTraveled || 1) / 1) % 4];
+  if (typeof document !== 'undefined' && document.documentElement) {
+    document.documentElement.setAttribute('data-time', phase);
+  }
 }
 
 // =====================================================================
@@ -8492,7 +9096,7 @@ function buildTrailNewsHtml(w, fortSpace) {
 function buildTeamPortrait(m, i) {
   const card = el('div', { class: 'team-portrait state-' + m.state,
                            'data-member-index': i, 'data-member-name': m.name });
-  card.innerHTML = characterPortrait(m.profession, m.skinTone);
+  card.innerHTML = characterPortrait(m.profession, m.skinTone, m.state);
   card.appendChild(el('div', { class: 'member-name', textContent: m.name }));
   // Health bar (Part 5) — 48×4px under the name. State CSS sets color & width.
   const bar = el('div', { class: 'member-health-bar' });
@@ -9656,6 +10260,9 @@ function doActionRest(w) {
   applyRegion(w);
   const heroProfs = w.team.filter(m => m.state === 'sick' || m.state === 'injured').slice(0, 3).map(m => m.profession);
   renderSceneCharacters({ heroes: heroProfs, wagonScale: 0.85, wagonX: 540, wagonY: 380 });
+  // v2.6 Stage 3 — campfire embers drift up during the Rest scene.
+  spawnEmbers(10);
+  setTimeout(() => spawnEmbers(0), 6000);
   $('eyelid-overlay').classList.add('active');
   setTimeout(() => $('eyelid-overlay').classList.remove('active'), 4100);
   const doctor = activeProtectorMember(w, 'Doctor');
