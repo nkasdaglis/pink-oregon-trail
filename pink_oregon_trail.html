@@ -8255,13 +8255,35 @@ function resolveFort(w, sp) {
     '<rect x="78" y="80" width="24" height="60" fill="#5C4A36"/><line x1="90" y1="20" x2="90" y2="-12" stroke="#3D2817" stroke-width="2"/>' +
     '<polygon points="90,-12 110,-7 90,-2" fill="#c63a3a"/></g>' });
   // Track shown fact for landmark? No, fort isn't landmark — but we still show fact card if appropriate. Keep simple here.
-  const trackerUsedAction = { Buy: false, Repair: false, Rest: false, News: false, Letter: false };
+  const trackerUsedAction = { Buy: false, Repair: false, Rest: false, News: false, Letter: false, Sell: false, Hire: false };
+  // Excess thresholds for Sell Goods (Part 3 — 7d) per money_economy.income_sources.
+  const EXCESS_THRESHOLDS = { food: 5, water: 5, supplies: 3 };
+  function computeSellableInventory(w, merchMult) {
+    const hides = w.resources.hides || 0;
+    const exF = Math.max(0, (w.resources.food     || 0) - EXCESS_THRESHOLDS.food);
+    const exW = Math.max(0, (w.resources.water    || 0) - EXCESS_THRESHOLDS.water);
+    const exS = Math.max(0, (w.resources.supplies || 0) - EXCESS_THRESHOLDS.supplies);
+    const hidesEarn  = Math.floor(hides * 3 * merchMult);
+    const excessEarn = Math.floor((exF + exW + exS) * merchMult);
+    return { hides, exF, exW, exS, hidesEarn, excessEarn, total: hidesEarn + excessEarn };
+  }
   function renderFortMenu() {
     const merch = activeProtectorMember(w, 'Merchant');
     const carp = activeProtectorMember(w, 'Carpenter');
+    const merchMult = merch ? 1.5 : 1;
+    const inv = computeSellableInventory(w, merchMult);
     let html = '<div class="event-title">' + escapeHtml(sp.name) + '</div>';
     if (sp.info) html += '<div class="event-flavor">"' + escapeHtml(sp.info) + '"</div>';
     html += '<div class="event-intro">A trader at the gate. The smell of woodsmoke. What will you do?</div>';
+    // Sellable-goods tip card per money_economy.ui_visibility (Part 3 — 7d)
+    if (inv.total > 0) {
+      const bits = [];
+      if (inv.hides > 0)   bits.push(inv.hides + ' hide' + (inv.hides === 1 ? '' : 's'));
+      const excessUnits = inv.exF + inv.exW + inv.exS;
+      if (excessUnits > 0) bits.push(excessUnits + ' excess unit' + (excessUnits === 1 ? '' : 's'));
+      html += '<div class="modifier-bonus">💰 Goods to sell: ' + bits.join(', ') +
+              ' (~' + inv.total + ' money). Try Sell Goods.</div>';
+    }
     html += '<div class="option-buttons" id="fort-opts"></div>';
     showOutcomeCallout('', html, () => {});
     $('action-buttons').innerHTML = '';
@@ -8274,6 +8296,10 @@ function resolveFort(w, sp) {
       opts.appendChild(o);
     };
     mkOpt('Buy',    'Buy Supplies',  'Trade money for goods.',          merch ? 'Your Merchant doubles the trade.' : null);
+    if (inv.total > 0) {
+      mkOpt('Sell', 'Sell Goods',    'Hides + excess food/water/supplies for cash.', merch ? 'Your Merchant adds +50%.' : null);
+    }
+    mkOpt('Hire',   'Hire On for the Day', '4-5 money. Costs 1 day.',  carp ? 'Your Carpenter pulls in +2 money.' : null);
     mkOpt('Repair', 'Repair Wagon',  'Fix wear and tear.',              carp ? 'Your Carpenter works free.' : '1 supply.');
     mkOpt('Rest',   'Rest at Fort',  'Spend a day. Heal the team.',     null);
     mkOpt('News',   'Get Trail News','Learn what lies ahead.',          null);
@@ -8348,6 +8374,67 @@ function resolveFort(w, sp) {
       audioController.playSfx('letter');
       logToWagon(w, 'Sent a letter home from ' + sp.name + '. (' + w.letters_sent + '/3)');
       const html = '<div class="event-title">A letter, sent home.</div><div class="dispatch-letter">' + letter + '</div>';
+      showOutcomeCallout('', html, renderFortMenu);
+    } else if (key === 'Sell') {
+      // Sell Goods (Part 3 — 7d): hides at 3 money each, excess
+      // food/water/supplies (over thresholds) at 1 money each. Merchant
+      // grants +50% to both. Show a confirmation modal listing what
+      // would be sold, then on Yes flush the goods and add the money.
+      const merch = activeProtectorMember(w, 'Merchant');
+      const merchMult = merch ? 1.5 : 1;
+      const inv = computeSellableInventory(w, merchMult);
+      if (inv.total <= 0) return showFortNote('Nothing to sell.');
+      let body = '<div class="narrative-text">';
+      if (inv.hides > 0) body += inv.hides + ' hide' + (inv.hides === 1 ? '' : 's') +
+                                 ' × 3 = ' + (inv.hides * 3) + ' money<br>';
+      if (inv.exF > 0)   body += inv.exF + ' excess food = '     + inv.exF + ' money<br>';
+      if (inv.exW > 0)   body += inv.exW + ' excess water = '    + inv.exW + ' money<br>';
+      if (inv.exS > 0)   body += inv.exS + ' excess supplies = ' + inv.exS + ' money<br>';
+      if (merch)         body += '<em>Merchant adds +50%.</em><br>';
+      body += '<strong>Total: ' + inv.total + ' money</strong></div>';
+      const html = '<div class="event-title">Sell Goods at ' + escapeHtml(sp.name) + '</div>' + body +
+                   '<div class="option-buttons" id="sell-opts"></div>';
+      showOutcomeCallout('', html, () => {});
+      $('action-buttons').innerHTML = '';
+      const list = $('sell-opts');
+      const yes = el('div', { class: 'choice-option', onclick: () => {
+        if (inv.hides > 0) w.resources.hides    = 0;
+        if (inv.exF   > 0) w.resources.food     = Math.max(0, w.resources.food     - inv.exF);
+        if (inv.exW   > 0) w.resources.water    = Math.max(0, w.resources.water    - inv.exW);
+        if (inv.exS   > 0) w.resources.supplies = Math.max(0, w.resources.supplies - inv.exS);
+        w.resources.money = clamp(w.resources.money + inv.total, 0, RESOURCES_BY_NAME.money.max);
+        audioController.playSfx('gain');
+        logToWagon(w, 'Sold goods at ' + sp.name + ': ' + inv.hides + ' hides, ' +
+                      (inv.exF + inv.exW + inv.exS) + ' excess units → +' + inv.total + ' money.' +
+                      (merch ? ' (Merchant +50%.)' : ''));
+        trackerUsedAction.Sell = true;
+        renderFortMenu();
+      }});
+      yes.innerHTML = '<div class="opt-label">Yes — sell.</div>';
+      list.appendChild(yes);
+      const no = el('div', { class: 'choice-option', onclick: () => renderFortMenu() });
+      no.innerHTML = '<div class="opt-label">No — keep them.</div>';
+      list.appendChild(no);
+    } else if (key === 'Hire') {
+      // Hire On for the Day (Part 3 — 7d): 4-5 base money, +2 with Carpenter,
+      // costs 1 day. Players can only hire once per fort (per the
+      // tracker checkmark UI), but the spec doesn't strictly forbid
+      // repeating — we keep the soft check so the action shows ✓ and
+      // discourages farming.
+      const carp = activeProtectorMember(w, 'Carpenter');
+      const earn = 4 + rand(2) + (carp ? 2 : 0);
+      w.resources.money = clamp(w.resources.money + earn, 0, RESOURCES_BY_NAME.money.max);
+      w.daysTraveled += 1;
+      audioController.playSfx('gain');
+      logToWagon(w, 'Hired on for the day at ' + sp.name + ' for ' + earn + ' money.' +
+                    (carp ? ' (Carpenter +2.)' : ''));
+      const html = '<div class="event-title">A Day of Honest Work</div>' +
+                   '<div class="narrative-text">' +
+                   (carp ? 'Your Carpenter does fine work — the foreman pays well.'
+                         : 'A day at the fort, hauling and patching. The foreman pays in coin.') +
+                   '</div>' +
+                   '<div class="outcome-effects">+' + earn + ' money, +1 day</div>';
+      trackerUsedAction.Hire = true;
       showOutcomeCallout('', html, renderFortMenu);
     } else if (key === 'Move') {
       endTurn(w);
