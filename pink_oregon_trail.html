@@ -5880,16 +5880,41 @@ function applyEndOfTurnStateTransitions(w) {
       }
     }
   }
-  // Per-state per-turn death checks
+  // Per-state per-turn death checks — collect candidates first, then apply
+  // the v2.2 death-per-turn cap: at most ONE member dies through natural
+  // state-machine progression per turn. Catastrophic events (river drownings,
+  // bandit ambush, cholera epidemic, winter ending) call transitionMember
+  // with to_state='lost' directly and bypass this cap by design — the spec
+  // permits multiple deaths only when the player CHOSE the risk.
+  const deathCandidates = [];
   for (const m of w.team) {
     if (m.state === 'lost') continue;
     const def = STATES[m.state];
     if (def.death_chance_per_turn && Math.random() < def.death_chance_per_turn) {
-      const cause = m.cause_of_state || m.state;
-      transitionMember(m, 'lost', w.daysTraveled, cause);
-      w.membersLost.push({ name: m.name, profession: m.profession, day: w.daysTraveled, cause: cause });
-      logToWagon(w, '✝ ' + m.name + ' the ' + m.profession + ' was lost on Day ' + w.daysTraveled + ' to ' + describeCause(cause) + '.');
+      deathCandidates.push(m);
     }
+  }
+  if (deathCandidates.length === 0) return;
+  // Most-progressed wins: dying > sick > injured > weakened, then longer in
+  // current state (smaller state_since_day). Ties broken randomly among the
+  // top cohort.
+  const STATE_PRIORITY = { dying: 4, sick: 3, injured: 2, weakened: 1, healthy: 0 };
+  const score = (m) => (STATE_PRIORITY[m.state] || 0) * 1e6 -
+                       (m.state_since_day != null ? m.state_since_day : w.daysTraveled);
+  let topScore = -Infinity;
+  for (const m of deathCandidates) { const s = score(m); if (s > topScore) topScore = s; }
+  const topTier = deathCandidates.filter(m => score(m) === topScore);
+  const chosen = topTier[rand(topTier.length)];
+  const survived = deathCandidates.filter(m => m !== chosen);
+  const cause = chosen.cause_of_state || chosen.state;
+  transitionMember(chosen, 'lost', w.daysTraveled, cause);
+  w.membersLost.push({ name: chosen.name, profession: chosen.profession, day: w.daysTraveled, cause: cause });
+  logToWagon(w, '✝ ' + chosen.name + ' the ' + chosen.profession + ' was lost on Day ' + w.daysTraveled + ' to ' + describeCause(cause) + '.');
+  // Survivors who would have died stay in their current state for another
+  // turn — giving the player one more window to intervene next turn.
+  if (survived.length > 0) {
+    logToWagon(w, '… ' + survived.length + ' other member' + (survived.length === 1 ? '' : 's') +
+                  ' came close to death but held on. Tomorrow may not be so kind.');
   }
 }
 function describeCause(cause) {
