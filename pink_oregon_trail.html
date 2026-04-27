@@ -7743,27 +7743,60 @@ function doActionPushOn(w) {
 function doActionHunt(w) {
   audioController.playSfx('click');
   applyTurnConsumption(w);
-  const hunter = activeProtectorMember(w, 'Hunter');
+  // Profession-aware Hunt (Part 3 — 7c) per GAME_DATA.hunt_action.
+  // Specialist priority: Hunter > Trapper > Cowboy > none.
+  // Each tier rolls Math.random < probability_base for success; otherwise
+  // the failure outcome fires with morale -1.
+  const hunter  = activeProtectorMember(w, 'Hunter');
   const trapper = activeProtectorMember(w, 'Trapper');
-  let foodGain = die(4);
-  let bonus = '';
-  if (hunter)        { foodGain += 3; bonus = ' ' + hunter.name + ' brought down a deer.'; }
-  else if (trapper)  { foodGain += 2; bonus = ' ' + trapper.name + ' set good snares.'; }
-  w.resources.food = clamp(w.resources.food + foodGain, 0, RESOURCES_BY_NAME.food.max);
-  audioController.playSfx('gain');
-  // Hunt scene
+  const cowboy  = activeProtectorMember(w, 'Cowboy');
+  const ha = (GAME_DATA.hunt_action && GAME_DATA.hunt_action.outcomes) || {};
+  let tierKey, hero, heroLabel;
+  if      (hunter)  { tierKey = 'success_with_hunter';  hero = hunter;  heroLabel = 'Hunter'; }
+  else if (trapper) { tierKey = 'success_with_trapper'; hero = trapper; heroLabel = 'Trapper'; }
+  else if (cowboy)  { tierKey = 'success_with_cowboy';  hero = cowboy;  heroLabel = 'Cowboy'; }
+  else              { tierKey = 'success_no_specialist'; hero = null; heroLabel = null; }
+  const tier = ha[tierKey] || {};
+  const succProb = tier.probability_base != null ? tier.probability_base : 0.3;
+  const succeeded = Math.random() < succProb;
+  const animal = pickRandom(['buffalo','elk','deer','antelope','wild turkey']);
+
+  let foodGain = 0, hidesGain = 0, moraleDelta = 0, narrative = '';
+  if (succeeded) {
+    const range = tier.food_gain_range || [1, 4];
+    foodGain = range[0] + rand(Math.max(1, range[1] - range[0] + 1));
+    hidesGain = tier.hides_gain || 0;
+    audioController.playSfx('gain');
+    narrative = (tier.narrative || 'A successful hunt.')
+      .replace(/\{Hunter\}/g,  '<span class="hero-name">' + escapeHtml(hunter  ? hunter.name  : 'The hunter')  + '</span>')
+      .replace(/\{Trapper\}/g, '<span class="hero-name">' + escapeHtml(trapper ? trapper.name : 'The trapper') + '</span>')
+      .replace(/\{Cowboy\}/g,  '<span class="hero-name">' + escapeHtml(cowboy  ? cowboy.name  : 'The cowboy')  + '</span>')
+      .replace(/\{animal\}/g,  escapeHtml(animal));
+  } else {
+    const f = ha.failure || {};
+    moraleDelta = f.morale_change != null ? f.morale_change : -1;
+    audioController.playSfx('loss');
+    narrative = f.narrative || 'The game vanished. We return empty-handed at dusk.';
+  }
+
+  // Apply effects
+  if (foodGain)  w.resources.food   = clamp(w.resources.food   + foodGain,  0, RESOURCES_BY_NAME.food.max);
+  if (hidesGain) w.resources.hides  = clamp((w.resources.hides || 0) + hidesGain, 0, RESOURCES_BY_NAME.hides.max);
+  if (moraleDelta) w.resources.morale = clamp(w.resources.morale + moraleDelta, 0, RESOURCES_BY_NAME.morale.max);
+
   applyRegion(w);
   renderSceneCharacters({
-    heroes: hunter ? ['Hunter'] : (trapper ? ['Trapper'] : []),
+    heroes: heroLabel ? [heroLabel] : [],
     wagonX: 540, wagonY: 380, wagonScale: 0.7,
-    extra: '<g transform="translate(360 300)" fill="#5C4A36" opacity="0.85"><ellipse cx="0" cy="0" rx="36" ry="14"/><ellipse cx="-26" cy="-6" rx="13" ry="10"/><polygon points="-38,-12 -42,-22 -34,-18" /><line x1="-30" y1="14" x2="-30" y2="28" stroke="#5C4A36" stroke-width="3"/><line x1="-12" y1="14" x2="-12" y2="28" stroke="#5C4A36" stroke-width="3"/><line x1="6" y1="14" x2="6" y2="28" stroke="#5C4A36" stroke-width="3"/><line x1="22" y1="14" x2="22" y2="28" stroke="#5C4A36" stroke-width="3"/></g>'
+    extra: succeeded ? '<g transform="translate(360 300)" fill="#5C4A36" opacity="0.85"><ellipse cx="0" cy="0" rx="36" ry="14"/><ellipse cx="-26" cy="-6" rx="13" ry="10"/><polygon points="-38,-12 -42,-22 -34,-18" /><line x1="-30" y1="14" x2="-30" y2="28" stroke="#5C4A36" stroke-width="3"/><line x1="-12" y1="14" x2="-12" y2="28" stroke="#5C4A36" stroke-width="3"/><line x1="6" y1="14" x2="6" y2="28" stroke="#5C4A36" stroke-width="3"/><line x1="22" y1="14" x2="22" y2="28" stroke="#5C4A36" stroke-width="3"/></g>' : ''
   });
-  const hero = hunter || trapper;
-  const txt = hunter ?
-    'We made camp early so <span class="hero-name">' + escapeHtml(hunter.name) + '</span> could hunt. By dusk, a buffalo. The whole train will eat well tonight. (+' + foodGain + ' food)' :
-    trapper ? '<span class="hero-name">' + escapeHtml(trapper.name) + '</span> set snares along the creek. Small game, but enough. (+' + foodGain + ' food)' :
-    'A team member walked out with the rifle. They came back with one rabbit. (+' + foodGain + ' food)';
-  logToWagon(w, txt.replace(/<[^>]+>/g, ''));
+  const tally = succeeded
+    ? '+' + foodGain + ' food' + (hidesGain ? ', +' + hidesGain + ' hide' + (hidesGain === 1 ? '' : 's') : '')
+    : (moraleDelta ? '(' + moraleDelta + ' morale)' : '');
+  const txt = '<div class="narrative-text">' + narrative + '</div>' +
+              '<div class="outcome-effects">' + tally + '</div>';
+  const plain = narrative.replace(/<[^>]+>/g, '');
+  logToWagon(w, 'Hunt: ' + plain + ' ' + tally);
   showOutcomeCallout('Hunt — Day ' + w.daysTraveled, txt, () => endTurn(w));
   if (hero) pulseHero(w.team.indexOf(hero));
 }
