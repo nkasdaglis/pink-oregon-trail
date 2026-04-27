@@ -1,199 +1,237 @@
 #!/usr/bin/env python3
 """
-Pink Oregon Trail — Historical Photos Fetcher
+Pink Oregon Trail — Historical Photos Embedder (v2.4 — folder-first)
 
-Run this script ONCE to upgrade the game with real public-domain photographs
-from the Library of Congress, replacing the daguerreotype-style SVG illustrations
-at the 9 historical landmarks.
+This script reads JPG/PNG files from a `historical_photos/` folder at the
+project root and embeds them as base64 inside `pink_oregon_trail.html`,
+which then displays real photographs at the 9 historical landmarks.
 
-The game itself remains a single-file offline HTML. Photos are base64-embedded
-into the HTML at one location: a `HISTORICAL_PHOTOS_OVERRIDE` constant block.
-Re-running the script overwrites this block. If a photo can't be fetched,
-that entry is skipped and the game falls back to the daguerreotype SVG.
+Photos NOT supplied locally fall back to the daguerreotype-style SVG
+illustrations baked into the game. You can supply 0, 1, or all 9 — any
+combination works.
 
-Requirements: Python 3.8+, Pillow (pip install pillow)
-Usage: python fetch_historical_photos.py [--html pink_oregon_trail.html]
+WHY FOLDER-BASED INSTEAD OF URL-BASED:
+The previous v2.3 fetcher tried to download photos from Library of Congress
+URLs at runtime. Several of those URLs were unstable and the script
+hard-failed when too few succeeded. This version reads from a local folder
+you control, which is reliable, debuggable, and lets you choose exactly
+which images you want.
 
-All Library of Congress photographs from before 1928 are public domain.
+USAGE:
+
+  1. Create a folder called `historical_photos/` next to pink_oregon_trail.html
+  2. Drop JPG or PNG files into it, named with the landmark IDs:
+       - fort_laramie.jpg
+       - chimney_rock.jpg
+       - independence_rock.jpg
+       - soda_springs.jpg
+       - south_pass.jpg
+       - fort_bridger.jpg
+       - whitman_mission.jpg
+       - the_dalles.jpg
+       - oregon_city.jpg
+  3. Run: `python fetch_historical_photos.py`
+  4. Open pink_oregon_trail.html — your photos appear at the matching landmarks.
+
+WHERE TO FIND PUBLIC-DOMAIN IMAGES:
+
+  - Library of Congress — https://www.loc.gov/photos
+    Search for the location name. Click an image. Click "Download." Pick "JPEG."
+    Almost everything from before 1928 is public domain in the US.
+
+  - Wikimedia Commons — https://commons.wikimedia.org
+    Search the location name + "historical." Filter by "Public domain."
+    Right-click an image, "Save Image As..."
+
+  - Oregon-California Trails Association — https://octa-trails.org
+
+  - National Park Service — many parks have photo archives
+
+If a landmark has no surviving period photograph (Whitman Mission was destroyed
+in 1847 — most pre-photography images don't exist), use any historically-themed
+illustration, OR just leave that file out and the SVG fallback is used.
+
+REQUIREMENTS:
+  Python 3.8+ and Pillow. Install Pillow with: pip install pillow
 """
 
 import argparse
 import base64
 import io
-import os
 import re
 import sys
-import urllib.request
-import urllib.error
 from pathlib import Path
 
-# Library of Congress URLs for the 9 historical landmarks.
-# These are stable LoC service URLs as of 2026.
-# If any fail (404, redirect, slow), the script logs a warning and skips
-# that entry — the game falls back to the daguerreotype SVG illustration.
-PHOTO_URLS = {
-    'fort_laramie': {
-        'url': 'https://tile.loc.gov/storage-services/service/pnp/cph/3a30000/3a35000/3a35200/3a35260v.jpg',
-        'description': 'Fort Laramie, c. 1858 — Albert Bierstadt',
-        'fallback_search': 'Library of Congress: search "Fort Laramie 1858" or "LC-USZ62-3a35260"',
-    },
-    'chimney_rock': {
-        'url': 'https://tile.loc.gov/storage-services/service/pnp/cph/3a40000/3a48000/3a48400/3a48468v.jpg',
-        'description': 'Chimney Rock, Nebraska — William Henry Jackson',
-        'fallback_search': 'Library of Congress: search "Chimney Rock Jackson"',
-    },
-    'independence_rock': {
-        'url': 'https://tile.loc.gov/storage-services/service/pnp/cph/3c20000/3c25000/3c25800/3c25893v.jpg',
-        'description': 'Independence Rock, Wyoming, c. 1870',
-        'fallback_search': 'Library of Congress: search "Independence Rock Wyoming"',
-    },
-    'soda_springs': {
-        'url': None,  # No reliable LoC URL; will fall back to SVG
-        'description': 'Soda Springs, Idaho (rare; fallback to daguerreotype)',
-        'fallback_search': 'Library of Congress: search "Soda Springs Idaho Hayden Survey 1872"',
-    },
-    'south_pass': {
-        'url': 'https://tile.loc.gov/storage-services/service/pnp/cph/3b40000/3b41000/3b41700/3b41716v.jpg',
-        'description': 'South Pass, Wyoming — Jackson, c. 1870',
-        'fallback_search': 'Library of Congress: search "South Pass Wyoming Jackson"',
-    },
-    'fort_bridger': {
-        'url': None,  # Variable LoC URLs; will fall back to SVG
-        'description': 'Fort Bridger, Wyoming, c. 1858',
-        'fallback_search': 'Library of Congress: search "Fort Bridger Wyoming 1858"',
-    },
-    'whitman_mission': {
-        'url': None,  # Few pre-1928 photos exist (mission was destroyed 1847)
-        'description': 'Whitman Mission, Washington — note: destroyed 1847',
-        'fallback_search': 'Library of Congress: search "Whitman Mission Walla Walla"',
-    },
-    'the_dalles': {
-        'url': 'https://tile.loc.gov/storage-services/service/pnp/cph/3a50000/3a52000/3a52900/3a52966v.jpg',
-        'description': 'The Dalles, Columbia River — Carleton Watkins',
-        'fallback_search': 'Library of Congress: search "The Dalles Columbia Watkins"',
-    },
-    'oregon_city': {
-        'url': 'https://tile.loc.gov/storage-services/service/pnp/cph/3c10000/3c10400/3c10406v.jpg',
-        'description': 'Oregon City and Willamette Falls, c. 1850',
-        'fallback_search': 'Library of Congress: search "Oregon City 1850" or "Willamette Falls Oregon"',
-    },
-}
+# The 9 landmark IDs the game knows about. The script looks for files
+# named "<id>.jpg", "<id>.jpeg", or "<id>.png" in the photos folder.
+LANDMARK_IDS = [
+    'fort_laramie',
+    'chimney_rock',
+    'independence_rock',
+    'soda_springs',
+    'south_pass',
+    'fort_bridger',
+    'whitman_mission',
+    'the_dalles',
+    'oregon_city',
+]
 
-# Maximum dimensions for downscaled images (preserves aspect ratio)
+ACCEPTED_EXTENSIONS = ('.jpg', '.jpeg', '.png')
+
+# Maximum dimensions when resizing for embedding (preserves aspect ratio)
 MAX_WIDTH = 600
 MAX_HEIGHT = 460
 JPEG_QUALITY = 80
 
 
 def log(msg, level='info'):
-    """Simple console logger with level prefixes."""
-    prefix = {'info': '  ', 'ok': '✓ ', 'warn': '⚠ ', 'err': '✗ '}.get(level, '  ')
+    prefix = {'info': '   ', 'ok': ' + ', 'warn': ' ! ', 'err': ' x '}.get(level, '   ')
     print(prefix + msg)
 
 
-def fetch_and_encode(landmark_id, info):
-    """Fetch one image, downscale, base64-encode. Return base64 string or None."""
-    if info['url'] is None:
-        log(f'{landmark_id}: no URL configured — falls back to daguerreotype SVG', 'warn')
-        log(f'    To add manually: {info["fallback_search"]}', 'info')
+def find_local_file(folder, landmark_id):
+    """Look for landmark_id.jpg / .jpeg / .png in folder. Return Path or None."""
+    if not folder.exists():
         return None
+    for ext in ACCEPTED_EXTENSIONS:
+        candidate = folder / (landmark_id + ext)
+        if candidate.exists() and candidate.is_file():
+            return candidate
+    return None
+
+
+def encode_image(path):
+    """Load image, downscale to fit MAX_WIDTH x MAX_HEIGHT, return base64 string."""
     try:
         from PIL import Image
     except ImportError:
         log('Pillow is required. Install with: pip install pillow', 'err')
         sys.exit(1)
-    log(f'{landmark_id}: fetching {info["description"]}...', 'info')
     try:
-        req = urllib.request.Request(
-            info['url'],
-            headers={'User-Agent': 'PinkOregonTrail-Educational-Tool/1.0'},
-        )
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            raw = resp.read()
-        log(f'    downloaded {len(raw)//1024} KB', 'info')
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as e:
-        log(f'    fetch failed: {e}. Falling back to SVG.', 'warn')
-        log(f'    To add manually: {info["fallback_search"]}', 'info')
-        return None
-    # Resize and re-encode
-    try:
-        img = Image.open(io.BytesIO(raw)).convert('RGB')
+        img = Image.open(path).convert('RGB')
+        original_size = img.size
         img.thumbnail((MAX_WIDTH, MAX_HEIGHT), Image.LANCZOS)
-        out = io.BytesIO()
-        img.save(out, format='JPEG', quality=JPEG_QUALITY, optimize=True)
-        encoded = base64.b64encode(out.getvalue()).decode('ascii')
-        log(f'    encoded {len(encoded)//1024} KB base64 ({img.size[0]}x{img.size[1]})', 'ok')
-        return encoded
+        buf = io.BytesIO()
+        img.save(buf, format='JPEG', quality=JPEG_QUALITY, optimize=True)
+        encoded = base64.b64encode(buf.getvalue()).decode('ascii')
+        return {
+            'b64': encoded,
+            'original_size': original_size,
+            'embedded_size': img.size,
+            'kb': len(encoded) // 1024,
+        }
     except Exception as e:
-        log(f'    image processing failed: {e}', 'err')
+        log('    failed to process ' + path.name + ': ' + str(e), 'err')
         return None
 
 
 def patch_html(html_path, photos):
-    """Insert or replace the HISTORICAL_PHOTOS_OVERRIDE block in pink_oregon_trail.html."""
+    """Insert or replace the historical-photos-override <script> block.
+
+    photos: dict of landmark_id -> base64 string (only successful entries).
+    Always writes a block, even if empty, so the consumer code reliably finds
+    window.HISTORICAL_PHOTOS_OVERRIDE.
+    """
     if not html_path.exists():
-        log(f'HTML file not found: {html_path}', 'err')
+        log('HTML file not found: ' + str(html_path), 'err')
         sys.exit(1)
     html = html_path.read_text(encoding='utf-8')
-    # Build the override block as a JS const
     block_lines = ['  window.HISTORICAL_PHOTOS_OVERRIDE = {']
-    for landmark_id, b64 in photos.items():
-        if b64:
-            # Use string concatenation to keep line lengths reasonable
-            block_lines.append(f'    {landmark_id}: ' + repr(b64).replace("'", '"') + ',')
+    for lid in LANDMARK_IDS:
+        if lid in photos:
+            block_lines.append('    ' + lid + ': "' + photos[lid] + '",')
     block_lines.append('  };')
     new_block = (
         '<script id="historical-photos-override">\n'
-        '  // Generated by fetch_historical_photos.py — DO NOT EDIT BY HAND.\n'
-        '  // Re-run the script to refresh. To remove: delete this <script> block.\n'
+        '  // Generated by fetch_historical_photos.py - DO NOT EDIT BY HAND.\n'
+        '  // Re-run the script to refresh. To remove: delete this <script> block\n'
+        '  // OR delete every file in historical_photos/ and re-run.\n'
         + '\n'.join(block_lines) + '\n'
         '</script>\n'
     )
-    # Replace existing block if present
     pattern = re.compile(
         r'<script id="historical-photos-override">.*?</script>\s*',
         re.DOTALL,
     )
     if pattern.search(html):
         html = pattern.sub(new_block, html, count=1)
-        log('replaced existing override block', 'ok')
+        log('replaced existing override block in HTML', 'ok')
     else:
-        # Insert immediately before the closing </body> tag
         if '</body>' not in html:
-            log('could not find </body> tag in HTML — file may be malformed', 'err')
+            log('could not find </body> in HTML - file may be malformed', 'err')
             sys.exit(1)
         html = html.replace('</body>', new_block + '</body>', 1)
-        log('inserted new override block before </body>', 'ok')
+        log('inserted override block before </body>', 'ok')
     html_path.write_text(html, encoding='utf-8')
     size_kb = html_path.stat().st_size // 1024
-    log(f'wrote {html_path.name} ({size_kb} KB)', 'ok')
+    log('wrote pink_oregon_trail.html (' + str(size_kb) + ' KB)', 'ok')
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Download and embed historical photos.')
-    parser.add_argument('--html', default='pink_oregon_trail.html',
-                        help='Path to pink_oregon_trail.html (default: %(default)s)')
+    parser = argparse.ArgumentParser(
+        description='Embed local historical photos into pink_oregon_trail.html.',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
+    )
+    parser.add_argument(
+        '--html', default='pink_oregon_trail.html',
+        help='Path to pink_oregon_trail.html (default: %(default)s)',
+    )
+    parser.add_argument(
+        '--photos', default='historical_photos',
+        help='Path to the photos folder (default: %(default)s)',
+    )
     args = parser.parse_args()
+
     html_path = Path(args.html).resolve()
+    photos_dir = Path(args.photos).resolve()
+
     print('=' * 64)
-    print('Pink Oregon Trail — Historical Photos Fetcher')
+    print('Pink Oregon Trail - Historical Photos Embedder (v2.4)')
     print('=' * 64)
-    print(f'Target: {html_path}')
+    print('HTML target:    ' + str(html_path))
+    print('Photos folder:  ' + str(photos_dir))
     print()
+
+    if not photos_dir.exists():
+        log('photos folder does not exist - creating it', 'warn')
+        photos_dir.mkdir(parents=True, exist_ok=True)
+        log('created ' + str(photos_dir) + '. Drop JPG/PNG files in there named like:', 'info')
+        for lid in LANDMARK_IDS:
+            log('    ' + lid + '.jpg', 'info')
+        log('Then re-run this script.', 'info')
+        patch_html(html_path, {})
+        log('wrote empty override block. Game uses SVG fallbacks for all 9 landmarks.', 'ok')
+        return
+
     photos = {}
-    for landmark_id, info in PHOTO_URLS.items():
-        encoded = fetch_and_encode(landmark_id, info)
-        photos[landmark_id] = encoded
+    print('Scanning photos folder...')
     print()
-    successful = sum(1 for v in photos.values() if v)
-    log(f'fetched {successful} of {len(PHOTO_URLS)} photos', 'ok' if successful >= 5 else 'warn')
-    if successful == 0:
-        log('no photos fetched — leaving HTML unchanged', 'err')
-        sys.exit(2)
+    for lid in LANDMARK_IDS:
+        local_file = find_local_file(photos_dir, lid)
+        if local_file is None:
+            log(lid.ljust(20) + ' no file -> SVG fallback', 'info')
+            continue
+        log(lid.ljust(20) + ' found ' + local_file.name, 'ok')
+        result = encode_image(local_file)
+        if result is None:
+            log(lid.ljust(20) + ' encode failed -> SVG fallback', 'warn')
+            continue
+        photos[lid] = result['b64']
+        log('    encoded ' + str(result['kb']) + ' KB base64 (' +
+            str(result['embedded_size'][0]) + 'x' + str(result['embedded_size'][1]) + ')', 'info')
+
+    print()
+    log('embedded ' + str(len(photos)) + ' of ' + str(len(LANDMARK_IDS)) + ' landmarks', 'ok')
+    if len(photos) == 0:
+        log('no photos to embed. Add JPG/PNG files to ' + str(photos_dir) + ' named:', 'warn')
+        for lid in LANDMARK_IDS:
+            log('    ' + lid + '.jpg (or .jpeg or .png)', 'info')
+    print()
     patch_html(html_path, photos)
     print()
-    log('Done. Open pink_oregon_trail.html in a browser to see real photos at landmarks.', 'ok')
-    log('To revert to SVG-only: delete the <script id="historical-photos-override"> block.', 'info')
+    log('Done. Open pink_oregon_trail.html in a browser to verify.', 'ok')
+    log('Re-run this script anytime you add or remove photos.', 'info')
 
 
 if __name__ == '__main__':
