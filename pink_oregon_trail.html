@@ -222,6 +222,26 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
 .icon-water { background: var(--blue); border-radius: 0 50% 50% 50%; transform: rotate(-45deg); }
 .icon-supplies { background: var(--brown-soft); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
 .icon-money { background: var(--gold); border-radius: 50%; border: 1px solid #a07f1c; }
+/* Hides icon (Part 3 — 7a) — soft tan pelt shape between supplies and money */
+.icon-hides { background: #b8895c; clip-path: polygon(20% 10%, 80% 10%, 95% 50%, 80% 90%, 50% 100%, 20% 90%, 5% 50%); border: 1px solid #8b5a2b; }
+/* Resource delta toast — brief +N/-N badge that fades out after 1.2s */
+.res-item .delta {
+  position: absolute; top: -8px; right: -4px;
+  font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums;
+  padding: 1px 5px; border-radius: 8px;
+  pointer-events: none;
+  animation: deltaFade 1.2s ease-out forwards;
+  background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+.res-item .delta.up   { color: #2e7a32; }
+.res-item .delta.down { color: #a32d2d; }
+.res-item { position: relative; }
+@keyframes deltaFade {
+  0%   { opacity: 0; transform: translateY(4px); }
+  20%  { opacity: 1; transform: translateY(0); }
+  80%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-8px); }
+}
 .icon-health { background: #d44; clip-path: polygon(50% 100%, 0 35%, 25% 0, 50% 25%, 75% 0, 100% 35%); }
 .icon-morale { background: #f5d654; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
 .icon-movement { background: var(--brown-soft); clip-path: polygon(0 30%, 60% 30%, 60% 0, 100% 50%, 60% 100%, 60% 70%, 0 70%); }
@@ -7195,10 +7215,15 @@ function renderResourceRibbon() {
   const cal = $('topbar-calendar');
   if (cal) cal.textContent = 'Day ' + w.daysTraveled + ' — ' + dateForDay(w.daysTraveled);
   const box = $('topbar-resources');
+  // Compute deltas vs the last render so we can show +N/-N badges per
+  // money_economy.ui_visibility (Part 3 — 7a). Hides sits between supplies
+  // and money in the ribbon order.
+  const prev = w._lastResourceSnapshot || {};
   box.innerHTML = '';
-  const layout = [['food','Food'],['water','Water'],['supplies','Supplies'],['money','Money'],['health','Health'],['morale','Morale'],['movement','Move']];
+  const layout = [['food','Food'],['water','Water'],['supplies','Supplies'],['hides','Hides'],['money','Money'],['health','Health'],['morale','Morale'],['movement','Move']];
   for (const [key, label] of layout) {
     const v = w.resources[key];
+    if (v == null) continue; // graceful if a resource isn't initialized
     const danger = (key === 'food' || key === 'water') && v === 0;
     const lowHealth = key === 'health' && v <= 2;
     const item = el('div', { class: 'res-item' + (danger || lowHealth ? ' danger' : '') }, [
@@ -7210,8 +7235,22 @@ function renderResourceRibbon() {
       const indicators = { food: 'STARVING', water: 'DEHYDRATING', supplies: 'DESPERATE' };
       if (indicators[key]) item.appendChild(el('div', { class: 'indicator', textContent: indicators[key] }));
     }
+    // +/- delta badge for money & hides changes (skip on initial render so
+    // the starting balances don't get a misleading "+30" stamp)
+    const prior = prev[key];
+    if (prior != null && prior !== v && (key === 'money' || key === 'hides')) {
+      const diff = v - prior;
+      const badge = el('div', {
+        class: 'delta ' + (diff > 0 ? 'up' : 'down'),
+        textContent: (diff > 0 ? '+' : '') + diff
+      });
+      item.appendChild(badge);
+      setTimeout(() => { try { badge.remove(); } catch (e) {} }, 1300);
+    }
     box.appendChild(item);
   }
+  // Snapshot for next render's delta diffing
+  w._lastResourceSnapshot = Object.assign({}, w.resources);
   $('pace-current').textContent = w.pace;
   $('ration-current').textContent = w.ration;
 }
