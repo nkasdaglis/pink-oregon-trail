@@ -2,7 +2,7 @@
   "meta": {
     "title": "Pink Oregon Trail",
     "designer": "Gabriella Kasdaglis (Gabby)",
-    "version": "2.3",
+    "version": "2.2",
     "trail_lengths": {
       "short": {
         "spaces": 25,
@@ -45,7 +45,7 @@
         "STARVATION_THRESHOLD": 0
       }
     },
-    "notes": "v2.3: Critical playability patch driven by 4-player playtest. Fixes skinTone persistence (the 'priest became the banker' bug), adds visible dice roll with 2d6 (max 12 spaces), water-from-river/Soda-Springs/forage-without-Scout, morale impacts, fixes turn-intro showing river-was-here illusion, expands music tempos and adds 4 more songs, replaces fly-by toasts with team-strip hover tooltips, expands player count to 6, makes Trail News functional, adds Day 67 surprise. Adds active scenario logic test framework via 'simulation_logic_validation' block.",
+    "notes": "v2.2 consolidated amendment: combines v2.1 patch (4 bugs + money economy) with major playability improvements: warning escalation system before death, pre-death intervention events, per-member health bars, death-per-turn cap, difficulty selector (Easy/Medium/Hard), teacher mode use case clarification, historical illustrations with daguerreotype style + real photo upgrade path, comprehensive testing protocol. v2.0 systems all preserved.",
     "stochastic_system": {
       "philosophy": "Real pioneers did not see probability tables before making choices. They knew the river was high, the team was tired, the trail looked rough \u2014 and they decided. The game models this. Choice screens show qualitative risk and team advantages, never exact numbers. Outcomes sample from hidden distributions. Sometimes the dice fall well. Sometimes they don't. Profession bonuses shift the distribution but rarely eliminate risk entirely.",
       "choice_display_mode": "qualitative",
@@ -347,9 +347,7 @@
           "Doctor recovery is probabilistic, not guaranteed \u2014 sick members may die"
         ]
       }
-    },
-    "max_player_count": 6,
-    "max_wagon_count_competitive": 6
+    }
   },
   "professions": [
     {
@@ -4233,49 +4231,6 @@
           "funeral_only"
         ],
         "duration_seconds": 95
-      },
-      {
-        "id": "old_dan_tucker",
-        "title": "Old Dan Tucker",
-        "year": 1843,
-        "mood": [
-          "hopeful",
-          "neutral"
-        ],
-        "duration_seconds": 70,
-        "bpm": 130
-      },
-      {
-        "id": "camptown_races",
-        "title": "Camptown Races",
-        "year": 1850,
-        "mood": [
-          "hopeful",
-          "neutral"
-        ],
-        "duration_seconds": 75,
-        "bpm": 140
-      },
-      {
-        "id": "skip_to_my_lou",
-        "title": "Skip to My Lou",
-        "year": 1844,
-        "mood": [
-          "hopeful"
-        ],
-        "duration_seconds": 60,
-        "bpm": 145
-      },
-      {
-        "id": "yellow_rose_of_texas",
-        "title": "The Yellow Rose of Texas",
-        "year": 1853,
-        "mood": [
-          "neutral",
-          "weary"
-        ],
-        "duration_seconds": 90,
-        "bpm": 95
       }
     ],
     "rotation_rules": [
@@ -4291,9 +4246,7 @@
       "weary: morale <=3 OR any member sick",
       "somber: any member dying OR resources at zero",
       "funeral_only: triggered on death event only, returns to prior mood after"
-    ],
-    "tempo_variation_rule": "Within a mood pool, prefer alternating fast/slow songs (don't play 2 slow songs back-to-back). Tempo classes: fast=120+ bpm, medium=90-120, slow=below 90. Funeral hymn (Amazing Grace, 60bpm) plays once on death, then returns to prior mood. After a funeral hymn, the next song picked from the mood pool should be at least 90bpm to break the somber spell.",
-    "amazing_grace_speedup": "Amazing Grace at 60bpm felt funeral-pace plodding in playtest. Bump to 75bpm for the in-game funeral version (still slow and reverent, but not soporific). Re-encode with more notes for richer melody."
+    ]
   },
   "death_announcement_protocol": {
     "philosophy": "Member deaths must NEVER pass silently. Each death is a story beat \u2014 named, narrated, scored, and audibly marked. Without this, the simulation feels like numbers ticking down instead of a journey.",
@@ -4787,282 +4740,5 @@
     },
     "delivery_gate": "All 10 tests must pass before declaring the build complete. Report results test-by-test in the final build report.",
     "regression_protocol": "When applying any future patch, re-run tests 1, 2, 3, and 10 (the visual + end-to-end tests). They catch the most common regression classes."
-  },
-  "dice_system": {
-    "philosophy": "Players need to SEE chance happening. The current 1d4 is invisible and unsatisfying \u2014 wagon teleports forward by an inscrutable amount. Replace with a visible 2d6 roll showing both dice, faces and pips, with a brief animation. Cap movement so it doesn't break game pacing.",
-    "dice_count": 2,
-    "dice_sides": 6,
-    "raw_max": 12,
-    "raw_min": 2,
-    "movement_cap": 8,
-    "movement_floor": 1,
-    "philosophy_on_cap": "2d6 raw can produce 12, but advancing 12 spaces in a single turn would skip 2-3 events and break the pacing of a 25-space Short trail. We cap movement at 8 per turn (after pace and state modifiers) to preserve the chance-of-events density. The dice still SHOW their natural roll (2-12); the displayed movement number after pace/state mods is what advances the wagon.",
-    "movement_formula": "raw_2d6_total + pace_modifier + state_modifier + morale_modifier \u2014 clamped to [1, 8]",
-    "morale_modifier_table": {
-      "morale_at_or_above_8": "+1 movement",
-      "morale_at_or_below_2": "-1 movement",
-      "default": "0"
-    },
-    "ui_specification": {
-      "dice_display_during_push_on": "When player clicks Push On, show both dice center-canvas, animated tumbling/shaking for 0.6 seconds, then settling on their face values. Each die shows pips (1-6 dot pattern) on a clean white face with rounded corners.",
-      "dice_size_px": 96,
-      "tumble_duration_ms": 600,
-      "settle_duration_ms": 200,
-      "movement_summary_callout": "After dice settle, briefly show: 'Rolled 4 + 5 = 9 \u2014 pace +1, team strong +1 = 10 (capped at 8). Travel 8 spaces.' Then resolve the new space.",
-      "summary_hold_ms": 1500,
-      "audio": "Dice rattle SFX during tumble (wood-on-table cascade, ~0.5s). Soft chime on settle.",
-      "mini_map_animation": "After dice settle, mini-map wagon icon slides smoothly from current to new position over 0.8s before space resolution fires."
-    }
-  },
-  "water_economy": {
-    "philosophy": "Water was a one-source resource (forts only, paid). This violates both common sense (rivers have water; Soda Springs is named for water) and historical reality (pioneers drank from streams, springs, and rivers constantly). Players who tried logical strategies (forage at a river) were punished by the absence of water as a logical reward. Fix this \u2014 water comes from many places.",
-    "sources": [
-      {
-        "source": "Crossing a river",
-        "amount": "Refill water to max",
-        "narrative": "We filled the barrels from the river before crossing.",
-        "note": "Already implemented in v2.2 at line 8866 \u2014 keep this."
-      },
-      {
-        "source": "Forage at any river or landmark space",
-        "amount": "+2 water always, +4 with Scout",
-        "narrative": "We found a clear stream and filled the barrels."
-      },
-      {
-        "source": "Forage on travel space (any region)",
-        "amount": "+1 water always, +3 with Scout",
-        "narrative": "We dug a small spring and gathered seeps and dew."
-      },
-      {
-        "source": "Soda Springs landmark",
-        "amount": "+5 water + 1 morale",
-        "narrative": "We filled every barrel from the bubbling springs. The water is faintly fizzy and tastes of iron."
-      },
-      {
-        "source": "Hot Springs landmark",
-        "amount": "+4 water",
-        "narrative": "We let the hot water cool overnight and filled the barrels by morning."
-      },
-      {
-        "source": "Any spring or watering hole encounter event",
-        "amount": "+2-3 water",
-        "narrative": "varies"
-      },
-      {
-        "source": "Buy at fort",
-        "amount": "Variable per money spent",
-        "narrative": "The trader sells barreled water by the gallon."
-      },
-      {
-        "source": "Storm/rain events",
-        "amount": "+2-3 water",
-        "narrative": "We caught the rain in our pots and barrels."
-      }
-    ],
-    "scarcity_design": "Water can still be a strategic concern in the high desert region (spaces 33-42 in Extended), where forage yields are halved and there are no rivers. The strategic depth comes from PLANNING ahead at the last river before the desert, not from water being categorically unobtainable everywhere."
-  },
-  "morale_impacts_v2_3": {
-    "philosophy": "Morale should be a real strategic resource. Currently it only marginally affects movement (+1 if morale \u22658) and music mood. Make morale matter mechanically across multiple systems.",
-    "tiered_effects": {
-      "high_morale_8_to_10": [
-        "+1 movement on Push On",
-        "+10% Hunt success chance",
-        "Members heal one state-tier on Rest (instead of by probability)",
-        "Surprise events 50% more likely to be positive",
-        "Music mood: hopeful (Oh Susanna, Buffalo Gals)"
-      ],
-      "medium_morale_4_to_7": [
-        "Standard play, no modifiers"
-      ],
-      "low_morale_2_to_3": [
-        "-1 movement on Push On",
-        "-15% Hunt success chance",
-        "Surprise events 30% more likely to be negative",
-        "Music mood: weary (Sweet Betsy, Shenandoah)"
-      ],
-      "crisis_morale_0_to_1": [
-        "-2 movement on Push On",
-        "-25% Hunt success chance",
-        "10% chance per turn that 1 member quits the wagon (state\u2192lost, cause='abandonment')",
-        "25% chance per turn of an Argument event (lose 1 day to camp infighting)",
-        "Music mood: somber (Shenandoah only)"
-      ]
-    },
-    "morale_recovery_sources": [
-      "Rest action: +1 morale per turn rested",
-      "Successful Hunt: +1",
-      "Reach a fort: +1",
-      "Send a Letter Home: +2",
-      "Reach a landmark: +1",
-      "Independence Rock on time: +2",
-      "Soda Springs: +1 (water + party)",
-      "Music event: +1",
-      "Find lost cache: +1"
-    ],
-    "morale_drain_sources": [
-      "Member sick or dying: -1 per turn",
-      "Member lost: -3 (one-time)",
-      "No food: -1 per turn",
-      "No water: -2 per turn",
-      "Storm event: -1",
-      "Failed river crossing: -2",
-      "Bandit ambush 0-2 correct: -3 to -4"
-    ]
-  },
-  "day_67_easter_egg": {
-    "philosophy": "Day 67 should be a memorable comedic beat. Sixth-graders find the number 67 inherently funny (in 2026 'six seven' is a popular meme). Pink Oregon Trail can wink at this without breaking the period setting.",
-    "trigger": "First time gameState.day reaches 67 in any wagon's journey",
-    "scene": {
-      "title": "Day 67 \u2014 A Strange Day",
-      "intro": "It is Day 67. The number sixty-seven. The team looks around and laughs for no clear reason.",
-      "flavor_options": [
-        "Cookie the cook holds up six fingers, then seven. The team breaks into laughter that lasts the whole afternoon.",
-        "Someone finds a wagon wheel with six and seven spokes painted in alternating colors. No one knows why.",
-        "A passing rider tips his hat and says 'sixty-seven miles to the next fort, or maybe seventy-six. Hard to tell out here.' Nobody knows whether to laugh or cry.",
-        "The Priest reads from Psalm 67 around the campfire. The team listens \u2014 but somebody chuckles, and then everyone is laughing. The Priest pretends to be offended, then laughs too."
-      ],
-      "effects": {
-        "morale": 2
-      },
-      "audio": "Light, lively flute riff (5-6 quick notes ascending then descending) followed by a soft chime",
-      "rendering_note": "Pick one flavor at random. Show as a light comedic event in the standard event callout style. Don't repeat in the same journey."
-    }
-  },
-  "hover_tooltip_system": {
-    "philosophy": "v2.2's transition toasts were fly-by \u2014 easy to miss while focused on the action menu. Replace with persistent hover tooltips on team-strip portraits. This way the player can check on any team member at any time, without time pressure.",
-    "removal": "Disable .transition-toast entirely. Keep the audio cue (worry chime) when transitions occur, so the player has an auditory hint that something changed.",
-    "addition": {
-      "trigger": "Mouse hover over any team-strip portrait (or tap on touch device)",
-      "tooltip_content": [
-        "Member name + profession (large)",
-        "Current state with description (e.g., 'Sick \u2014 coughing, fever. Doctor cannot heal until they recover')",
-        "Days in current state (e.g., 'Sick since Day 32 \u2014 three days')",
-        "Recovery probability if Doctor present (e.g., '60% chance to recover with Doctor today')",
-        "Cause of state if known (e.g., 'Cause: starvation')",
-        "Profession bonus contribution if active (e.g., 'Hunting: +75% success when this member is healthy')"
-      ],
-      "ui_styling": "Soft cream background, deep rose border, drop shadow, max-width 300px. Appears with a 100ms fade-in. Stays until pointer leaves the portrait."
-    },
-    "additional_visual_state_signals": [
-      "Already implemented in v2.2: health bar color and width by state",
-      "Add a state-indicator badge under the bar with text: 'healthy' (green), 'tired' (gold), 'sick' (orange), 'hurt' (terracotta), 'dying' (red, pulsing)",
-      "On state change, briefly flash the entire portrait with a colored glow matching the new state, lasting 1.5 seconds (this replaces the toast as the immediate visual hint)"
-    ]
-  },
-  "minimap_upgrade": {
-    "philosophy": "Currently the mini-map shows a simplified line. Players using the physical board need a screen-board that MATCHES it: the same 6-tile layout, same key landmarks visible, all wagons positioned in real time. This becomes the bridge between physical and digital play.",
-    "specification": {
-      "size_px": "320 wide x 200 tall (expandable to 640x400 on click)",
-      "layout": "3 tiles wide \u00d7 2 tile rows, matching the physical board exactly",
-      "tile_content": "Simplified version of each board tile: trail line through key spaces, named landmarks at correct positions, region color tinting (plains tan, foothills mauve, mountains purple-grey, desert beige, forest green)",
-      "wagon_markers": "Each wagon shown as a small colored circle with the player's initial inside (e.g., 'N' for Nicholas, 'G' for Gabby). Wagons in distinct colors (deep rose, gold, navy, forest green, plum, copper for up to 6 players).",
-      "current_player_marker": "Currently-active wagon's marker pulses with a soft halo and is slightly larger.",
-      "expandability": "Click/tap to expand to full-screen overlay (640x400 view of the full board). Click again to collapse.",
-      "always_visible": "Mini-map docks in bottom-left corner, always visible during gameplay (not collapsed by default)."
-    }
-  },
-  "turn_indicator_system": {
-    "philosophy": "In multi-wagon games (Cooperative or Competitive), players need to constantly know whose turn it is. Currently the player name is buried; players lose track. Make this prominent and persistent.",
-    "specification": {
-      "turn_banner_top_of_scene": "When a wagon's turn begins, a banner slides down from the top of the scene canvas reading: '[Player Name]'s turn \u2014 [Wagon Name]' in large serif italic. Holds for 2.5 seconds, then minimizes to a small persistent corner badge.",
-      "persistent_corner_badge": "Top-right of scene canvas, always visible during turn: 'Now playing: [Player Name]' with the wagon's color accent. Click to expand to full team strip preview.",
-      "audio_cue": "Soft, cheerful 2-note chime when the banner appears (different from the worry-chime used for state transitions).",
-      "wagon_color_accents": "Each wagon has an assigned color (deep rose, gold, navy, forest green, plum, copper). The action menu border, mini-map marker, and turn banner all use this color for the active wagon, so multiple players don't lose track of which wagon is theirs."
-    }
-  },
-  "trail_news_upgrade": {
-    "philosophy": "Trail News was 'shows next 3 stops by name' which is barely useful \u2014 players already see this on the mini-map. Make it real: surface upcoming events, hazards, weather forecasts, or tips that meaningfully aid strategy.",
-    "specification": {
-      "cost": "Free at any fort",
-      "content": [
-        "Names of next 3-5 spaces (existing)",
-        "Hazard hint if upcoming spaces include a tough river: 'A traveler reports the Snake River is running high.'",
-        "Weather hint if upcoming weather event due (40% chance of being available): 'Storm clouds on the horizon. Plan accordingly.'",
-        "Profession-relevant tip: if a Doctor is on team, 'Cholera reports from the Platte River Valley.' If a Carpenter, 'A wagon train reports broken axles ahead \u2014 bring extra supplies.'",
-        "Random fact tied to next landmark: 'The next big landmark is Independence Rock \u2014 pioneers try to reach it by July 4.'",
-        "Strategic tip: 'Forts are scarce in the high desert region. Stock up here.'"
-      ],
-      "narrative_voice": "First-person colloquial pioneer voice. 'A trader from the west says the river's still passable. Won't be in two weeks.'",
-      "tip_card_format": "Show as a stylized broadside / handbill \u2014 period-appropriate styling. Each tip on its own line with bullet, max 4-5 tips per news session."
-    }
-  },
-  "simulation_logic_validation": {
-    "philosophy": "Build the v2.3 patch with explicit user-story / use-case tests, BEFORE writing the code. Each scenario must be reasoned through end-to-end, validating that the simulation produces a sensible narrative outcome that matches player expectations. This is how the priest/banker swap, water-but-not bug, and skinTone bugs would have been caught.",
-    "required_user_stories_pre_implementation": [
-      {
-        "id": "US-01",
-        "story": "Player has a Priest and a Banker on the team. The Banker is in dying state. End of turn fires.",
-        "expected": "If Banker dies: Banker name, profession, and skinTone (consistent across selection, naming, gameplay) appear in the death scene. Team strip updates with Banker grayscaled. Priest unchanged. If Banker lives: Banker remains in dying state with health bar pulsing red; intervention may fire next turn."
-      },
-      {
-        "id": "US-02",
-        "story": "Player selects 7 professions on screen 4 (e.g., Doctor, Hunter, Carpenter, Cook, Scout, Cowboy, Priest). Continues to Naming, names them. Hits Back to return to selection. Deselects Carpenter. Selects Influencer instead. Returns to Naming. Continues. Begins journey.",
-        "expected": "In the in-game team strip, each profession shows the name and skin tone the player gave it for THAT profession. Names and skin tones MUST stay aligned to their professions across array mutations. Specifically: if Carpenter is removed from index 2 of the professions array, name[2] and skinTone[2] (which were associated with Carpenter) must ALSO be removed. When Influencer is appended at the end, name[6] and skinTone[6] must be empty/freshly-randomized so the player can name the new member from scratch."
-      },
-      {
-        "id": "US-03",
-        "story": "A wagon lands on a river space. Player chooses Ford. Player succeeds. The next time their turn comes around (in Competitive mode), they look at the screen.",
-        "expected": "The screen shows them at the NEXT space (or at least the previously-resolved river space without re-firing the river-crossing scene). The turn-intro callout says something appropriate to their current position, NOT the river that has been crossed already."
-      },
-      {
-        "id": "US-04",
-        "story": "Player chooses Forage. Their team has no Scout, no Farmer.",
-        "expected": "They get +1-2 food AND +1-2 water (logically \u2014 foraging includes finding water sources). With Farmer: more food. With Scout: more water. Without either: still get reasonable amounts of both."
-      },
-      {
-        "id": "US-05",
-        "story": "Player reaches Soda Springs landmark.",
-        "expected": "They get the historical fact (existing) AND they refill water (because Soda Springs is literally named for its water). Morale +1 (the team rests at this famous landmark)."
-      },
-      {
-        "id": "US-06",
-        "story": "Player clicks Push On.",
-        "expected": "Two dice appear center-canvas, tumble for 0.6s, land on values (e.g. 4 and 5). A summary appears: 'Rolled 4+5 = 9, pace +1, capped at 8 \u2014 travel 8 spaces.' Then the wagon advances visibly along the mini-map. Then the new space resolves."
-      },
-      {
-        "id": "US-07",
-        "story": "Day 67 of any wagon's journey.",
-        "expected": "A special light comedic event fires. Morale +2. A flute riff plays. The team laughs about the number 67. (Sixth-grade kids will laugh too.)"
-      },
-      {
-        "id": "US-08",
-        "story": "Player hovers over a team-strip portrait.",
-        "expected": "A tooltip appears showing member name, profession, current state with description, days in state, recovery probability if a Doctor is present, cause of state, and profession bonus contribution. The toast notifications (which were fly-by) are gone \u2014 hover gives persistent info instead."
-      },
-      {
-        "id": "US-09",
-        "story": "The team's morale drops to 1 (crisis level). Two more turns pass.",
-        "expected": "Push On movement is reduced by 2. There's a 10% chance per turn one member quits (lost with abandonment narrative). Music shifts to somber (Shenandoah only). Hunt success drops 25%. The player feels the desperation and is motivated to find a fort or successful event."
-      },
-      {
-        "id": "US-10",
-        "story": "Multiple players (4) play in Competitive mode.",
-        "expected": "A turn banner appears at the top of scene at start of each wagon's turn showing the player name. A persistent corner badge shows 'Now playing: [Name]'. Each wagon has its own color accent on action menu, mini-map marker, and turn banner. The mini-map shows all 4 wagons in their colors at their respective positions."
-      }
-    ],
-    "test_protocol": "Before writing code for any v2.3 feature, write a brief paragraph describing how the user story plays out in the patched code. If anything is unclear or contradictory, surface it as an open question BEFORE writing the implementation. After writing the code, manually walk through the user story step-by-step verifying each expected outcome holds.",
-    "scenario_catch_targets": [
-      "name+skinTone+profession alignment bug after Back-navigation+reselection (US-02)",
-      "river-state persistence illusion (US-03)",
-      "no-water-from-forage bug (US-04)",
-      "Soda-Springs-no-water bug (US-05)",
-      "invisible dice (US-06)",
-      "missing day 67 (US-07)",
-      "fly-by toast (US-08)",
-      "morale doesn't matter (US-09)",
-      "lost-track-of-whose-turn (US-10)"
-    ]
-  },
-  "team_alignment_fix": {
-    "philosophy": "Names and skin tones are PER-PROFESSION metadata. They must stay aligned to their profession across all array mutations. The bug in v2.2 is that .splice() on professions doesn't propagate to names/skinTones, leaving members at higher indices with the wrong metadata.",
-    "the_actual_bug_observed": "A player picks Doctor/Hunter/Carpenter/Cook/Scout/Cowboy/Priest, names them all, hits Back, deselects Carpenter, adds Influencer. The professions array becomes [Doctor, Hunter, Cook, Scout, Cowboy, Priest, Influencer]. But the names array is still [DrBill, Bob, Carla(was-Carpenter), Cookie, ScoutSam, CowboyJoe, FatherPat]. Result: in-game, Cook is named 'Carla', Scout is named 'Cookie', Cowboy is named 'ScoutSam', Priest is named 'CowboyJoe', and Influencer is named 'FatherPat'. The diligent player who picked specific roles sees their work erased.",
-    "required_invariant": "At ALL times when w.stage === 'naming' or beyond, w.names.length === w.professions.length AND w.skinTones.length === w.professions.length, and the i-th element of names/skinTones describes the i-th profession.",
-    "implementation_pattern": [
-      "When deselecting a profession (selection stage onclick): perform the splice on professions[idx], names[idx], skinTones[idx] in lock-step.",
-      "When appending a profession (selection stage onclick): push '' to names and a fresh random skin tone to skinTones at the same time.",
-      "When entering naming stage: defensively reconcile \u2014 truncate names/skinTones to professions.length, pad with empty/random as needed.",
-      "Apply the same lock-step principle to any future code that mutates professions."
-    ],
-    "non_destructive_alternative_to_consider": "An alternative architecture is to make team members objects from the start: w.team = [{profession, name, skinTone}, ...]. Splice operates on whole objects atomically \u2014 alignment becomes structural, not procedural. This is cleaner but a bigger refactor. The minimal fix is the lock-step splice approach above. Use your judgment."
   }
 }
