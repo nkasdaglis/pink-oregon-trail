@@ -805,6 +805,16 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
   </div>
 </div>
 
+<div id="screen-difficulty" class="screen" hidden>
+  <div class="center-wrap">
+    <h1 class="title">Pink Oregon Trail</h1>
+    <h2 class="section-h">Choose Difficulty</h2>
+    <p class="subtitle">You can change this only at setup. Pick the experience that fits your class.</p>
+    <div class="cards-grid" id="difficulty-cards"></div>
+    <div class="actions"><button class="ghost" id="difficulty-back">&larr; Back</button></div>
+  </div>
+</div>
+
 <div id="screen-count" class="screen" hidden>
   <div class="center-wrap">
     <h1 class="title">Pink Oregon Trail</h1>
@@ -5840,6 +5850,18 @@ function newWagonState(setup) {
   const team = setup.professions.map((p, i) => newMember(setup.names[i] || ('Member ' + (i+1)), p));
   const resources = {};
   GAME_DATA.resources.forEach(r => resources[r.name.toLowerCase()] = r.start);
+  // Part 4 — Stage 8: apply difficulty preset modifiers to starting
+  // resources / money / revivals. The preset name is read from
+  // setupState.difficulty (set on the difficulty screen). Falls back
+  // gracefully to Medium if unset.
+  const presetName = (typeof setupState !== 'undefined' && setupState.difficulty) ||
+                     ((GAME_DATA.difficulty_settings || {}).default || 'Medium');
+  const preset = ((GAME_DATA.difficulty_settings || {}).presets || {})[presetName] || {};
+  const mods = preset.modifiers || {};
+  if (mods.starting_money    != null) resources.money    = clamp(mods.starting_money,                   0, RESOURCES_BY_NAME.money.max);
+  if (mods.starting_food_bonus)        resources.food     = clamp(resources.food     + mods.starting_food_bonus,     0, RESOURCES_BY_NAME.food.max);
+  if (mods.starting_water_bonus)       resources.water    = clamp(resources.water    + mods.starting_water_bonus,    0, RESOURCES_BY_NAME.water.max);
+  if (mods.starting_supplies_bonus)    resources.supplies = clamp(resources.supplies + mods.starting_supplies_bonus, 0, RESOURCES_BY_NAME.supplies.max);
   return {
     id: 0,
     playerName: setup.playerName,
@@ -5870,6 +5892,13 @@ function newWagonState(setup) {
     ration_history: [],
     daysTraveled: 1,
     luck: STOCH.momentum_system.starting_value || 0,
+    // Part 4 — Stage 8: revival charges (Easy mode only; intervention
+    // event's use_revival_charge choice consumes one). The grace-period
+    // counter tracks the first_member_lost_grace_period_turns modifier
+    // (currently informational; future use is in the death-cap path).
+    revival_charges_remaining: (mods.revival_charges || 0),
+    grace_turns_remaining: 0,
+    _difficulty: presetName,
     consec_zero_food: 0,
     consec_zero_water: 0,
     consec_zero_supplies: 0,
@@ -5976,12 +6005,19 @@ function applyEndOfTurnStateTransitions(w) {
   // processWarningEvents() in endTurn after this function returns.
   w._pendingTransitionToasts  = [];
   w._pendingTransitionBanners = [];
+  // Part 4 — Stage 8: scale degrade probabilities by the difficulty preset's
+  // state_transition_probability_multiplier (Easy=0.65, Medium=1.0, Hard=1.35).
+  // Recovery rules (toState in healthy/weakened) are NOT scaled — easy mode
+  // shouldn't make sick members recover faster, only stay healthier longer.
+  const diffMult = degradeProbabilityMultiplier();
   for (const rule of TRANSITION_RULES) {
     if (!ruleMatches(rule, w)) continue;
     for (const m of w.team) {
       if (m.state === 'lost') continue;
       if (rule.from_state === 'any_living' || m.state === rule.from_state) {
-        if (Math.random() < (rule.probability || 0)) {
+        const isDegrade = isDegradeRule(rule);
+        const p = (rule.probability || 0) * (isDegrade ? diffMult : 1);
+        if (Math.random() < p) {
           const fromState = m.state;
           transitionMember(m, rule.to_state, w.daysTraveled, rule.trigger);
           queueTransitionWarning(w, m, fromState, rule.to_state, rule.trigger);
@@ -5989,6 +6025,23 @@ function applyEndOfTurnStateTransitions(w) {
       }
     }
   }
+}
+
+function degradeProbabilityMultiplier() {
+  const presetName = (typeof gameState !== 'undefined' && gameState && gameState.difficulty) || 'Medium';
+  const preset = ((GAME_DATA.difficulty_settings || {}).presets || {})[presetName] || {};
+  const m = (preset.modifiers || {}).state_transition_probability_multiplier;
+  return (m == null) ? 1 : m;
+}
+
+function isDegradeRule(rule) {
+  // A rule is a "degrade" if to_state is worse than from_state.
+  // Recovery rules go to healthy/weakened from a worse state — those are
+  // not scaled by difficulty.
+  const order = { healthy: 0, weakened: 1, sick: 2, injured: 2, dying: 3, lost: 4, any_living: -1 };
+  const from = rule.from_state in order ? order[rule.from_state] : 0;
+  const to   = rule.to_state   in order ? order[rule.to_state]   : 0;
+  return to > from;
 }
 
 // Per-state per-turn death checks — split out from
@@ -7214,11 +7267,12 @@ let gameState = null;
 const setupState = {
   trailLength: null, mode: null, wagonCount: 1, currentWagonIdx: 0,
   teacherMode: false,
+  difficulty: 'Medium', // Part 4 — Stage 8 default per difficulty_settings.default
   wagons: [] // [{ playerName, wagonName, professions[7], names[7], skinTones[7] }]
 };
 
 function showScreen(id) {
-  ['screen-length','screen-mode','screen-count','screen-wagon','screen-confirm','screen-game','screen-end'].forEach(s => { $(s).hidden = (s !== id); });
+  ['screen-length','screen-mode','screen-difficulty','screen-count','screen-wagon','screen-confirm','screen-game','screen-end'].forEach(s => { $(s).hidden = (s !== id); });
   window.scrollTo(0, 0);
 }
 
@@ -7401,7 +7455,49 @@ function renderModeScreen() {
       onclick: () => {
         audioController.playSfx('click');
         setupState.mode = o.key;
-        if (o.key === 'competitive') {
+        // Part 4 — Stage 8: difficulty screen sits between mode and the
+        // count/wagon screens regardless of which mode was picked.
+        showScreen('screen-difficulty');
+        renderDifficultyScreen();
+      }
+    });
+    cards.appendChild(c);
+  });
+}
+
+// Part 4 — Stage 8: difficulty selector screen. Three big cards driven by
+// GAME_DATA.difficulty_settings.presets. Default is Medium per
+// difficulty_settings.default. The chosen preset name is stashed on
+// setupState.difficulty and copied to gameState.difficulty in beginJourney
+// so the simulation core can read it.
+function renderDifficultyScreen() {
+  const cards = $('difficulty-cards');
+  cards.innerHTML = '';
+  const ds = (GAME_DATA.difficulty_settings && GAME_DATA.difficulty_settings.presets) || {};
+  // Sun/cloud/storm icons per ui_placement spec — minimal inline SVG
+  const icons = {
+    Easy:   '<svg class="icon-svg" viewBox="0 0 60 60"><circle cx="30" cy="30" r="14" fill="#F4D86F"/><g stroke="#D4A937" stroke-width="3" stroke-linecap="round">' +
+            '<line x1="30" y1="6"  x2="30" y2="14"/><line x1="30" y1="46" x2="30" y2="54"/><line x1="6"  y1="30" x2="14" y2="30"/><line x1="46" y1="30" x2="54" y2="30"/>' +
+            '<line x1="13" y1="13" x2="19" y2="19"/><line x1="41" y1="41" x2="47" y2="47"/><line x1="13" y1="47" x2="19" y2="41"/><line x1="41" y1="19" x2="47" y2="13"/></g></svg>',
+    Medium: '<svg class="icon-svg" viewBox="0 0 60 60"><circle cx="22" cy="28" r="9"  fill="#F4D86F"/>' +
+            '<ellipse cx="36" cy="36" rx="18" ry="9" fill="#E8DCCB" stroke="#A89580" stroke-width="1.5"/>' +
+            '<ellipse cx="22" cy="34" rx="12" ry="7" fill="#FBF6F0" stroke="#A89580" stroke-width="1.2"/></svg>',
+    Hard:   '<svg class="icon-svg" viewBox="0 0 60 60"><ellipse cx="30" cy="22" rx="22" ry="9" fill="#5C4A66" stroke="#3D2817" stroke-width="1.5"/>' +
+            '<ellipse cx="22" cy="28" rx="14" ry="6" fill="#7A6480" stroke="#3D2817" stroke-width="1"/>' +
+            '<polyline points="18,32 22,42 17,42 26,54" fill="none" stroke="#D4AF37" stroke-width="2.4" stroke-linejoin="bevel" stroke-linecap="round"/>' +
+            '<line x1="36" y1="34" x2="32" y2="44" stroke="#5B7FA8" stroke-width="1.5"/>' +
+            '<line x1="44" y1="34" x2="40" y2="44" stroke="#5B7FA8" stroke-width="1.5"/></svg>'
+  };
+  ['Easy','Medium','Hard'].forEach(key => {
+    const p = ds[key];
+    if (!p) return;
+    const c = el('div', { class: 'big-card' + (setupState.difficulty === key ? ' primary' : ''),
+      html: (icons[key] || '') + '<h3>' + escapeHtml(p.label || key) + '</h3>' +
+            '<p>' + escapeHtml(p.subtitle || '') + '</p>',
+      onclick: () => {
+        audioController.playSfx('click');
+        setupState.difficulty = key;
+        if (setupState.mode === 'competitive') {
           if (setupState.wagonCount < 2) setupState.wagonCount = 2;
           showScreen('screen-count'); renderCountScreen();
         } else {
@@ -7513,7 +7609,7 @@ function renderWagonScreen() {
     if (w.stage === 'naming') { w.stage = 'select'; renderWagonScreen(); }
     else if (setupState.currentWagonIdx > 0) { setupState.currentWagonIdx--; renderWagonScreen(); }
     else if (setupState.mode === 'competitive') { showScreen('screen-count'); renderCountScreen(); }
-    else { showScreen('screen-mode'); renderModeScreen(); }
+    else { showScreen('screen-difficulty'); renderDifficultyScreen(); } // Stage 8: skip past mode, land on difficulty
   } }));
   const next = el('button', { class: 'primary', id: 'wagon-next-btn', textContent: w.stage === 'naming' ? (setupState.currentWagonIdx === total - 1 ? 'Confirm Team →' : 'Next Wagon →') : 'Continue →',
     onclick: () => { audioController.playSfx('click');
@@ -7592,6 +7688,7 @@ function beginJourney() {
     trailLength: setupState.trailLength,
     mode: setupState.mode,
     teacherMode: setupState.teacherMode,
+    difficulty: setupState.difficulty || 'Medium', // Part 4 — Stage 8
     wagons: wagons,
     currentWagonIdx: 0,
     firstFinisher: null,
@@ -9191,7 +9288,8 @@ function init() {
 
   // Setup back buttons
   $('mode-back').addEventListener('click', () => { showScreen('screen-length'); renderLengthScreen(); });
-  $('count-back').addEventListener('click', () => { showScreen('screen-mode'); renderModeScreen(); });
+  $('difficulty-back').addEventListener('click', () => { showScreen('screen-mode'); renderModeScreen(); });
+  $('count-back').addEventListener('click', () => { showScreen('screen-difficulty'); renderDifficultyScreen(); });
 
   // Render the first screen
   renderLengthScreen();
