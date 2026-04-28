@@ -2373,30 +2373,32 @@
       "description": "Used to feed the team each turn",
       "start": 10,
       "min": 0,
-      "max": 20,
+      "max": 999,
+      "unit": "lbs",
       "gain_sources": "Hunting,trading,events",
       "loss_sources": "Spoilage,rationing,events",
-      "notes": "If 0-lose health each turn"
+      "notes": "v3.2 — units are pounds. Cap raised to 999 because the calibrated economy starts you at 140-240 lbs and a Hunt nets 25 lbs per success; the old cap of 20 made forage gains and hunts no-op."
     },
     {
       "name": "Water",
       "description": "Required for survival,especially in heat",
       "start": 8,
       "min": 0,
-      "max": 20,
+      "max": 99,
+      "unit": "gal",
       "gain_sources": "Rivers,trade,events",
       "loss_sources": "Heat,bad water,events",
-      "notes": "If 0-immediate health loss"
+      "notes": "v3.2 — units are gallons. Cap raised to 99 because the calibrated economy starts you at 16-30 gallons and forage/Scout finds add up; the old cap of 20 silently truncated all subsequent water gains."
     },
     {
       "name": "Supplies",
       "description": "Tools,materials,repairs",
       "start": 6,
       "min": 0,
-      "max": 15,
+      "max": 20,
       "gain_sources": "Trade,scavenging,events",
       "loss_sources": "Breakdowns,storms,repairs",
-      "notes": "Used to avoid delays or losses"
+      "notes": "v3.2 — cap 15->20 for parity with V32_STARTING easy preset (8 supplies). Used to avoid delays or losses."
     },
     {
       "name": "Hides",
@@ -5142,7 +5144,14 @@
       {"id":"monument_rocks",     "name":"Monument Rocks",      "year_referenced":"1849", "caption":"Monument Rocks (the Chalk Pyramids), Kansas. Seventy-foot chalk-and-shale spires rising from the prairie south of the trail. Pioneers detoured to see them. The chalk was so soft that wagons could carve names into the base. Now the first National Natural Landmark in the United States (1968)."},
       {"id":"city_of_rocks",      "name":"City of Rocks",       "year_referenced":"1850", "caption":"City of Rocks, Idaho. A maze of 60-foot granite spires where the California Trail branched south from the Oregon Trail. Pioneers camped in the shade of the rocks and signed their names in axle grease — many signatures are still readable today, 175 years later. About one in three emigrants chose California from this junction."},
       {"id":"buffalo_stampede",   "name":"Buffalo Stampede",    "year_referenced":"1849", "caption":"A buffalo stampede on the Great Plains. Herds numbered in the tens of thousands; when one panicked, the ground shook for miles. Pioneers who saw a stampede coming had minutes to drive the wagons into a creek bed or be trampled. By 1880, the buffalo were nearly gone."},
-      {"id":"columbia_river_alt", "name":"Columbia River (gorge view)","year_referenced":"1850","caption":"The Columbia River Gorge cuts through the Cascade Range — the only sea-level path through the mountains in 1,000 miles. The river offered the trail's last great obstacle and its most beautiful stretch."}
+      {"id":"columbia_river_alt", "name":"Columbia River (gorge view)","year_referenced":"1850","caption":"The Columbia River Gorge cuts through the Cascade Range — the only sea-level path through the mountains in 1,000 miles. The river offered the trail's last great obstacle and its most beautiful stretch."},
+      {"id":"cholera_poster",     "name":"Cholera Warning",     "year_referenced":"1849", "caption":"A period broadside warning of cholera. The disease killed more pioneers than anything else on the trail — sometimes a strong, healthy person felt a stomach ache at breakfast and was dead by sundown. Spread through dirty water at busy river crossings. Boiling water for two minutes was the only sure prevention pioneers had."},
+      {"id":"pioneer_family",     "name":"Pioneer Family",      "year_referenced":"1850", "caption":"A pioneer family at their wagon. About a third of all emigrants were children. Mothers cooked, washed, nursed the sick, watched the little ones, and walked the same 2,000 miles as everyone else. The diaries pioneer women kept survive today and tell us most of what we know about daily trail life."},
+      {"id":"native_americans",   "name":"Native Americans of the Trail","year_referenced":"1850","caption":"Native peoples of the Oregon Trail — Pawnee, Sioux, Shoshone, Nez Perce, Cayuse, Walla Walla, and many others. They guided pioneers across rivers, traded fish and horses, taught the use of camas root, and warned of bad water. Far more often than fighting, they helped — and watched their lands and game disappear under wagon wheels."},
+      {"id":"trail_scene_1",      "name":"Wagon Train at Dusk", "year_referenced":"1849", "caption":"A pioneer wagon train circled for the night. The wagons formed a corral that kept the oxen safe and let families cook over a single shared fire. Songs after supper, prayer at sundown. Pioneers slept on the ground, not in the wagons — the wagons were full of supplies."},
+      {"id":"trail_scene_2",      "name":"Wagons on the Plains","year_referenced":"1850", "caption":"A wagon train crossing the Great Plains. On a good day a wagon train made 12 to 20 miles. The trail was so heavily used by 1850 that the ruts were already a foot deep — in some places they remain visible today."},
+      {"id":"kelly_wagon",        "name":"Period Pioneer Wagon","year_referenced":"1850", "caption":"A prairie schooner — the small, light wagon most pioneers used. About 10 feet long, 4 wide, with a canvas top stretched over hickory bows. Loaded weight around 1,500 pounds, plus another 1,500 of supplies. Pulled by 4 to 6 oxen at about 2 miles per hour."},
+      {"id":"wagons_on_trail",    "name":"Wagons in the Distance","year_referenced":"1850","caption":"A line of wagons stretching to the horizon. By 1849, the year of the California Gold Rush, more than 25,000 emigrants crossed in a single season — the trail looked like a mile-wide stripe of dust and canvas, visible for thirty miles."}
     ],
     "upgrade_path_for_real_photos": {
       "instructions": "To enhance the game with real public-domain historical photographs, Nicholas (or anyone) can: (1) Visit Library of Congress (loc.gov/photos) and search for the suggested terms above; (2) Download the highest-resolution version of each photo; (3) Resize to 600x460 max and save as JPG with quality 85; (4) Convert to base64 using any base64 tool (Windows PowerShell: [Convert]::ToBase64String([IO.File]::ReadAllBytes('photo.jpg'))); (5) Add the base64 string to the historicalPhotosOverride constant in pink_oregon_trail.html under the matching id key. The game checks the override first; if present, displays the photograph; if not, falls back to the daguerreotype SVG. All Library of Congress photographs from before 1928 are public domain.",
