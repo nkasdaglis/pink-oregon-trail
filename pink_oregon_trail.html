@@ -858,6 +858,22 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
   white-space: normal;
 }
 .team-portrait .member-tooltip.tooltip-open { opacity: 1; }
+.team-portrait .member-tooltip .tt-med-btn {
+  display: block;
+  margin-top: 6px;
+  padding: 5px 8px;
+  width: 100%;
+  background: var(--rose);
+  color: #FFF;
+  border: 1px solid var(--rose-dark);
+  border-radius: 4px;
+  font-family: Georgia, serif;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.team-portrait .member-tooltip .tt-med-btn:hover:not(:disabled) { background: var(--rose-dark); }
+.team-portrait .member-tooltip .tt-med-btn:disabled { background: #C9C2B6; border-color: #A89B82; cursor: not-allowed; opacity: 0.7; }
 .team-portrait .member-tooltip .tt-name {
   font-weight: 700; font-size: 14px; color: var(--rose-dark);
   display: block; line-height: 1.2;
@@ -1836,6 +1852,115 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
    stop sitting on top of the drawer-map tab at bottom-right. */
 :root[data-ui-density="mobile"] #mute-toggle  { bottom: auto; right: 6px;  top: 6px; width: 32px; height: 32px; font-size: 12px; }
 :root[data-ui-density="mobile"] #music-toggle { bottom: auto; right: 44px; top: 6px; width: 32px; height: 32px; font-size: 12px; }
+
+/* v3.3.1 round 3 — Resources drawer. Per user feedback ("resources still
+   too thin; hide them behind a pull-down tab"), at mobile density the
+   resource ribbon and pace-ration-strip are HIDDEN by default and a
+   small "Resources" pull-down tab at top-center reveals them. Tapping
+   the tab toggles a slide-down panel anchored to the top of the screen.
+   Tap anywhere outside (or the close X) to dismiss. */
+:root[data-ui-density="mobile"] .resource-ribbon,
+:root[data-ui-density="mobile"] .pace-ration-strip { display: none; }
+:root[data-ui-density="mobile"] #screen-game {
+  grid-template-rows: minmax(38vh, 1fr) auto;
+  padding-bottom: 40px;
+}
+:root[data-ui-density="mobile"] #screen-game.callout-open {
+  grid-template-rows: minmax(26vh, 1fr) auto;
+}
+.resources-pulldown-tab {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--rose);
+  color: #FFF;
+  font-family: Georgia, serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 4px 18px;
+  border-radius: 0 0 10px 10px;
+  border: 1.5px solid var(--rose-dark);
+  border-top: none;
+  cursor: pointer;
+  z-index: 200;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  user-select: none;
+}
+.resources-pulldown-tab::after { content: " ▾"; opacity: 0.85; }
+.resources-pulldown-tab.open::after { content: " ▴"; }
+:root[data-ui-density="mobile"] .resources-pulldown-tab { display: block; }
+.resources-pulldown-panel {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: var(--cream);
+  border-bottom: 2px solid var(--rose);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  z-index: 195;
+  padding: 8px 10px 10px;
+  animation: pulldownIn 0.25s ease;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+:root[data-ui-density="mobile"] .resources-pulldown-panel.open { display: block; }
+@keyframes pulldownIn {
+  from { transform: translateY(-100%); opacity: 0.5; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+.resources-pulldown-panel .pull-section-title {
+  font-family: Georgia, serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--rose-dark);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 4px 2px;
+}
+.resources-pulldown-panel .pull-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
+  gap: 6px;
+}
+.resources-pulldown-panel .pull-cell {
+  background: #FFF;
+  border: 1px solid var(--tan);
+  border-radius: 5px;
+  padding: 6px 8px;
+  font-family: system-ui, sans-serif;
+  font-size: 11px;
+  color: var(--brown);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.resources-pulldown-panel .pull-cell .pc-label {
+  font-size: 9px; opacity: 0.65; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.resources-pulldown-panel .pull-cell .pc-val {
+  font-size: 15px; color: var(--rose-dark); font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.resources-pulldown-panel .pull-cell.danger { background: #f6d8d8; }
+.resources-pulldown-panel .pull-cell.danger .pc-val { color: #a32d2d; }
+.resources-pulldown-panel .pull-cell.warning { background: #fcf2dc; }
+.resources-pulldown-panel .pull-pace {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;
+  font-family: Georgia, serif; font-size: 12px;
+}
+.resources-pulldown-panel .pull-pace > span {
+  background: #FFF; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--tan);
+}
+.resources-pulldown-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.25);
+  z-index: 190;
+}
+:root[data-ui-density="mobile"] .resources-pulldown-overlay.open { display: block; }
 /* v3.3.1 — when the callout routes into the mobile panel (below), the
    absolute-positioned variant in the scene overlay should not also
    render. Hide any leftover overlay copy at mobile density. */
@@ -2096,6 +2221,13 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
        mobile; team-strip and mini-map relocate into slide-up drawers
        triggered by tabs at the bottom edge. -->
   <div class="mobile-interaction-panel" id="mobile-interaction-panel"></div>
+  <!-- v3.3.1 round 3 — Resources pull-down (mobile only). Tab at top
+       toggles a slide-down panel showing full resource detail + pace.
+       Default state hidden; tap tab to reveal. Tap overlay or tab to
+       close. -->
+  <div class="resources-pulldown-overlay" id="resources-pulldown-overlay"></div>
+  <div class="resources-pulldown-panel" id="resources-pulldown-panel"></div>
+  <div class="resources-pulldown-tab" id="resources-pulldown-tab" role="button" tabindex="0" aria-label="Show resources">📊 Resources</div>
   <div class="drawer-tab team" id="drawer-tab-team" role="button" tabindex="0" aria-label="Open team drawer">Team</div>
   <div class="drawer-tab map"  id="drawer-tab-map"  role="button" tabindex="0" aria-label="Open map drawer">Map</div>
   <div class="drawer-overlay"  id="drawer-overlay"></div>
@@ -4536,6 +4668,17 @@ const GAME_DATA = {
       "gain_sources": "Hunting (Hunter +1, Trapper +2 per success)",
       "loss_sources": "Selling at forts (3 Money each)",
       "notes": "Pure trade good — has no consumption effect."
+    },
+    {
+      "name": "Medicine",
+      "description": "Doses for treating illness on the trail. One dose treats one minor illness; severe illness takes two doses (one with Doctor).",
+      "start": 1,
+      "min": 0,
+      "max": 10,
+      "unit": "dose",
+      "gain_sources": "Forts ($3.50/dose); Doctor profession bonus (+1 starting)",
+      "loss_sources": "Treating sick or weakened members; severe illness events",
+      "notes": "v3.2 — required for the new sickness/cholera shock handlers. Without medicine, sick members may not recover."
     },
     {
       "name": "Money",
@@ -7255,6 +7398,180 @@ const GAME_DATA = {
         "subject": "Small frontier town beside a great waterfall (Willamette Falls). Wooden buildings, a few church spires. Forested hills behind. Founded by John McLoughlin.",
         "caption": "Oregon City, Oregon. The end of the Oregon Trail. Founded in 1842 by John McLoughlin of the Hudson's Bay Company, who became known as the 'Father of Oregon' for the help he gave countless arriving pioneers.",
         "historical_photo_search": "Library of Congress: 'Oregon City 1850' or 'Willamette Falls Oregon'"
+      },
+      {
+        "id": "fort_kearny",
+        "name": "Fort Kearney",
+        "year_referenced": "1858",
+        "caption": "Fort Kearney, Nebraska. Built in 1848 to protect Oregon Trail travelers along the Platte. The fort had no walls — just buildings on the open prairie."
+      },
+      {
+        "id": "fort_hall",
+        "name": "Fort Hall",
+        "year_referenced": "1849",
+        "caption": "Fort Hall, Idaho. Built by Nathaniel Wyeth in 1834, sold to Hudson's Bay Company. The last real resupply before the Snake River."
+      },
+      {
+        "id": "fort_boise",
+        "name": "Fort Boise",
+        "year_referenced": "1849",
+        "caption": "Fort Boise, Idaho. Hudson's Bay Company trading post on the Snake River. Resupply before the Blue Mountains."
+      },
+      {
+        "id": "fort_nez_perces",
+        "name": "Fort Nez Perces",
+        "year_referenced": "1850",
+        "caption": "Fort Nez Perces (Walla Walla), Washington. Hudson's Bay Company post near the Whitman Mission."
+      },
+      {
+        "id": "ash_hollow",
+        "name": "Ash Hollow",
+        "year_referenced": "1849",
+        "caption": "Ash Hollow, Nebraska. Pioneers locked their wagon wheels and slid down California Hill into this lush spring-fed valley."
+      },
+      {
+        "id": "courthouse_rock",
+        "name": "Courthouse Rock",
+        "year_referenced": "1849",
+        "caption": "Courthouse and Jail Rocks, Nebraska. Two clay-and-sandstone formations that pioneers passed before reaching Chimney Rock."
+      },
+      {
+        "id": "scotts_bluff",
+        "name": "Scotts Bluff",
+        "year_referenced": "1849",
+        "caption": "Scotts Bluff, Nebraska. Eight hundred feet of bluff named for Hiram Scott, a fur trapper who died here in 1828. Mitchell Pass cuts through it."
+      },
+      {
+        "id": "snake_river",
+        "name": "Snake River",
+        "year_referenced": "1849",
+        "caption": "The Snake River, Idaho. Coursing through deep canyons. Pioneers could see the water but often could not reach it from the trail."
+      },
+      {
+        "id": "columbia_river",
+        "name": "Columbia River",
+        "year_referenced": "1850",
+        "caption": "The Columbia River, Oregon. Wagons were rafted down the Columbia until the Barlow Road was completed in 1846."
+      },
+      {
+        "id": "platte_river",
+        "name": "Platte River",
+        "year_referenced": "1849",
+        "caption": "The Platte River, Nebraska. 'A mile wide and an inch deep' said the pioneers. The trail followed it for hundreds of miles."
+      },
+      {
+        "id": "kansas_river",
+        "name": "Kansas River",
+        "year_referenced": "1849",
+        "caption": "Kansas River crossing. Ferries operated here in season. Big Blue, just to the west, had no ferry — pioneers had to ford or caulk."
+      },
+      {
+        "id": "green_river",
+        "name": "Green River",
+        "year_referenced": "1849",
+        "caption": "The Green River, Wyoming. Swift, deep, cold from mountain snow. Three to five ferries operated at peak season."
+      },
+      {
+        "id": "register_cliff",
+        "name": "Register Cliff",
+        "year_referenced": "1849",
+        "caption": "Register Cliff, Wyoming. A soft sandstone bluff where pioneers carved their names just past Fort Laramie."
+      },
+      {
+        "id": "trail_ruts",
+        "name": "Trail Ruts",
+        "year_referenced": "1849",
+        "caption": "Wagon ruts in solid sandstone, near Guernsey, Wyoming. Worn five feet deep by 250,000 pioneers over twenty-five years."
+      },
+      {
+        "id": "massacre_rocks",
+        "name": "Massacre Rocks",
+        "year_referenced": "1862",
+        "caption": "Massacre Rocks, Idaho. A narrow trail squeeze through black lava. The 1862 ambush gave the place its grim name."
+      },
+      {
+        "id": "farewell_bend",
+        "name": "Farewell Bend",
+        "year_referenced": "1849",
+        "caption": "Farewell Bend, Oregon. Pioneers' last view of the Snake River before turning north into the Burnt River canyon."
+      },
+      {
+        "id": "willamette_locks",
+        "name": "Willamette Falls",
+        "year_referenced": "1850",
+        "caption": "Willamette Falls at Oregon City. The forty-foot waterfall pioneers heard before they saw — the trail's end was just below."
+      },
+      {
+        "id": "blue_mountains",
+        "name": "Blue Mountains",
+        "year_referenced": "1849",
+        "caption": "The Blue Mountains, Oregon. Steep, forested, the last hard climb before the Columbia. Snow could close them by October."
+      },
+      {
+        "id": "great_plains",
+        "name": "The Great Plains",
+        "year_referenced": "1849",
+        "caption": "The Great Plains. A sea of grass stretching to the horizon. Pioneers spoke of the loneliness as much as the beauty."
+      },
+      {
+        "id": "snowstorm",
+        "name": "Mountain Snowstorm",
+        "year_referenced": "1849",
+        "caption": "A late-season storm in the high country. The wagon master prayed for an early frost to harden the trail, not a blizzard to bury it."
+      },
+      {
+        "id": "wagon_lashed",
+        "name": "Wagon Lashed for Descent",
+        "year_referenced": "1849",
+        "caption": "A wagon lashed with ropes and chains for a steep descent. Wheels locked, oxen straining backward to hold the load."
+      },
+      {
+        "id": "wagon_at_camp",
+        "name": "Wagon at Camp",
+        "year_referenced": "1849",
+        "caption": "A pioneer family's wagon at evening camp. The cookfire, the picketed oxen, the tarp drawn over the wagon bed for sleeping."
+      },
+      {
+        "id": "covered_wagon",
+        "name": "Covered Wagon",
+        "year_referenced": "1849",
+        "caption": "A prairie schooner — the small, light wagon most pioneers used. Ten feet long, four wide, hickory bows holding up a canvas top."
+      },
+      {
+        "id": "sunset_sage",
+        "name": "Sunset on the Sage",
+        "year_referenced": "1849",
+        "caption": "Sunset over the sagebrush plains. The smell of warm sage carried for miles in the evening air."
+      },
+      {
+        "id": "jim_bridger",
+        "name": "Jim Bridger",
+        "year_referenced": "1850",
+        "caption": "Jim Bridger, mountain man and trail-blazer. Founded Fort Bridger. Could not read or write, but knew every river west of the Missouri."
+      },
+      {
+        "id": "ezra_meeker",
+        "name": "Ezra Meeker",
+        "year_referenced": "1852",
+        "caption": "Ezra Meeker. Crossed the trail in 1852 at twenty-two; spent the rest of his long life preserving its memory and marking the route."
+      },
+      {
+        "id": "tabitha_brown",
+        "name": "Tabitha Brown",
+        "year_referenced": "1846",
+        "caption": "Tabitha Brown. Crossed the trail in 1846 at sixty-six. Founded a school for orphans in Forest Grove, Oregon, that became Pacific University."
+      },
+      {
+        "id": "george_bush",
+        "name": "George Washington Bush",
+        "year_referenced": "1844",
+        "caption": "George Washington Bush, a free Black settler who brought his family across in 1844. Settled in what is now Washington Territory after Oregon's Black exclusion law."
+      },
+      {
+        "id": "chimney_rock_alt",
+        "name": "Chimney Rock (alternate view)",
+        "year_referenced": "1850",
+        "caption": "Chimney Rock, Nebraska — a second period photograph. The spire was already eroding by the time pioneers passed."
       }
     ],
     "upgrade_path_for_real_photos": {
@@ -12049,7 +12366,9 @@ class AudioController {
     };
     const song = melodies[id];
     if (!song) { this._scheduleNextSong(); return; }
-    const beat = 60 / song.bpm;
+    // v3.3.1 — global tempo bump (~15% faster) per playtest feedback that
+    // the music felt sluggish. Applies uniformly across all songs/moods.
+    const beat = 60 / song.bpm / 1.15;
     const tokens = song.notes.split(/\s+/);
     const noteFreq = (n) => {
       const m = String(n).match(/^([A-G])(\d)$/);
@@ -12388,8 +12707,21 @@ function stateLabelFor(state) {
 function attachMemberTooltip(card, memberIndex) {
   card.addEventListener('mouseenter', () => showMemberTooltip(card, memberIndex));
   card.addEventListener('mouseleave', () => hideMemberTooltip(card));
-  // Touch-device support: tap toggles the tooltip
+  // Touch-device support: tap toggles the tooltip. v3.3.1 — Give Medicine
+  // button (inside the tooltip) handles the click separately and does NOT
+  // bubble up to toggle the tooltip closed.
   card.addEventListener('click', (e) => {
+    if (e.target && e.target.matches && e.target.matches('button[data-action="give-medicine"]')) {
+      e.stopPropagation();
+      e.preventDefault();
+      if (e.target.disabled) return;
+      const ok = useMedicineOn(memberIndex);
+      if (ok) {
+        // Close tooltip after the dose so the user can see updated state
+        hideMemberTooltip(card);
+      }
+      return;
+    }
     e.stopPropagation();
     const open = card.querySelector('.member-tooltip.tooltip-open');
     if (open) hideMemberTooltip(card); else showMemberTooltip(card, memberIndex);
@@ -12465,6 +12797,17 @@ function buildTooltipBody(w, m) {
   const profBonus = bonusByState && bonusByProf[m.profession]
     ? '<span class="tt-line">' + escapeHtml(bonusByProf[m.profession]) + '</span>'
     : '';
+  // v3.3.1 — Give Medicine button on the tooltip when this member is
+  // ailing AND there's at least one dose in the wagon. One dose lifts the
+  // member by one tier (sick → weakened, weakened → healthy, injured →
+  // weakened, dying → sick). Click handler is wired in attachMemberTooltip.
+  const ailing = (m.state === 'weakened' || m.state === 'sick' || m.state === 'injured' || m.state === 'dying');
+  const haveMed = (w.resources && (w.resources.medicine || 0) >= 1);
+  const medBtn = ailing
+    ? '<button class="tt-med-btn" data-action="give-medicine"' + (haveMed ? '' : ' disabled') + '>' +
+        (haveMed ? '⚕ Give Medicine (1 dose)' : '⚕ Give Medicine — out of doses') +
+      '</button>'
+    : '';
   return '<span class="tt-name">' + escapeHtml(m.name) + '</span>' +
          '<span class="tt-prof">' + escapeHtml(m.profession) + '</span>' +
          '<span class="tt-state">' + escapeHtml(stateLabelFor(m.state).toUpperCase()) +
@@ -12472,7 +12815,34 @@ function buildTooltipBody(w, m) {
          '<span class="tt-line">' + escapeHtml(turnsLine) + '</span>' +
          recoveryLine +
          causeLine +
-         profBonus;
+         profBonus +
+         medBtn;
+}
+
+// v3.3.1 — apply one dose of medicine to a specific member. Lifts the
+// member's state by one tier. Logs to wagon, plays sfx, refreshes UI.
+function useMedicineOn(memberIndex) {
+  const w = currentWagon(); if (!w) return false;
+  const m = w.team[memberIndex]; if (!m || m.state === 'lost') return false;
+  if ((w.resources.medicine || 0) < 1) {
+    if (typeof showFortNote === 'function') showFortNote('No medicine left.');
+    return false;
+  }
+  const transitions = { dying: 'sick', sick: 'weakened', injured: 'weakened', weakened: 'healthy' };
+  const next = transitions[m.state];
+  if (!next) {
+    if (typeof showFortNote === 'function') showFortNote(m.name + ' does not need medicine.');
+    return false;
+  }
+  w.resources.medicine = Math.max(0, w.resources.medicine - 1);
+  if (typeof transitionMember === 'function') transitionMember(m, next, w.daysTraveled, 'treated with medicine');
+  else { m.state = next; m.state_since_day = w.daysTraveled; m.cause_of_state = 'treated with medicine'; }
+  if (typeof logToWagon === 'function') logToWagon(w, '⚕ Gave a dose of medicine to ' + m.name + '. ' + m.name + ' is now ' + next + '.');
+  if (typeof audioController !== 'undefined' && audioController.playSfx) audioController.playSfx('gain');
+  if (typeof renderResourceRibbon === 'function') renderResourceRibbon();
+  if (typeof renderTeamStrip === 'function') renderTeamStrip(w);
+  if (typeof flashPortraitForState === 'function') flashPortraitForState(m.name, next);
+  return true;
 }
 
 // Issue 11 (v2.3) — fire a 1.5s glow on a portrait when its state changes.
@@ -13582,9 +13952,8 @@ function clearNarrativeCallout() {
 }
 
 // v3.3.1 round 2 — wire tap-to-expand on the resource ribbon at mobile
-// density. The ribbon defaults to a thin single-row glance view (icons
-// + numbers only); tap toggles `.expanded` to show labels + bigger
-// numbers (wraps to two rows). Uses a single delegated listener.
+// density. (Round 3: ribbon is now hidden behind a pull-down on mobile,
+// so this listener only fires for any non-mobile compact-tier hover.)
 function _wireResourceRibbonExpand() {
   const ribbon = document.querySelector('.resource-ribbon');
   if (!ribbon || ribbon._expandWired) return;
@@ -13593,6 +13962,85 @@ function _wireResourceRibbonExpand() {
     ribbon.classList.toggle('expanded');
   });
   ribbon._expandWired = true;
+}
+
+// v3.3.1 round 3 — Resources pull-down (mobile). Tab at top of viewport
+// toggles a slide-down panel showing all resources + pace + ration in
+// detail. The panel content is rebuilt on every open from currentWagon
+// state. Closes on tab tap, overlay tap, or Escape.
+function _buildResourcesPulldownContent(w) {
+  if (!w) return '';
+  const layout = [
+    ['food',     'Food'],
+    ['water',    'Water'],
+    ['supplies', 'Supplies'],
+    ['medicine', 'Medicine'],
+    ['hides',    'Hides'],
+    ['money',    'Money'],
+    ['health',   'Health'],
+    ['morale',   'Morale']
+  ];
+  let cells = '';
+  for (const [k, lbl] of layout) {
+    const v = w.resources[k];
+    if (v == null) continue;
+    const danger  = (k === 'food' || k === 'water') && v === 0;
+    const lowHp   = (k === 'health' && v <= 2);
+    const klass   = (danger || lowHp) ? ' danger' : '';
+    let display;
+    if (typeof formatResource === 'function') display = formatResource(k, v);
+    else display = String(v);
+    cells += '<div class="pull-cell' + klass + '">' +
+      '<span class="pc-label">' + escapeHtml(lbl) + '</span>' +
+      '<span class="pc-val">' + escapeHtml(String(display)) + '</span>' +
+    '</div>';
+  }
+  if (w.wagon_hp != null) {
+    const lowHp = w.wagon_hp < 50;
+    const cls = w.wagon_hp <= 0 ? ' danger' : (lowHp ? ' warning' : '');
+    cells += '<div class="pull-cell' + cls + '">' +
+      '<span class="pc-label">Wagon HP</span>' +
+      '<span class="pc-val">' + Math.round(w.wagon_hp) + ' / 100</span>' +
+    '</div>';
+  }
+  const cal = 'Day ' + w.daysTraveled + ' — ' + (typeof dateForDay === 'function' ? dateForDay(w.daysTraveled) : '');
+  const region = (w.region || '—');
+  return (
+    '<div class="pull-section-title">' + escapeHtml(cal) + ' · ' + escapeHtml(region) + '</div>' +
+    '<div class="pull-grid">' + cells + '</div>' +
+    '<div class="pull-pace">' +
+      '<span><strong>Pace:</strong> ' + escapeHtml(w.pace || 'Steady') + '</span>' +
+      '<span><strong>Rations:</strong> ' + escapeHtml(w.ration || 'Meager') + '</span>' +
+    '</div>'
+  );
+}
+function _toggleResourcesPulldown(forceState) {
+  const tab     = $('resources-pulldown-tab');
+  const panel   = $('resources-pulldown-panel');
+  const overlay = $('resources-pulldown-overlay');
+  if (!tab || !panel || !overlay) return;
+  const willOpen = forceState != null ? forceState : !panel.classList.contains('open');
+  if (willOpen) {
+    const w = (typeof currentWagon === 'function') ? currentWagon() : null;
+    panel.innerHTML = _buildResourcesPulldownContent(w);
+    panel.classList.add('open');
+    overlay.classList.add('open');
+    tab.classList.add('open');
+  } else {
+    panel.classList.remove('open');
+    overlay.classList.remove('open');
+    tab.classList.remove('open');
+  }
+}
+function _wireResourcesPulldown() {
+  const tab     = $('resources-pulldown-tab');
+  const overlay = $('resources-pulldown-overlay');
+  if (!tab || tab._pulldownWired) return;
+  tab.addEventListener('click', () => _toggleResourcesPulldown());
+  tab.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _toggleResourcesPulldown(); } });
+  if (overlay) overlay.addEventListener('click', () => _toggleResourcesPulldown(false));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') _toggleResourcesPulldown(false); });
+  tab._pulldownWired = true;
 }
 
 function showSettingPicker(kind) {
@@ -14995,7 +15443,11 @@ function resolveRiver(w, sp) {
   const noFerry = (sp.name === 'Big Blue River' || sp.name === 'Snake River Crossing');
   const allowGuide = (sp.name === 'Snake River Crossing' || sp.name === 'Three Island Crossing' || sp.name === 'Columbia River');
 
-  let html = eventIllustration('water') + '<div class="event-title">' + escapeHtml(sp.name) + '</div>';
+  // v3.3.1 — show the river-specific historical photo when one exists
+  // (snake_river, columbia_river, platte_river, kansas_river, green_river).
+  // Falls back to the generic "water" event illustration otherwise.
+  const riverDag = historicalIllustrationFor(sp.name);
+  let html = (riverDag || eventIllustration('water')) + '<div class="event-title">' + escapeHtml(sp.name) + '</div>';
   if (sp.info) html += '<div class="event-flavor">"' + escapeHtml(sp.info) + '"</div>';
   html += '<div class="event-intro">How will you cross?</div><div class="option-buttons" id="river-opts"></div>';
   showOutcomeCallout('', html, () => {});
@@ -17754,6 +18206,7 @@ function init() {
   _syncMobileLayout();
   _wireDrawers();
   _wireResourceRibbonExpand();
+  _wireResourcesPulldown();
   // v3.0 Stage 1E — mobile behaviors. Audio gate fires for everyone (the
   // hint surfaces only on mobile); save notice + orientation hint
   // self-gate on density.
