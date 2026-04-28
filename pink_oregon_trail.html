@@ -1701,30 +1701,73 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
   .drawer-overlay { transition: none; }
 }
 
-/* Mobile interaction panel — fixed below the scene, hosts action
-   buttons and the narrative callout. Layout below in Stage 1D. */
+/* Mobile interaction panel — at desktop density it's hidden via the
+   `display: none` rule earlier; at mobile density (set below), it
+   becomes an in-flow grid row at the bottom of #screen-game so the
+   scene canvas above gets a guaranteed minimum height instead of
+   being squeezed by a fixed-position panel reserving 42vh.
+   v3.3.1 fix: was previously `position: fixed; max-height: 42vh`
+   with #screen-game reserving `padding-bottom: calc(42vh + 32px)`,
+   which left the scene canvas ~30vh and then the callout (which sits
+   absolutely inside the scene) covered most of that. New layout uses
+   natural flow: scene gets `minmax(38vh, 1fr)`, panel sizes to its
+   content (action buttons alone ~14vh; with callout up to ~55vh). */
 .mobile-interaction-panel {
-  position: fixed;
-  left: 0; right: 0; bottom: 32px; /* clear the drawer-tab strip */
   background: var(--cream);
   border-top: 2px solid var(--rose);
-  z-index: 90;
   flex-direction: column;
   gap: 8px;
   padding: 10px 12px;
-  max-height: 42vh;
-  overflow-y: auto;
 }
 
 /* v3.0 Stage 1D — main layout overrides at mobile density.
    Bottom bar hidden (children moved into drawers and interaction panel
-   by _syncMobileLayout). #screen-game reserves padding-bottom for the
-   fixed interaction panel + tab strip so the scene canvas never flows
-   under them. */
+   by _syncMobileLayout). v3.3.1 fix: panel is now an in-flow grid row
+   so the scene canvas keeps a guaranteed visible area instead of being
+   crushed by a fixed bottom panel reserving 42vh of viewport. */
 :root[data-ui-density="mobile"] .bottom-bar { display: none; }
 :root[data-ui-density="mobile"] #screen-game {
-  grid-template-rows: auto auto 1fr;
-  padding-bottom: calc(42vh + 32px);
+  grid-template-rows: auto auto minmax(38vh, 1fr) auto;
+  padding-bottom: 36px;  /* clear the 32px drawer-tab strip at bottom: 0 */
+}
+:root[data-ui-density="mobile"] .scene-canvas { min-height: 38vh; }
+:root[data-ui-density="mobile"] .mobile-interaction-panel {
+  position: static;
+  z-index: 1;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+:root[data-ui-density="mobile"] .mobile-interaction-panel.has-callout {
+  border-top-width: 3px;
+  border-top-color: var(--rose-dark);
+}
+/* v3.3.1 — when the callout routes into the mobile panel (below), the
+   absolute-positioned variant in the scene overlay should not also
+   render. Hide any leftover overlay copy at mobile density. */
+:root[data-ui-density="mobile"] .scene-overlay > .narrative-callout {
+  display: none;
+}
+/* Callout inside the mobile interaction panel — flows in-line, no
+   absolute positioning. The host wraps it. */
+:root[data-ui-density="mobile"] .mobile-callout-host {
+  display: block;
+  width: 100%;
+  margin-bottom: 6px;
+}
+:root[data-ui-density="mobile"] .mobile-callout-host .narrative-callout {
+  position: static;
+  left: auto; right: auto; bottom: auto; transform: none;
+  width: 100%; max-width: 100%; max-height: 36vh;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(184, 87, 112, 0.5);
+  box-shadow: none;
+  animation: calloutInMobile 0.32s ease;
+}
+@keyframes calloutInMobile {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 :root[data-ui-density="mobile"] .resource-ribbon {
   padding: 6px 10px; gap: 6px;
@@ -13393,15 +13436,43 @@ function renderTravelScene(w) {
 }
 
 function renderNarrativeCallout(html) {
+  // v3.3.1 — on mobile density, route the callout into the in-flow
+  // mobile-interaction-panel (above the action buttons) instead of
+  // overlaying the scene. This stops the callout from covering the
+  // already-cramped scene graphics on phones.
+  const isMobile = (typeof document !== 'undefined' && document.documentElement.getAttribute('data-ui-density') === 'mobile');
+  const panel = $('mobile-interaction-panel');
+  if (isMobile && panel) {
+    let host = panel.querySelector('.mobile-callout-host');
+    if (!host) {
+      host = el('div', { class: 'mobile-callout-host' });
+      panel.insertBefore(host, panel.firstChild);
+    }
+    host.innerHTML = '';
+    const c = el('div', { class: 'narrative-callout', html: html });
+    host.appendChild(c);
+    panel.classList.add('has-callout');
+    // Smooth-scroll the panel into view so the callout is immediately readable
+    try { host.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+    return;
+  }
+  // Desktop / non-mobile: callout overlays the scene as before
   const overlay = $('scene-overlay');
   if (!overlay) return;
-  // Clear existing callout (preserve banners briefly)
   const old = overlay.querySelector('.narrative-callout');
   if (old) old.remove();
   const c = el('div', { class: 'narrative-callout', html: html });
   overlay.appendChild(c);
 }
 function clearNarrativeCallout() {
+  // Mobile path — clear the panel host + drop the has-callout flag
+  const panel = $('mobile-interaction-panel');
+  if (panel) {
+    const host = panel.querySelector('.mobile-callout-host');
+    if (host) host.innerHTML = '';
+    panel.classList.remove('has-callout');
+  }
+  // Desktop path — clear the scene-overlay copy
   const overlay = $('scene-overlay');
   if (!overlay) return;
   const old = overlay.querySelector('.narrative-callout');
