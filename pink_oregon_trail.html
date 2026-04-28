@@ -1342,7 +1342,14 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
   text-align: center; font-size: 18px; color: var(--rose-dark);
   margin-bottom: 8px;
 }
-.minimap-fullscreen .minimap-bigwrap svg { flex: 1; width: 100%; height: 100%; }
+.minimap-fullscreen .minimap-bigwrap svg { flex: 1; width: 100%; height: 100%; cursor: grab; }
+.minimap-fullscreen .minimap-bigwrap svg.dragging { cursor: grabbing; }
+/* v3.3.1 item 15 — zoom/pan controls */
+.map-zoom-controls { position: absolute; bottom: 14px; right: 14px; display: flex; flex-direction: column; gap: 6px; z-index: 10; }
+.map-zoom-btn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--rose); background: rgba(255,255,255,0.95); color: var(--rose-dark); font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+.map-zoom-btn:hover { background: #FFF; transform: scale(1.05); }
+.map-scale-readout { position: absolute; bottom: 14px; left: 14px; background: rgba(255,255,255,0.95); border: 1px solid var(--tan); border-radius: 4px; padding: 4px 10px; font-family: Georgia, serif; font-size: 11px; color: #3D2817; z-index: 10; }
+.minimap-bigwrap { position: relative; }
 .minimap-fullscreen .minimap-bigwrap .minimap-bigclose {
   text-align: center; font-size: 12px; opacity: 0.7; margin-top: 6px; font-style: italic;
 }
@@ -1561,6 +1568,13 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
   #screen-end, #screen-end *, #print-target, #print-target * { visibility: visible; }
   #screen-end { position: absolute; left: 0; top: 0; }
   button, .audio-toggle { display: none !important; }
+  /* v3.3.1 item 13 — What You Learned page print formatting */
+  .wyl-wrap { page-break-inside: avoid; border: 1px solid #999 !important; background: #FFF !important; }
+  .wyl-wrap h2 { font-size: 14pt; margin-bottom: 4pt; }
+  .wyl-wrap h3 { font-size: 12pt; margin: 6pt 0 2pt; }
+  .leaderboard, details { display: none !important; }
+  .scoreboard { font-size: 11pt; }
+  @page { size: letter; margin: 0.6in; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
@@ -5445,6 +5459,468 @@ const GAME_DATA = {
         "Around 1900 (when railroads arrived)",
         "Around 1492 (when Columbus arrived)"
       ]
+    },
+    {
+      "title": "The Whitman Mission",
+      "category": "social",
+      "fact": "Marcus and Narcissa Whitman established a mission in 1836 near present-day Walla Walla, Washington. Narcissa was one of the first white American women to cross the Rockies. The mission helped many emigrants but ended tragically in 1847 when measles brought by the wagon trains killed many Cayuse children, leading to a violent confrontation. The Whitmans and twelve others died.",
+      "source": "National Park Service — Whitman Mission NHS",
+      "quiz_question": "Why did the Whitman Mission end in tragedy in 1847?",
+      "correct": "Measles brought by emigrants killed Cayuse children, leading to violence",
+      "wrong": [
+        "A flood washed the mission buildings away",
+        "The Whitmans abandoned it for California gold",
+        "The U.S. Army closed it down"
+      ],
+      "quiz_variants": [
+        {
+          "question": "Who was Narcissa Whitman?",
+          "correct": "One of the first white American women to cross the Rocky Mountains",
+          "wrong": [
+            "A Cayuse healer",
+            "The first female wagon master",
+            "A buffalo hunter from Missouri"
+          ]
+        },
+        {
+          "question": "What disease was brought by emigrants and devastated the Cayuse near the Whitman Mission?",
+          "correct": "Measles",
+          "wrong": [
+            "Cholera",
+            "Smallpox",
+            "Tuberculosis"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Fort Laramie — The Halfway Mark",
+      "category": "geography",
+      "fact": "Fort Laramie in present-day Wyoming was the unofficial halfway point of the Oregon Trail. By the time wagons reached Laramie they had traveled about 650 miles from Independence and had another 1,350 to go. Pioneers rested, repaired, resupplied, and wrote letters home that mail riders would carry east. Reaching Fort Laramie meant the easy part was over and the mountains lay ahead.",
+      "source": "National Park Service — Fort Laramie NHS",
+      "quiz_question": "Why was Fort Laramie called the unofficial halfway point of the Oregon Trail?",
+      "correct": "Because it sat about 650 miles from Independence — roughly half of the 2,000-mile journey",
+      "wrong": [
+        "Because pioneers turned back from there half the time",
+        "Because the U.S. Army required wagons to register there at the midpoint",
+        "Because the Pony Express turned around there"
+      ],
+      "quiz_variants": [
+        {
+          "question": "What did pioneers do at Fort Laramie?",
+          "correct": "Rested, repaired wagons, resupplied, and sent mail home",
+          "wrong": [
+            "Voted on whether to continue or return east",
+            "Picked up army escorts to Oregon",
+            "Met California-bound emigrants and traded routes"
+          ]
+        },
+        {
+          "question": "About how far had pioneers traveled when they reached Fort Laramie?",
+          "correct": "About 650 miles",
+          "wrong": [
+            "About 200 miles",
+            "About 1,500 miles",
+            "Almost the whole way"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "The Sublette Cutoff",
+      "category": "geography",
+      "fact": "The Sublette Cutoff was a shortcut west of South Pass that saved roughly 70 miles by skipping Fort Bridger. The trade-off was a brutal 50-mile dry crossing called the 'Little Colorado Desert' with no reliable water. Wagon trains debated for days whether to take it. Those who guessed right gained time. Those who guessed wrong sometimes lost oxen — or people.",
+      "source": "Oregon-California Trails Association",
+      "quiz_question": "What was the trade-off of the Sublette Cutoff?",
+      "correct": "Saved 70 miles but crossed 50 miles of waterless desert",
+      "wrong": [
+        "Saved a week but cost double in tolls",
+        "Avoided cholera but added a tall mountain pass",
+        "Faster but required Native guide payment"
+      ],
+      "quiz_variants": [
+        {
+          "question": "About how long was the dry crossing on the Sublette Cutoff?",
+          "correct": "About 50 miles with no reliable water",
+          "wrong": [
+            "About 5 miles, manageable in a half-day",
+            "About 200 miles, longer than any pioneer attempted",
+            "Only 10 miles but mostly uphill"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "South Pass — The Continental Divide",
+      "category": "geography",
+      "fact": "South Pass in present-day Wyoming is a wide, gentle saddle through the Rocky Mountains — so gentle that pioneers often crossed without realizing they had topped the Continental Divide. East of South Pass, water flows to the Atlantic. West of it, water flows to the Pacific. Pioneers used to dip their canteens in two creeks to taste water from both oceans.",
+      "source": "Bureau of Land Management — South Pass National Historic Landmark",
+      "quiz_question": "What makes South Pass important?",
+      "correct": "It is a gentle crossing of the Continental Divide in the Rocky Mountains",
+      "wrong": [
+        "It is the highest peak on the Oregon Trail",
+        "It is the longest river crossing on the trail",
+        "It is the only place where two trails meet"
+      ],
+      "quiz_variants": [
+        {
+          "question": "What is the Continental Divide?",
+          "correct": "The line where rivers begin flowing east toward the Atlantic or west toward the Pacific",
+          "wrong": [
+            "The U.S.-Canada border in the West",
+            "The line between free states and slave states",
+            "The boundary between Oregon and California"
+          ]
+        },
+        {
+          "question": "Why was South Pass surprisingly easy to cross compared to other Rocky Mountain passes?",
+          "correct": "It is a wide, gentle saddle rather than a steep peak",
+          "wrong": [
+            "The U.S. Army built a road through it",
+            "Native guides cleared a tunnel through the mountain",
+            "It was lower in elevation than the prairie"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sacagawea and Lewis & Clark",
+      "category": "native_perspective",
+      "fact": "Sacagawea, a young Lemhi Shoshone woman, traveled with Lewis and Clark from 1805 to 1806 — about 40 years before the Oregon Trail wagons rolled. She translated, identified edible plants, and her presence with a baby signaled to other tribes that the expedition came in peace. Without her, the journey might have failed. Pioneers crossing the trail walked roads she had helped open.",
+      "source": "National Park Service — Lewis & Clark NHT",
+      "quiz_question": "How did Sacagawea help the Lewis & Clark Expedition?",
+      "correct": "She translated, found edible plants, and signaled peaceful intent to other tribes",
+      "wrong": [
+        "She drew the first map of the entire route",
+        "She led every expedition meeting and made all decisions",
+        "She paid for the expedition with money from her tribe"
+      ],
+      "quiz_variants": [
+        {
+          "question": "About how many years before Oregon Trail wagons did Sacagawea travel with Lewis and Clark?",
+          "correct": "About 40 years",
+          "wrong": [
+            "About 5 years",
+            "About 100 years",
+            "About 200 years"
+          ]
+        },
+        {
+          "question": "What tribal nation was Sacagawea born into?",
+          "correct": "Lemhi Shoshone",
+          "wrong": [
+            "Lakota Sioux",
+            "Cherokee",
+            "Navajo"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "The Snake River — Treacherous Beauty",
+      "category": "geography",
+      "fact": "The Snake River in present-day Idaho was one of the most beautiful and most dangerous stretches of the Oregon Trail. The river ran in deep canyons, sometimes hundreds of feet below the trail. Pioneers could see the water but couldn't reach it. Many died of thirst within sight of the river. The Native Shoshone and Nez Perce knew the safe descent points; pioneers who hired guides survived; those who didn't, sometimes did not.",
+      "source": "BLM National Historic Trails Office",
+      "quiz_question": "Why was the Snake River dangerous despite being a major water source?",
+      "correct": "It ran through deep canyons that pioneers couldn't easily descend to reach the water",
+      "wrong": [
+        "It was poisoned by alkali for most of its length",
+        "Bandits guarded every approach to the water",
+        "Pioneers were forbidden by treaty from drinking from it"
+      ],
+      "quiz_variants": [
+        {
+          "question": "Which Native peoples helped pioneers find safe descent points on the Snake River?",
+          "correct": "The Shoshone and Nez Perce",
+          "wrong": [
+            "The Cherokee and Creek",
+            "The Iroquois and Mohawk",
+            "The Apache and Comanche"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Wagons Made for the Trail",
+      "category": "scientific",
+      "fact": "The Conestoga wagon was too heavy for the Oregon Trail. Most pioneers used a smaller 'prairie schooner' — about 10 feet long, 4 feet wide, with a canvas top stretched over hickory bows. A loaded prairie schooner weighed about 1,500 pounds and could carry another 1,500 pounds of supplies. It rode on iron-tired wooden wheels and was pulled by 4 to 6 oxen.",
+      "source": "Smithsonian National Museum of American History",
+      "quiz_question": "Why didn't pioneers use the famous Conestoga wagon on the Oregon Trail?",
+      "correct": "Conestoga wagons were too heavy; pioneers used smaller 'prairie schooners' instead",
+      "wrong": [
+        "Conestoga wagons were illegal west of Missouri",
+        "Conestoga wagons couldn't be repaired without a blacksmith",
+        "Conestoga wagons could only be pulled by horses"
+      ],
+      "quiz_variants": [
+        {
+          "question": "About how much could a prairie schooner carry in supplies?",
+          "correct": "About 1,500 pounds",
+          "wrong": [
+            "About 200 pounds",
+            "About 5,000 pounds",
+            "About 50 pounds"
+          ]
+        },
+        {
+          "question": "What animals usually pulled a prairie schooner?",
+          "correct": "4 to 6 oxen",
+          "wrong": [
+            "A single horse",
+            "Two donkeys",
+            "A team of dogs"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Why Oxen, Not Horses?",
+      "category": "scientific",
+      "fact": "Oxen pulled most Oregon Trail wagons because they were stronger, calmer, cheaper, and could eat the prairie grass that horses found unpalatable. Oxen also held up better on the long distances and were less likely to be stolen by bandits. The disadvantage: they were slow — about 2 miles per hour. A wagon train made 12 to 20 miles on a good day.",
+      "source": "Oregon-California Trails Association",
+      "quiz_question": "Why did most pioneers use oxen instead of horses to pull wagons?",
+      "correct": "Oxen were stronger, calmer, cheaper, ate prairie grass, and were less likely to be stolen",
+      "wrong": [
+        "Horses were illegal to take across the Mississippi River",
+        "The U.S. government required oxen for all wagon trains",
+        "Horses couldn't drink the water west of Independence"
+      ],
+      "quiz_variants": [
+        {
+          "question": "About how fast did an ox-pulled wagon travel?",
+          "correct": "About 2 miles per hour",
+          "wrong": [
+            "About 10 miles per hour",
+            "About half a mile per hour",
+            "About 25 miles per hour"
+          ]
+        },
+        {
+          "question": "About how many miles did a wagon train travel on a good day?",
+          "correct": "12 to 20 miles",
+          "wrong": [
+            "1 to 2 miles",
+            "50 to 80 miles",
+            "100 to 150 miles"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Women on the Trail",
+      "category": "women",
+      "fact": "Pioneer women on the Oregon Trail did most of the cooking, laundry, child care, and medical care — on top of walking the same 2,000 miles as the men. Many wrote diaries that survive today and tell us most of what we know about daily trail life. Women also drove wagons, hunted, and helped repair wheels. Several gave birth on the trail. The journey was as much theirs as anyone's.",
+      "source": "National Women's History Museum",
+      "quiz_question": "What do historians use to learn about daily life on the Oregon Trail?",
+      "correct": "The diaries kept by pioneer women",
+      "wrong": [
+        "Government surveys of every wagon train",
+        "Newspaper articles published in Oregon City",
+        "Photographs taken at every stop"
+      ],
+      "quiz_variants": [
+        {
+          "question": "What kinds of work did pioneer women do on the trail?",
+          "correct": "Cooking, laundry, child care, medical care, driving wagons, hunting, and repairs",
+          "wrong": [
+            "Only sewing and child care",
+            "Only managing money",
+            "They rode in the wagon and did not work"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Children on the Trail",
+      "category": "children",
+      "fact": "About one-third of Oregon Trail emigrants were children. Many walked the entire journey alongside the wagons, picking up buffalo chips for fires, watching younger siblings, and gathering wild fruit. Some children played a game of finding three special things on the trail every day — a bird's feather, a smooth river stone, a wildflower. Childhood on the trail was hard but not joyless.",
+      "source": "Oregon Historical Society",
+      "quiz_question": "About what fraction of Oregon Trail emigrants were children?",
+      "correct": "About one-third",
+      "wrong": [
+        "Less than one in twenty",
+        "About half",
+        "Almost none — the trail was too dangerous"
+      ],
+      "quiz_variants": [
+        {
+          "question": "What was a common chore for pioneer children on the trail?",
+          "correct": "Picking up buffalo chips for the cooking fires",
+          "wrong": [
+            "Driving the lead wagon",
+            "Hunting buffalo with rifles",
+            "Repairing the iron wagon tires"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "The Cost of Outfitting",
+      "category": "economic",
+      "fact": "Outfitting a family of four for the Oregon Trail cost about $700 to $1,000 in 1848 — the equivalent of more than two years' wages for a working family. Most pioneers were not the very poor; they were middling farmers selling everything they owned for a chance at land in Oregon. The Donation Land Claim Act later promised 320 acres to single settlers and 640 to married couples — vast wealth by the standards of crowded eastern farms.",
+      "source": "Oregon Historical Society / Donation Land Claim Act records",
+      "quiz_question": "About how much did it cost a family of four to outfit for the Oregon Trail in 1848?",
+      "correct": "About $700 to $1,000 — more than two years' wages",
+      "wrong": [
+        "About $20 — almost anyone could afford it",
+        "About $50,000 — only the wealthy could go",
+        "Free — the U.S. government paid for everything"
+      ],
+      "quiz_variants": [
+        {
+          "question": "How much land did a married couple receive under the Donation Land Claim Act?",
+          "correct": "640 acres",
+          "wrong": [
+            "40 acres",
+            "10 acres",
+            "10,000 acres"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "The Fur Trade Trails Came First",
+      "category": "historical",
+      "fact": "Before pioneers came in wagons, fur trappers and traders had walked these trails for decades. Mountain men like Jim Bridger, Jedediah Smith, and Joseph Walker mapped the rivers, the passes, and the safe water sources between 1820 and 1840. Without their knowledge, the Oregon Trail as wagon emigrants knew it would not have existed. Bridger himself founded the fort that bears his name.",
+      "source": "BLM National Historic Trails Office",
+      "quiz_question": "Who knew the Oregon Trail routes before wagon emigrants arrived?",
+      "correct": "Fur trappers and mountain men who had explored the region in the 1820s and 1830s",
+      "wrong": [
+        "U.S. Army surveyors who marked every mile",
+        "Spanish explorers from California",
+        "British traders from the Hudson's Bay Company who built the trail"
+      ],
+      "quiz_variants": [
+        {
+          "question": "Which mountain man founded a fort on the Oregon Trail that still bears his name?",
+          "correct": "Jim Bridger",
+          "wrong": [
+            "Daniel Boone",
+            "Davy Crockett",
+            "Kit Carson"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "The Letter Home",
+      "category": "social",
+      "fact": "Pioneers sent letters home from forts along the trail. Mail riders carried letters east in saddlebags, and a letter from Fort Laramie might take three to six months to reach a family in Ohio or Pennsylvania. Some letters never arrived; some arrived after the writer had reached Oregon and written again from there. Receiving a letter was an event for the whole community back east — neighbors gathered to hear the news read aloud.",
+      "source": "U.S. Postal Museum (Smithsonian)",
+      "quiz_question": "About how long did a letter from Fort Laramie take to reach the East?",
+      "correct": "Three to six months",
+      "wrong": [
+        "About one day, by Pony Express",
+        "Almost a year",
+        "Letters could not be sent from the trail"
+      ],
+      "quiz_variants": [
+        {
+          "question": "Who carried letters from forts on the Oregon Trail back east?",
+          "correct": "Mail riders on horseback",
+          "wrong": [
+            "Stagecoach companies",
+            "Telegraph operators",
+            "Express trains"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Trade Goods at the Forts",
+      "category": "economic",
+      "fact": "Fort traders charged pioneers two to ten times what supplies cost back east. A pound of flour that cost 4 cents in Independence might be 35 cents at Fort Hall. Sugar, coffee, and ammunition were similarly marked up. Pioneers learned to leave Independence well-supplied and visit forts only when desperate. A Banker on the team helped — they had cash for emergencies. A Merchant negotiated better deals.",
+      "source": "Hudson's Bay Company records / Fort Hall trade ledgers",
+      "quiz_question": "Why were supplies at trail forts so expensive?",
+      "correct": "Forts were remote, so traders charged two to ten times the eastern price",
+      "wrong": [
+        "The U.S. government taxed trail forts heavily",
+        "Forts only accepted gold, which raised the price",
+        "Native peoples controlled the price of all trail goods"
+      ],
+      "quiz_variants": [
+        {
+          "question": "Which profession helped a pioneer family negotiate better prices at fort trading posts?",
+          "correct": "A Merchant",
+          "wrong": [
+            "A Doctor",
+            "A Hunter",
+            "A Carpenter"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "The Donation Land Claim Act",
+      "category": "historical",
+      "fact": "The Donation Land Claim Act of 1850 gave free land in Oregon to settlers who farmed it for four years. A single white settler over age 18 received 320 acres; a married couple received 640 acres. The Act explicitly excluded Native peoples, Black Americans, and Hawaiians from owning land — a painful injustice woven into the very motivation that brought wagon trains west. Understanding the trail means understanding both the dream and the exclusion.",
+      "source": "Oregon Historical Society — Donation Land Claim Act records",
+      "quiz_question": "What did the Donation Land Claim Act of 1850 promise emigrants?",
+      "correct": "Free land in Oregon if they farmed it for four years",
+      "wrong": [
+        "Free passage on a steamship from Missouri",
+        "A salary from the U.S. Army for guarding the trail",
+        "Citizenship for any nationality that arrived"
+      ],
+      "quiz_variants": [
+        {
+          "question": "Who was excluded from owning land under the Donation Land Claim Act?",
+          "correct": "Native peoples, Black Americans, and Hawaiians",
+          "wrong": [
+            "Only single women under 30",
+            "Anyone born outside the United States",
+            "Nobody — the Act was open to all settlers"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Buffalo Chips for Cooking",
+      "category": "scientific",
+      "fact": "On the open prairie, where trees were rare for hundreds of miles, pioneers cooked over fires made from dried buffalo droppings — called 'buffalo chips' or 'prairie coal.' Children gathered them by the bushelful. The chips burned hot, almost smokeless, and odorless once dried by the prairie sun. Many pioneer families wrote that buffalo chips kept them alive — without that fuel, they could not have cooked or boiled water for safety.",
+      "source": "Oregon-California Trails Association",
+      "quiz_question": "What did pioneers use for fuel when there were no trees on the prairie?",
+      "correct": "Dried buffalo droppings (called buffalo chips)",
+      "wrong": [
+        "Coal they bought at trail forts",
+        "Tumbleweeds rolled into bundles",
+        "Leftover wood scraps from the wagon"
+      ],
+      "quiz_variants": [
+        {
+          "question": "What were 'prairie coal' or 'buffalo chips'?",
+          "correct": "Dried buffalo droppings used as cooking fuel",
+          "wrong": [
+            "A type of coal mined in Wyoming",
+            "Hardened mud bricks for fireplaces",
+            "Pressed prairie grass cakes"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Trail Graves",
+      "category": "historical",
+      "fact": "About 1 in 10 Oregon Trail emigrants died on the journey — roughly 30,000 people in total over the trail's main use from 1841 to 1869. Most are buried in unmarked graves along the route. Some graves can still be found today by hikers and ranchers; the Bureau of Land Management has cataloged hundreds. Each one is a story we will never fully know. The trail is, in a real sense, also a long graveyard.",
+      "source": "BLM National Historic Trails Office",
+      "quiz_question": "About how many people died on the Oregon Trail in total?",
+      "correct": "About 30,000 over the trail's main use from 1841 to 1869",
+      "wrong": [
+        "About 200",
+        "About 1 million",
+        "Almost none — modern medicine prevented most deaths"
+      ],
+      "quiz_variants": [
+        {
+          "question": "Where can Oregon Trail graves still be found today?",
+          "correct": "Unmarked along the route, cataloged by the Bureau of Land Management",
+          "wrong": [
+            "In a single national cemetery in Oregon City",
+            "Only in churchyards along the trail",
+            "All graves were moved to museums"
+          ]
+        }
+      ]
     }
   ],
   "surprise_events": [
@@ -5453,11 +5929,13 @@ const GAME_DATA = {
       "category": "campfire",
       "rarity": "rare",
       "weight": 1,
+      "superstition_class": "atmospheric",
       "intro": "A green light swims across the northern sky. Then red. Then green again, brighter.",
-      "flavor": "Aurora was rarely visible this far south, but it happened — pioneers wrote about it in journals as a sign from God, a wonder of wonders, a portent.",
+      "flavor": "Aurora was rarely visible this far south, but it happened — pioneers wrote about it in journals as a sign from God, a wonder of wonders, a portent. Modern science calls it the same name and a different cause.",
       "outcomes_default": [
         "Gain 3 morale"
       ],
+      "dyk_pairing": "The aurora is caused by charged particles from the Sun striking gases high in Earth's atmosphere. Oxygen glows green and red; nitrogen, blue and purple. The same physics that lit the prairie sky for our pioneers lights the night skies of Alaska and Norway today.",
       "narratives": {
         "default": "The whole camp stands in silence. The horses do not move. The children do not whisper. The lights ripple across the dark like cloth in water. By the time it fades, no one is the same. We will tell our grandchildren about this night."
       }
@@ -5467,6 +5945,7 @@ const GAME_DATA = {
       "category": "campfire",
       "rarity": "uncommon",
       "weight": 2,
+      "superstition_class": "atmospheric",
       "intro": "A man walks into camp at dusk with a fiddle case under his arm.",
       "flavor": "Solo travelers walking the trail were not unheard of — fiddlers, preachers, prospectors, runaways. They asked for a meal and gave what they had.",
       "outcomes_default": [
@@ -5530,14 +6009,15 @@ const GAME_DATA = {
       "category": "wildlife",
       "rarity": "very_rare",
       "weight": 1,
+      "superstition_class": "atmospheric",
       "intro": "A buffalo, separate from the herd, white as winter, watching us.",
-      "flavor": "The white buffalo is sacred to many Plains tribes — a sign of profound importance, a blessing, a warning. Pioneer journals from the 1840s and 1850s record at least three sightings.",
+      "flavor": "The white buffalo is sacred to the Lakota, Cheyenne, and other Plains nations — the embodiment of the White Buffalo Calf Woman, a teacher and bringer of the sacred pipe. Pioneer journals from the 1840s and 1850s record at least three sightings. We name what we saw; we do not pretend to know what it meant.",
       "outcomes_default": [
-        "Gain 4 morale",
-        "Gain 2 health"
+        "Gain 4 morale"
       ],
+      "dyk_pairing": "The Lakota nation traces the white buffalo back to White Buffalo Calf Woman, who taught the Lakota the sacred ceremonies and pipe. To this day, a white buffalo birth is honored across many nations.",
       "narratives": {
-        "default": "No one moves to raise a rifle. Even the children understand. We watch, the buffalo watches, and after a long quiet moment it turns and walks back into the herd. We do not speak of it for the rest of the day. But each of us feels something we don't have words for. The journey will be different from this point on."
+        "default": "No one moves to raise a rifle. Even the children understand. We watch, the buffalo watches, and after a long quiet moment it turns and walks back into the herd. We do not speak of it for the rest of the day. We carry the memory of it the rest of our lives."
       }
     },
     {
@@ -5704,11 +6184,13 @@ const GAME_DATA = {
       "category": "campfire",
       "rarity": "very_rare",
       "weight": 1,
+      "superstition_class": "atmospheric",
       "intro": "A streak of fire — green, then white — and a deep BOOM that shakes the wagon.",
       "flavor": "Meteorites were occasionally seen and even recovered by 19th century travelers. The experience was unforgettable.",
       "outcomes_default": [
         "Gain 3 morale"
       ],
+      "dyk_pairing": "The Leonid meteor shower peaks every November when Earth crosses the dust trail of comet Tempel-Tuttle. The streaks of fire are tiny grains of comet rock burning up at sixty miles above the prairie. Some of them survive to ground; pioneers occasionally found and kept them.",
       "narratives": {
         "default": "The team runs out of the wagons in the dark. Whatever it was struck not far off — somewhere over the next ridge. By dawn the air still smells faintly of ash and metal. We don't go looking. Some things are not meant to be picked up. We carry the story with us."
       }
@@ -6471,9 +6953,9 @@ const GAME_DATA = {
             "recovery_probability_with_priest": 0.4,
             "recovery_state": "sick"
           },
-          "narrative_success_with_priest": "{Priest_name} leads us in prayer beside {name}'s bedroll. By dawn the fever has broken. Some called it grace; some called it luck. We continue west.",
-          "narrative_success_without_priest": "We prayed our own prayers. By dawn the fever had broken. We continue west.",
-          "narrative_failure": "The prayers did not hold the fever back. {name} was lost in the night."
+          "narrative_success_with_priest": "{Priest_name} gathers the family at the bedside. They lead them in prayer and song through the night. {name} is held, loved, kept warm, and the wagon does not move. By morning the fever has broken. Some called it grace; some called it the gift of being still and tended.",
+          "narrative_success_without_priest": "We prayed by the bedside as the wagon rolled. We sat with {name} in turns. By dawn the fever had broken. We continue west.",
+          "narrative_failure": "We sat with {name} through the night. We held their hand. The fever was too strong. They were lost before morning."
         },
         {
           "id": "use_revival_charge",
@@ -8283,6 +8765,599 @@ const GAME_DATA = {
       "effect": "Loses that landmark's DYK card AND -1 morale",
       "narrative": "The landmark fell behind us before we even knew we were past it."
     }
+  },
+  "event_shadows_v3_3": {
+    "philosophy": "Item 10. Systems feel alive when one event raises probability of related ones. Real wagon trains experienced this — wagon damaged at river was more likely to break down on the next rough stretch; crew with one cholera case had others incubating. Per-wagon event_shadows array; each shadow is a 2-turn-window probability boost applied to a related event class. Full effect turn 1, half turn 2, gone turn 3. Multiple shadows of the same class stack additively up to a cap of x4.",
+    "shadows": [
+      {
+        "trigger_event": "wagon_damage",
+        "shadow_class": "wagon_damage",
+        "multiplier": 2,
+        "duration_turns": 2,
+        "narrative": "The wagon was tougher than we thought, but it shows the wear."
+      },
+      {
+        "trigger_event": "broken_axle",
+        "shadow_class": "wagon_damage",
+        "multiplier": 2,
+        "duration_turns": 2,
+        "narrative": "The new axle is greener than the old. We listen for trouble."
+      },
+      {
+        "trigger_event": "cholera",
+        "shadow_class": "cholera",
+        "multiplier": 3,
+        "duration_turns": 2,
+        "scope": "other_members",
+        "narrative": "Cholera spreads through dirty water — and we drink the same barrel."
+      },
+      {
+        "trigger_event": "lost_trail",
+        "shadow_class": "food_spoil",
+        "multiplier": 1.5,
+        "duration_turns": 2,
+        "narrative": "Wandering wastes everything we carry."
+      },
+      {
+        "trigger_event": "lost_trail",
+        "shadow_class": "water_spill",
+        "multiplier": 1.5,
+        "duration_turns": 2
+      },
+      {
+        "trigger_event": "river_crossing_failure",
+        "shadow_class": "wagon_damage",
+        "multiplier": 2,
+        "duration_turns": 2,
+        "narrative": "The wagon is wet through; the harness is fouled."
+      },
+      {
+        "trigger_event": "bandit_demand",
+        "shadow_class": "theft",
+        "multiplier": 3,
+        "duration_turns": 2,
+        "narrative": "Word travels among the road agents."
+      },
+      {
+        "trigger_event": "push_on_tax_oxen_refuse",
+        "shadow_class": "broken_axle",
+        "multiplier": 2,
+        "duration_turns": 2
+      },
+      {
+        "trigger_event": "buffalo_stampede",
+        "shadow_class": "wagon_damage",
+        "multiplier": 1.5,
+        "duration_turns": 2,
+        "narrative": "The wagon held but its bones are looser tonight."
+      },
+      {
+        "trigger_event": "prairie_fire",
+        "shadow_class": "lost_trail",
+        "multiplier": 2,
+        "duration_turns": 2,
+        "narrative": "The land we crossed is black ash. The trail markers are gone."
+      }
+    ],
+    "decay": "Full effect turn 1, half effect turn 2, gone turn 3",
+    "stacking_cap": 4
+  },
+  "narrative_variants_v3_3": {
+    "philosophy": "Item 9. Each major event gets 3 random narrative variants for the default case. Mechanical effect identical, story different. Replay shows different prose. Profession-modifier overrides keep their existing narratives plus 2 variants where authored.",
+    "events": {
+      "broken_wagon_wheel": [
+        "The right rear wheel splinters as we cross a stretch of rocky ground. The wagon jerks to a halt at an angle. Without a fix, we go nowhere.",
+        "An iron tire band splits with a CRACK that startles the oxen. The wheel binds and locks. The wagon stops.",
+        "We feel the wagon lurch — a spoke has shattered crossing a creek bed. The wheel wobbles and we have to stop before it falls apart entirely."
+      ],
+      "river_crossing_disaster": [
+        "The current was higher than it looked. Halfway across, the wagon tipped; a barrel of pork floated downstream and a man went under to his shoulders before we got him.",
+        "A submerged log caught the front axle and spun the wagon broadside. We lost half a day getting the wagon out and a quarter of our supplies were soaked through.",
+        "The ox at the off side stumbled in the deep water and the team lurched. We rescued the wagon but two pack mules were swept fifty yards down the bank before we could lasso them."
+      ],
+      "oxen_collapse": [
+        "The lead ox went down in the trace at noon. We unhitched the team and stood over him an hour. He did not rise. We left his bones at the edge of the trail.",
+        "The off ox had been laboring all morning. He stopped and lay down at midafternoon. By dusk the wagon master had drawn his rifle. The team is one ox lighter tonight.",
+        "Both lead oxen refused to move at dawn. We stayed in camp until past noon, watered them, rubbed them down. The off ox never stood again."
+      ],
+      "cholera_outbreak": [
+        "Sarah was well at breakfast. By noon she was vomiting. By dusk she could not lift her head. By morning the camp had dug a grave.",
+        "It came on the wind, the doctors used to say. Three of us were down by sundown. The wagon master sealed the water barrels and burned the bedding of the dead.",
+        "Cholera moves fast. The first sign was a child's stomach ache after the river crossing. By dawn three were dead. By the next sundown, two more."
+      ],
+      "food_spoilage": [
+        "Weevils in the flour barrel. Maggots in the bacon. The whole side of pork had to go in the fire. We ate hardtack for three days.",
+        "A leak in the wagon canvas had let the rain in. By the time we noticed, the flour was paste and the sugar a brown ruin.",
+        "A skunk got into the food chest while we slept. We salvaged what we could. The smell traveled with the wagon for a week."
+      ],
+      "failed_hunt": [
+        "The Hunter came back at dusk with an empty game bag. The deer had vanished from the country we were crossing. We ate beans tonight.",
+        "Two days of stalking and no shot. The Hunter spent the third day in camp, sharpening knives and saying nothing.",
+        "The buffalo herd we had spotted moved off in the night. The Hunter came back with one rabbit and a long apology."
+      ],
+      "severe_storm": [
+        "The clouds had been building since noon. The first drops were the size of pebbles. By dark the wagon canvas was leaking in five places and the children were crying.",
+        "Thunder so loud the iron pots rang on their hooks. Lightning every few seconds. The horses panicked and broke their picket line.",
+        "Rain for thirty hours straight. The trail became a river. We sat in the wagon and watched the water rise to the floorboards."
+      ],
+      "snake_bite_classic": [
+        "He was gathering firewood at dusk and reached blindly into a brush pile. The snake struck him on the wrist. The fang marks were deep.",
+        "She stepped over a fallen log and didn't see what was coiled on the other side. The strike came at her ankle. We carried her back to camp at a run.",
+        "The boy had been told to look before he reached. He had not. The rattlesnake's strike caught him on the back of the hand. The doctor worked over him through the night."
+      ],
+      "thief_in_camp": [
+        "The strongbox had been nailed to the wagon bed. By dawn, the nails were still there but the box was empty. Someone in this train.",
+        "Two horses missing from the picket line. The picket pins were undisturbed. Someone had walked them out, slow and quiet.",
+        "Coffee, salt, and a side of bacon vanished from the wagon between dusk and dawn. No tracks, no witnesses. The trail brings desperate people."
+      ],
+      "contaminated_water": [
+        "The spring tasted clean. By midday three of us were doubled over with the gripes. We boiled all our water for the rest of the week.",
+        "The creek where we filled our barrels at evening had a dead deer in it upstream. We did not see it until the morning.",
+        "The water at the seep was warm and faintly sweet. By moonrise, half the camp was sick. The Doctor said it was probably alkali."
+      ],
+      "lost_on_trail": [
+        "The trail forked at a rocky outcrop. We chose left. By noon we were in a country we did not recognize. We turned back.",
+        "Heavy rain the night before had washed out the wagon ruts. We followed what we thought was the trail; it ended at a box canyon.",
+        "The wagon master had grown overconfident. He led us by what he called a shortcut. By the third day we admitted we were lost."
+      ]
+    }
+  },
+  "calamities_v3_3": {
+    "philosophy": "v3.2 had 11 daily shock types. After a handful of plays, kids saw the bad luck. v3.3 brings the catalog to 25 with 14 new entries and 3 narrative variants each. Cumulative daily shock probability across all 25 entries ~0.65-0.80. Most days have something; quiet days exist. Each new shock has a profession protection where appropriate — pioneers who prepared had advantages, but residual luck still mattered.",
+    "shocks": {
+      "lightning_strike": {
+        "probability": 0.02,
+        "effect": "1 member dying, oxen panic (-2 movement next turn)",
+        "protections": [
+          "Scout"
+        ],
+        "escape_p": 0.15,
+        "narratives": [
+          "A blue-white flash. The thunder is the same instant. The lead ox screams and bolts; the team scatters. We find one of our own face-down in the wet grass.",
+          "The strike came so close the air smelled of copper and burned hair. The wagon canvas glowed for an instant. We did not all rise from where we had thrown ourselves down.",
+          "Lightning split the cottonwood at the edge of camp clean down the trunk. One of our number had been sitting beneath it. The bark was still smoking when we reached them."
+        ]
+      },
+      "saleratus_poisoning": {
+        "probability": 0.03,
+        "effect": "If team forages without Cook/Doctor, 1 member sick",
+        "protections": [
+          "Cook",
+          "Doctor"
+        ],
+        "escape_p": 0.05,
+        "narratives": [
+          "The white powder we had taken for baking soda was something else entirely. By midday, three of us were doubled over in the brush.",
+          "The crusted patches at the spring tasted clean enough. We were wrong. The cramps came before the moon was up.",
+          "Without anyone to read the soil, we used what we found. The fever followed at dawn."
+        ]
+      },
+      "hailstorm": {
+        "probability": 0.04,
+        "effect": "wagon_hp -10, food -8 lbs",
+        "protections": [
+          "Carpenter"
+        ],
+        "escape_p": 0.05,
+        "narratives": [
+          "Hailstones the size of hen's eggs hammered the canvas to ribbons in five minutes. Flour bags split open on the wagon bed. The oxen ran themselves bloody at the picket line.",
+          "We heard it on the wind before we saw it — a hissing roar that became a wall of white ice. By the time it passed, the wagon top was shredded and the spare flour was paste.",
+          "The first stones drove us under the wagon. The big ones came after, denting the iron tires and breaking a lantern. Sarah crawled out with a welt on her cheek the size of a coin."
+        ]
+      },
+      "snake_bite": {
+        "probability": 0.04,
+        "effect": "1 member injured",
+        "protections": [
+          "Doctor",
+          "Native Guide"
+        ],
+        "escape_p": 0.12,
+        "narratives": [
+          "The rattler was coiled in the long grass beside the wagon wheel. By the time we heard the buzz, the strike had landed.",
+          "He thought it was a stick. The fangs left two neat punctures above his ankle. The leg swelled within the hour.",
+          "She bent to draw water from the seep and the snake came out of the rocks like a whip. We carried her back to the wagon at a dead run."
+        ]
+      },
+      "sunstroke": {
+        "probability": 0.05,
+        "effect": "If water < 10 gal, 1 random member to weakened",
+        "protections": [
+          "Scout"
+        ],
+        "escape_p": 0.05,
+        "narratives": [
+          "The boy had been walking beside the wagon all morning without his hat. By noon he could not say his own name.",
+          "She fell where she stood, in the alkali dust, with the sun straight overhead. We poured the last cup of water on her face and prayed.",
+          "The heat was something we had no word for back east. By midday a man's footsteps would weave; by afternoon he would crumple."
+        ]
+      },
+      "gun_accident": {
+        "probability": 0.02,
+        "effect": "1 member injured (kids playing with rifles)",
+        "protections": [
+          "Hunter",
+          "Cowboy",
+          "Trapper"
+        ],
+        "escape_p": 0.05,
+        "narratives": [
+          "The eldest had been told to stay clear of the rifle by the wagon seat. He did not. The shot went through the canvas and his own shoulder.",
+          "She was cleaning the muzzle of the rifle when it discharged. The ball cut a furrow across her forearm. The flash burned her sleeve to ash.",
+          "A dropped rifle on a rocky descent will sometimes fire. This one did. The ball passed through the wagon bonnet and grazed a man's neck on the other side."
+        ]
+      },
+      "alkaline_water": {
+        "probability": 0.04,
+        "effect": "1 ox dead = movement -1 permanent",
+        "protections": [
+          "Native Guide",
+          "Scout"
+        ],
+        "escape_p": 0.05,
+        "narratives": [
+          "The water at the seep was clear and cold. By morning the off-side ox lay dead in the trace, his belly swollen, his tongue black.",
+          "We did not know to look for the white crust at the spring's edge. The lead ox drank his fill at dusk; by sunrise he was past saving.",
+          "Alkali water kills slow and certain. The ox we lost at the seep had walked from Missouri without complaint. He died sixty miles from green grass."
+        ]
+      },
+      "prairie_fire": {
+        "probability": 0.025,
+        "effect": "If region is plains, food -15, wagon_hp -20",
+        "protections": [
+          "Cowboy"
+        ],
+        "escape_p": 0.05,
+        "narratives": [
+          "We saw the smoke at the horizon at noon. By dusk the line of fire was a mile wide and closing on us with the wind. We threw our gear into the wagon and drove the team straight through a creek bed.",
+          "The grass was so dry it caught from a single ember. By the time we smelled smoke the wagon's south side was already blistering.",
+          "A burnt-over country is what they call it after. The fire passed in less than an hour and left us standing in ash up to our boot tops."
+        ]
+      },
+      "buffalo_stampede": {
+        "probability": 0.02,
+        "effect": "wagon_hp -25, possibly 1 member injured",
+        "protections": [
+          "Hunter",
+          "Cowboy"
+        ],
+        "escape_p": 0.08,
+        "narratives": [
+          "We felt them in the ground before we saw them — a pulse like distant thunder. The herd came over the ridge in a brown river and ran straight through camp.",
+          "The buffalo did not see us until they were on us. The wagon tipped on its side; one of the children was knocked clean off her feet.",
+          "Five thousand head of cattle, panicked, in a single wave. The wagon held. The wagon tongue did not. We were two days mending."
+        ]
+      },
+      "tornado": {
+        "probability": 0.01,
+        "effect": "wagon_hp -40, 1 member injured",
+        "protections": [],
+        "escape_p": 0.1,
+        "narratives": [
+          "The funnel came from a green sky. We had time to drag the children into a creek bed and lie flat. The wagon was three hundred yards away when the tornado found it.",
+          "We watched it cross the prairie like a black finger. We watched it turn toward us. We watched it pick up the canvas like a kerchief and tear it in two.",
+          "A wind that took the breath out of you. The wagon was on its side when we crawled out from under the wash bank. Half our supplies were in the tall grass a quarter-mile downwind."
+        ]
+      },
+      "quicksand": {
+        "probability": 0.015,
+        "effect": "Forced 1-day stop, supplies -2",
+        "protections": [
+          "Scout"
+        ],
+        "escape_p": 0.05,
+        "narratives": [
+          "The river bottom looked firm. The lead ox went down to his belly in three steps. We spent the day with ropes and planks and prayer.",
+          "The sand at the ford was wet but quiet. The wagon was halfway across when the off wheel sank to the hub.",
+          "We lost two crates of flour and a barrel of pork before we got the wagon free. The day was gone before the wheels were dry."
+        ]
+      },
+      "lost_child": {
+        "probability": 0.015,
+        "effect": "Forced 1-day stop, search; 80% found, 20% lost",
+        "protections": [
+          "Native Guide",
+          "Scout"
+        ],
+        "escape_p": 0.05,
+        "narratives": [
+          "She was beside the wagon at the noon halt. She was not at the dusk camp. We searched until the moon set, calling her name across the swale.",
+          "He had wandered ahead chasing a prairie dog. The trail forked twice between him and us. We found him at sunrise, asleep in a cottonwood hollow, scratched but whole.",
+          "The youngest had a habit of falling behind. This time she did not catch up. We found her two miles back, sitting in the trail with a doll in her lap, weeping in silence."
+        ]
+      },
+      "ferry_rope_snap": {
+        "probability": 0.01,
+        "effect": "If on river crossing via ferry, 1 member possibly drowning",
+        "protections": [
+          "Carpenter"
+        ],
+        "escape_p": 0.05,
+        "narratives": [
+          "The hawser parted with a crack like a rifle shot. The ferry swung downstream broadside; one of our number went over the rail before we could grab him.",
+          "The frayed line gave at the worst moment — mid-crossing, the current at full pace. The ferry struck a sandbar and tilted. A man went under and did not surface for a long time.",
+          "The ropes had been showing wear since Fort Laramie. We thought one more crossing. We were wrong."
+        ]
+      },
+      "powder_keg_explosion": {
+        "probability": 0.005,
+        "effect": "wagon_hp -30, 1 member dying",
+        "protections": [],
+        "escape_p": 0.05,
+        "narratives": [
+          "A spark from the cookfire found the keg. The blast threw the wagon onto its side and sent fire across the canvas in two seconds.",
+          "We had told the boy to stay away from the lantern by the powder. He did not. The flash blew out the wagon's tail panel and burned three of us before we cleared the bed.",
+          "The keg had been wedged near the iron stove for warmth in the cold nights. Warmth and powder do not keep company well. The blast was heard a half-mile down the trail."
+        ]
+      },
+      "tooth_abscess": {
+        "probability": 0.04,
+        "effect": "1 member to weakened, recoverable",
+        "protections": [
+          "Doctor"
+        ],
+        "escape_p": 0.05,
+        "narratives": [
+          "Her jaw had ached for three days. By the fourth morning the swelling closed her left eye and the fever started.",
+          "He could not chew. He could not sleep. The pain was worse than the cholera he had survived at Fort Kearny.",
+          "A bad tooth on the trail is a bad tooth indeed. By the time the swelling went down he had lost nine pounds and three days of travel."
+        ]
+      }
+    }
+  },
+  "fortunes_v3_3": {
+    "philosophy": "v3.2 had 16 surprise events, mostly atmospheric. Real Oregon Trail pioneers had luck too. v3.3 brings the catalog to 35-40 with 24 new entries spanning four categories: help_from_people, nature_gives_back, timing_milestones, atmospheric_superstition. Calibrated to ~1 surprise per 2.5 turns; at least 3 fortune events per Short trail and 6 per Extended.",
+    "fortunes": [
+      {
+        "name": "Native Trade for Salmon",
+        "category": "help_from_people",
+        "weight": 3,
+        "effect": "+10 lbs food",
+        "narratives": [
+          "Three Cayuse riders met us at the river bend with strings of fresh salmon over their saddles. We traded a brass kettle for ten fine fish. They smiled at the children and rode on.",
+          "An elder of the Walla Walla people held up four salmon and pointed at our spare bridle. The trade was made by gestures and goodwill. We ate well that night.",
+          "The Yakama family at the salmon falls would not take coin. They wanted iron — a knife, a needle, a length of wire. We gave what we had and carried away food for a week."
+        ]
+      },
+      {
+        "name": "Native Trade for Horses",
+        "category": "help_from_people",
+        "weight": 2,
+        "effect": "+1 movement permanent, -3 money or -2 hides",
+        "narratives": [
+          "The Shoshone band at the green river had three pony horses to spare. The wagon master traded our two best buffalo hides for one. The new pony pulled steadier than any ox.",
+          "A Nez Perce trader walked the line of our wagons with a paint mare on a lead. She was worth twice what he asked. We paid in coin and shook hands twice.",
+          "We met the Crow at the headwaters. Their horses are the finest on the plains. We left them three dollars lighter and a horse heavier."
+        ]
+      },
+      {
+        "name": "Friendly Mountain Man with Map",
+        "category": "help_from_people",
+        "weight": 2,
+        "effect": "Removes next 'lost trail' shock",
+        "narratives": [
+          "He had been trapping these mountains for twenty years. He drew us a map on the back of a hide with a piece of charcoal. The shortcut he showed us saved us a day at Burnt River.",
+          "An old trapper rode into camp at dusk on a sorrel mule. He shared our supper. He left at dawn with a sketch of the trail ahead pressed into our hands.",
+          "He said his name was Smith but everyone here knew him by another. He marked the safe ford with a circle and the bad water with a cross. We followed his map and never lost the trail."
+        ]
+      },
+      {
+        "name": "Fellow Emigrants Share Tools",
+        "category": "help_from_people",
+        "weight": 3,
+        "effect": "-1 wagon damage on next event",
+        "narratives": [
+          "The Missourians camped beside us at Soda Springs were carrying spare iron tires. They lent us one for a half day's labor splitting their firewood. We rolled out with a stronger wagon than we came in.",
+          "An Ohio family at the next ford had a full blacksmith's kit. The father spent an afternoon tightening every bolt in our wagon. He would take no payment.",
+          "Three wagons from Illinois traveled with us for a week. We shared tools, food, and watch duties. The wagon was steadier for the whole stretch."
+        ]
+      },
+      {
+        "name": "Fort Doctor Cheap Visit",
+        "category": "help_from_people",
+        "weight": 2,
+        "effect": "$1 visit revives 1 weakened member",
+        "narratives": [
+          "The fort surgeon at Laramie took one silver dollar for the visit. He bled the fever out of Sarah by morning and asked nothing more. A rare kindness.",
+          "The young doctor at Fort Hall had been an army medic. He worked for hours over the boy and charged us only what we could spare.",
+          "An old Whitman-trained physician at Fort Boise saw to two of our weakened in the same afternoon. Two coins for two souls. The trail can yet be kind."
+        ]
+      },
+      {
+        "name": "Fort Blacksmith Barters",
+        "category": "help_from_people",
+        "weight": 2,
+        "effect": "-1 wagon damage, -2 hides instead of -3 money",
+        "narratives": [
+          "The smith at Fort Bridger took two buffalo hides instead of cash for the wheel repair. Hides he could send east; coin he could not.",
+          "The Fort Hall blacksmith preferred trade. We left him a winter coat and a length of canvas. He left us a wheel as good as new.",
+          "An honest smith at Fort Boise looked over our hide stack, picked the two best, and re-rimmed both rear wheels for the price."
+        ]
+      },
+      {
+        "name": "Missionary Holds Healing Service",
+        "category": "help_from_people",
+        "weight": 1,
+        "effect": "With Priest +0.10 recovery on next dying intervention; without, morale +1",
+        "narratives": [
+          "A Methodist circuit rider had set up tent camp at the river. He held service at sundown. The whole camp came. The singing carried half a mile in the still air.",
+          "The Whitman station mission held a prayer service for the trail-weary. Sarah, who had been failing, sat upright through the whole hour and asked for water afterward.",
+          "Father Demers traveled west with us for two days. He prayed over the sick at every stop. By the time he turned back, two who had been failing were standing again."
+        ]
+      },
+      {
+        "name": "Eastbound Traveler with News",
+        "category": "help_from_people",
+        "weight": 3,
+        "effect": "Free DYK card, +1 morale",
+        "narratives": [
+          "A westbound rider who had turned back rode into camp with a sack of mail and a bundle of newspapers. We sat by firelight reading news from St. Louis four months stale and felt nearly home.",
+          "The mail rider from Oregon City passed at noon. He had a letter for nobody we knew but he carried news of the trail ahead, fresh as morning bread.",
+          "Two trappers headed back east shared their fire and their stories. Both had known a man who had crossed before us. We learned more in one evening than we had in a week of guessing."
+        ]
+      },
+      {
+        "name": "Discarded Cache from Earlier Train",
+        "category": "help_from_people",
+        "weight": 3,
+        "effect": "+5 lbs food, +2 supplies, +1 ammo",
+        "narratives": [
+          "Behind a rock outcrop near the trail: a cache covered with a blanket. Salt pork, flour, a tin of ammunition, three good cookpots. Whoever left them had lightened their load. We did not waste their leavings.",
+          "A pile of stores beneath a juniper tree, marked with a stick driven upright. Earlier travelers had decided they could not carry it all. We carried what we could and blessed them.",
+          "A hidden cache near Independence Rock — flour, supplies, a fine Bowie knife. The note tucked under the lid said only 'God speed.' We kept the note and took what we needed."
+        ]
+      },
+      {
+        "name": "Wagon Master Joins Train",
+        "category": "help_from_people",
+        "weight": 2,
+        "effect": "+0.05 to all profession protection rolls for 5 turns",
+        "narratives": [
+          "An experienced wagon master who had crossed twice before fell in with our train at Fort Kearny. His advice on water and grass saved us a dozen errors over the next week.",
+          "A grizzled trail veteran in a black coat asked to join our train. He had led three crossings and lost no one. We were better for his counsel every day he rode with us.",
+          "The wagon master we had hired at Independence had quit at the Big Blue. The replacement we picked up at Fort Laramie knew the trail well enough to find every spring and avoid every alkali bog."
+        ]
+      },
+      {
+        "name": "Letter from Home Waiting at Fort",
+        "category": "help_from_people",
+        "weight": 2,
+        "effect": "+2 morale",
+        "narratives": [
+          "Two letters waiting at the fort post — one in mother's hand, one in sister Anne's. We read them both aloud at the fire. Half the camp wept. Half the camp wrote replies that night.",
+          "A letter at Fort Hall, four months old, from family back in Ohio. The news was old; the comfort was fresh. We tucked it into the family Bible and pressed on.",
+          "The fort sutler had been holding our mail for six weeks. Three letters and a small packet from grandmother. We did not open the packet until Christmas, six months on the trail."
+        ]
+      },
+      {
+        "name": "Bumper Buffalo Herd",
+        "category": "nature_gives_back",
+        "weight": 2,
+        "effect": "+25 lbs food on next Hunt",
+        "narratives": [
+          "The herd we struck was so large we counted by the acre, not the head. Our hunters dropped two cows in the first hour. Meat for two weeks, hides for a winter.",
+          "A buffalo herd a mile wide moved past our camp at evening. The hunters were waiting at first light. We dressed two carcasses by sundown and salted what we could.",
+          "We had not seen buffalo in six days. The herd that crossed our path on the seventh was uncountable. We took what we needed and let the rest go on."
+        ]
+      },
+      {
+        "name": "Soda Springs Carbonation",
+        "category": "nature_gives_back",
+        "weight": 1,
+        "effect": "+1 morale, atmospheric",
+        "narratives": [
+          "The water at the springs bubbled like cider straight from the rock. The children would not stop drinking it. Even the oxen tossed their heads at the strange tingle on their tongues."
+        ]
+      },
+      {
+        "name": "Snake River Salmon Run",
+        "category": "nature_gives_back",
+        "weight": 2,
+        "effect": "+15 lbs food",
+        "narratives": [
+          "The salmon were so thick at the falls a man could have walked across on their backs. We borrowed nets from the Nez Perce and pulled out enough for a week.",
+          "Salmon running so dense the river itself looked silver-flecked. We speared what we could, smoked the rest over green willow.",
+          "The Snake River salmon run was at its peak the day we arrived. The fish were as long as a man's arm. We ate well and tucked away salt-cured fillets for the days to come."
+        ]
+      },
+      {
+        "name": "Plum and Berry Season",
+        "category": "nature_gives_back",
+        "weight": 2,
+        "effect": "+5 lbs food, no Hunter needed",
+        "narratives": [
+          "The wild plum thickets along the Platte were heavy with fruit. The children picked baskets full. We ate plum pie that night for the first time since Independence.",
+          "A grove of chokecherry, gooseberry, and wild plum at the river bend. The whole camp took an hour with baskets and pails. We had pie filling for a month.",
+          "The June berry was just at peak. We picked four buckets in an afternoon. Flapjacks with berries that night — the children's faces purple at the corners."
+        ]
+      },
+      {
+        "name": "Camas Root Foraging",
+        "category": "nature_gives_back",
+        "weight": 1,
+        "effect": "+3 lbs food, +1 morale",
+        "narratives": [
+          "The camas meadow was bright blue with bloom. A Cayuse woman showed us how to dig the bulbs and bake them in a pit. They tasted like sweet chestnut and lasted three days."
+        ]
+      },
+      {
+        "name": "Wild Horses Worth Trading",
+        "category": "nature_gives_back",
+        "weight": 1,
+        "effect": "+3 hides equivalent",
+        "narratives": [
+          "We came on a small band of mustangs at a watering hole. The cowboy among us roped a young colt without trouble. The colt would fetch a price at any fort west of here."
+        ]
+      },
+      {
+        "name": "Antelope Hunt Success",
+        "category": "nature_gives_back",
+        "weight": 2,
+        "effect": "+18 lbs food, +1 hide, requires Hunter",
+        "narratives": [
+          "The antelope crossed our line of sight at full speed. The Hunter took the lead doe with a single shot at three hundred yards. The whole camp ate fresh meat that night.",
+          "Pronghorn at the prairie's edge — a herd of forty. The Hunter laid down his bedroll, set up the rifle on a low rock, and took two before they scattered.",
+          "An antelope hunt at first light. The Hunter's dog flushed them from the sage and we picked up a yearling at fifty yards. Tender as veal."
+        ]
+      },
+      {
+        "name": "Calm Low-Water River Crossing",
+        "category": "nature_gives_back",
+        "weight": 2,
+        "effect": "Next river crossing safe automatically",
+        "narratives": [
+          "The river was running so low we crossed at a walk. The wagon hardly wet its axles. We reached the far bank dry and laughing.",
+          "We arrived at the ford on the lowest day of the season. The current was a hand's breadth deep at midstream. The crossing took twenty minutes and not a barrel was lost.",
+          "A drought year in the high country meant the river was nearly a creek. We rolled across without unhitching."
+        ]
+      },
+      {
+        "name": "Independence Rock by July 4th",
+        "category": "timing_milestones",
+        "weight": 1,
+        "effect": "+2 morale",
+        "narratives": [
+          "We reached Independence Rock on the Fourth of July, just as the trail wisdom promised. The whole train carved their names into the granite that afternoon. We were on time."
+        ]
+      },
+      {
+        "name": "Mild Weather All Summer",
+        "category": "timing_milestones",
+        "weight": 1,
+        "effect": "Next 5 turns no weather shocks",
+        "narratives": [
+          "The summer of '48 was kind. No prairie thunderstorm worth mentioning, no hail, no killing heat. The oxen kept their flesh; the children kept their spirits."
+        ]
+      },
+      {
+        "name": "Reunion with Old Friend",
+        "category": "timing_milestones",
+        "weight": 1,
+        "effect": "+1 morale, +1 free DYK",
+        "narratives": [
+          "An old neighbor from back east had crossed two years before. He was at the fort, prosperous now, and stood drinks for the whole train. We talked into the night."
+        ]
+      },
+      {
+        "name": "Baby Born on the Trail",
+        "category": "timing_milestones",
+        "weight": 1,
+        "effect": "+3 morale, family-name immortalization in journal",
+        "narratives": [
+          "Mrs. Hawkins' baby came at three in the morning, beside the wagon, by lamplight. A girl, healthy and loud. They named her after the river: Platte. She rode the rest of the way in a sling on her mother's chest."
+        ]
+      },
+      {
+        "name": "Rainbow over Independence Rock",
+        "category": "atmospheric_superstition",
+        "weight": 1,
+        "superstition_class": "atmospheric",
+        "effect": "+1 morale only",
+        "narratives": [
+          "A rainbow arched clean over the granite dome at sunrise. Half the camp stopped what they were doing to look. The other half kept loading the wagon, but they all looked too."
+        ]
+      }
+    ]
   },
   "personality_biases": {
     "philosophy": "Lightweight bridge toward agent-based architecture without rebuilding the engine. Each member gets 5 hidden traits at character creation. Traits modify that member's behavior in stochastic rolls. Players see traits as flavor descriptors on the character card.",
@@ -11530,12 +12605,148 @@ function showMinimapFullscreen() {
   const overlay = el('div', { class: 'minimap-fullscreen' });
   const wrap = el('div', { class: 'minimap-bigwrap' });
   wrap.innerHTML = '<div class="minimap-bigtitle">The Oregon Trail</div>' +
-                   '<svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet">' +
+                   '<svg id="map-zoom-svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet">' +
                    _buildHistoricalMapSvgBody(currentWagon()) + '</svg>' +
-                   '<div class="minimap-bigclose">Click anywhere to close.</div>';
+                   '<div class="map-scale-readout" id="map-scale-readout">1 inch ≈ 80 miles</div>' +
+                   '<div class="map-zoom-controls">' +
+                     '<button class="map-zoom-btn" id="map-zoom-in"     title="Zoom in">+</button>' +
+                     '<button class="map-zoom-btn" id="map-zoom-out"    title="Zoom out">−</button>' +
+                     '<button class="map-zoom-btn" id="map-zoom-center" title="Center on my wagon" style="font-size:14px;">⊕</button>' +
+                     '<button class="map-zoom-btn" id="map-zoom-reset"  title="Reset view"  style="font-size:11px;">1×</button>' +
+                   '</div>' +
+                   '<div class="minimap-bigclose">Click outside the map to close.</div>';
   overlay.appendChild(wrap);
-  overlay.addEventListener('click', () => overlay.remove());
+  // Click on overlay (outside wrap) closes; clicks on wrap don't close
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
+  // v3.3.1 item 15 — wire MapZoomController to the SVG
+  v33WireMapZoom(wrap, currentWagon());
+}
+
+// v3.3.1 item 15 — Map zoom/pan controller. Drives a single SVG via
+// viewBox manipulation. Zoom 1×-4×; pan via drag; pinch on touch; scroll
+// wheel zoom centered on cursor; +/- buttons; center-on-wagon button;
+// scale indicator updates with zoom.
+function v33WireMapZoom(wrapEl, activeWagon) {
+  const svg = wrapEl.querySelector('#map-zoom-svg');
+  if (!svg) return;
+  const baseW = 800, baseH = 500;
+  const state = { zoom: 1.0, panX: 0, panY: 0 };
+  const updateView = () => {
+    const w = baseW / state.zoom, h = baseH / state.zoom;
+    let x = (baseW - w) / 2 + state.panX;
+    let y = (baseH - h) / 2 + state.panY;
+    // Clamp pan so we don't lose the trail off the edge
+    x = Math.max(0, Math.min(baseW - w, x));
+    y = Math.max(0, Math.min(baseH - h, y));
+    svg.setAttribute('viewBox', x + ' ' + y + ' ' + w + ' ' + h);
+    // Update scale readout — at 1×, ~80 miles/in; at 4×, ~20 miles/in
+    const readout = wrapEl.querySelector('#map-scale-readout');
+    if (readout) readout.textContent = '1 inch ≈ ' + Math.round(80 / state.zoom) + ' miles';
+    // Inverse-scale label font sizes — labels stay readable at all zooms
+    const labels = svg.querySelectorAll('text');
+    labels.forEach(t => {
+      const baseSize = parseFloat(t.getAttribute('data-base-size') || t.getAttribute('font-size') || '11');
+      t.setAttribute('data-base-size', baseSize);
+      const newSize = Math.max(8, Math.min(18, baseSize / Math.sqrt(state.zoom)));
+      t.setAttribute('font-size', newSize);
+    });
+  };
+  const setZoom = (newZoom, focusX, focusY) => {
+    newZoom = Math.max(1.0, Math.min(4.0, newZoom));
+    if (focusX != null && focusY != null) {
+      // Adjust pan so focus point stays under cursor
+      const oldVB = svg.getAttribute('viewBox').split(' ').map(parseFloat);
+      const sx = oldVB[0] + (focusX / svg.clientWidth) * oldVB[2];
+      const sy = oldVB[1] + (focusY / svg.clientHeight) * oldVB[3];
+      state.zoom = newZoom;
+      const newW = baseW / newZoom, newH = baseH / newZoom;
+      state.panX = sx - newW / 2 - (baseW - newW) / 2;
+      state.panY = sy - newH / 2 - (baseH - newH) / 2;
+    } else {
+      state.zoom = newZoom;
+    }
+    updateView();
+  };
+  // Buttons
+  wrapEl.querySelector('#map-zoom-in').addEventListener('click',  (e) => { e.stopPropagation(); setZoom(state.zoom * 1.4); });
+  wrapEl.querySelector('#map-zoom-out').addEventListener('click', (e) => { e.stopPropagation(); setZoom(state.zoom / 1.4); });
+  wrapEl.querySelector('#map-zoom-reset').addEventListener('click', (e) => { e.stopPropagation(); state.zoom = 1; state.panX = 0; state.panY = 0; updateView(); });
+  // Center on active wagon at 2.5x
+  wrapEl.querySelector('#map-zoom-center').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const w = activeWagon || (gameState && gameState.wagons && gameState.wagons[0]);
+    if (!w) return;
+    const trail = GAME_DATA.trails[gameState.trailLength];
+    const total = trail.length;
+    const frac = total <= 1 ? 0 : Math.min(1, Math.max(0, (w.position - 1) / (total - 1)));
+    const p = _trailPointAtFraction(frac);
+    state.zoom = 2.5;
+    const newW = baseW / 2.5, newH = baseH / 2.5;
+    state.panX = p.x - newW / 2 - (baseW - newW) / 2;
+    state.panY = p.y - newH / 2 - (baseH - newH) / 2;
+    updateView();
+  });
+  // Scroll-wheel zoom (centered on cursor)
+  svg.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const rect = svg.getBoundingClientRect();
+    const fx = e.clientX - rect.left, fy = e.clientY - rect.top;
+    const factor = e.deltaY > 0 ? 1 / 1.2 : 1.2;
+    setZoom(state.zoom * factor, fx, fy);
+  }, { passive: false });
+  // Drag-to-pan
+  let dragging = false, dragStartX = 0, dragStartY = 0, panStartX = 0, panStartY = 0;
+  svg.addEventListener('mousedown', (e) => {
+    dragging = true; svg.classList.add('dragging');
+    dragStartX = e.clientX; dragStartY = e.clientY;
+    panStartX = state.panX; panStartY = state.panY;
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    const dx = (e.clientX - dragStartX) / svg.clientWidth * (baseW / state.zoom);
+    const dy = (e.clientY - dragStartY) / svg.clientHeight * (baseH / state.zoom);
+    state.panX = panStartX - dx; state.panY = panStartY - dy;
+    updateView();
+  });
+  window.addEventListener('mouseup', () => { dragging = false; svg.classList.remove('dragging'); });
+  // Pinch-to-zoom (touch)
+  let lastDist = 0;
+  svg.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastDist = Math.sqrt(dx * dx + dy * dy);
+    } else if (e.touches.length === 1) {
+      dragging = true;
+      dragStartX = e.touches[0].clientX; dragStartY = e.touches[0].clientY;
+      panStartX = state.panX; panStartY = state.panY;
+    }
+  });
+  svg.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (lastDist > 0) {
+        const rect = svg.getBoundingClientRect();
+        const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+        const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+        setZoom(state.zoom * (dist / lastDist), cx, cy);
+      }
+      lastDist = dist;
+      e.preventDefault();
+    } else if (e.touches.length === 1 && dragging) {
+      const tx = e.touches[0].clientX, ty = e.touches[0].clientY;
+      const dx = (tx - dragStartX) / svg.clientWidth * (baseW / state.zoom);
+      const dy = (ty - dragStartY) / svg.clientHeight * (baseH / state.zoom);
+      state.panX = panStartX - dx; state.panY = panStartY - dy;
+      updateView();
+    }
+  }, { passive: false });
+  svg.addEventListener('touchend', () => { dragging = false; lastDist = 0; });
+  updateView();
 }
 
 // ===== Setup screens =====
@@ -11847,12 +13058,39 @@ function renderConfirmScreen() {
     style: 'margin:6px 0 0; font-size:12px; line-height:1.4; color:var(--brown); opacity:0.85;',
     textContent: tmExplain
   }));
+  // v3.3.1 — item 14: Class Session registration. Shown when teacher mode
+  // is on. Inputs become part of gameState; class results aggregate to a
+  // localStorage-backed Class Session keyed by session ID.
+  const csBox = el('div', { id: 'class-session-box', style: 'margin-top:12px;display:' + (setupState.teacherMode ? 'block' : 'none') + ';' });
+  csBox.innerHTML =
+    '<div style="font-size:13px;font-weight:600;color:var(--brown);margin-bottom:6px;">Class Session (optional)</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px;">' +
+    '  <input id="cs-class-name"  placeholder="Class name (e.g. 6A)"     value="' + escapeHtml(setupState.teacherClass || '') + '" style="padding:5px;font-size:12px;border:1px solid #b8895c;border-radius:4px;">' +
+    '  <input id="cs-teacher-name" placeholder="Teacher name"             value="' + escapeHtml(setupState.teacherName || '') + '" style="padding:5px;font-size:12px;border:1px solid #b8895c;border-radius:4px;">' +
+    '  <input id="cs-period"       placeholder="Period (e.g. 3rd)"        value="' + escapeHtml(setupState.teacherPeriod || '') + '" style="padding:5px;font-size:12px;border:1px solid #b8895c;border-radius:4px;">' +
+    '  <input id="cs-session-id"   placeholder="Session ID (auto)"        value="' + escapeHtml(setupState.classSessionId || ('CS-' + Date.now().toString(36).toUpperCase())) + '" style="padding:5px;font-size:12px;border:1px solid #b8895c;border-radius:4px;">' +
+    '</div>' +
+    '<p style="margin:6px 0 0;font-size:11px;color:var(--brown);opacity:0.75;">Teams using the same Session ID will be aggregated into a single class dashboard at the end.</p>';
+  tmBox.appendChild(csBox);
   wrap.appendChild(tmBox);
   // Live-bind the toggle so the state is captured the moment the user
   // checks it, not only when Begin Journey is clicked.
   setTimeout(() => {
     const tm = $('teacher-mode-toggle');
-    if (tm) tm.addEventListener('change', () => { setupState.teacherMode = tm.checked; });
+    const cs = $('class-session-box');
+    if (tm) tm.addEventListener('change', () => {
+      setupState.teacherMode = tm.checked;
+      if (cs) cs.style.display = tm.checked ? 'block' : 'none';
+    });
+    ['cs-class-name','cs-teacher-name','cs-period','cs-session-id'].forEach(id => {
+      const e = $(id);
+      if (e) e.addEventListener('change', () => {
+        setupState.teacherClass = $('cs-class-name').value;
+        setupState.teacherName  = $('cs-teacher-name').value;
+        setupState.teacherPeriod= $('cs-period').value;
+        setupState.classSessionId = $('cs-session-id').value;
+      });
+    });
   }, 0);
 
   const actions = el('div', { class: 'actions' });
@@ -11889,6 +13127,10 @@ function beginJourney() {
     trailLength: setupState.trailLength,
     mode: setupState.mode,
     teacherMode: setupState.teacherMode,
+    teacherClass: setupState.teacherClass,
+    teacherName: setupState.teacherName,
+    teacherPeriod: setupState.teacherPeriod,
+    classSessionId: setupState.classSessionId,
     difficulty: setupState.difficulty || 'Medium', // Part 4 — Stage 8
     wagons: wagons,
     currentWagonIdx: 0,
@@ -12747,10 +13989,19 @@ function resolveNarrativeEvent(w, space, event) {
   const willLose = resolved.some(e => e.kind === 'lose' && e.target === 'member');
   const lostMember = willLose ? pickRandomLivingMember(w) : null;
 
-  // Pick narrative
+  // Pick narrative — v3.3.1 item 9: if no profession modifier and the event
+  // has a v3.3 narrative_variants entry, pick a random one. Otherwise fall
+  // back to the existing default narrative.
   const narratives = event.narratives || {};
   const key = chosenMod ? chosenMod.profession : 'default';
-  const tmpl = narratives[key] || narratives['default'];
+  let tmpl = narratives[key] || narratives['default'];
+  if (key === 'default') {
+    const eventKey = (event.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+    const variants = (((typeof GAME_DATA !== 'undefined' && GAME_DATA.narrative_variants_v3_3) || {}).events || {})[eventKey];
+    if (variants && variants.length) {
+      tmpl = variants[Math.floor(Math.random() * variants.length)];
+    }
+  }
   const narrativeHtml = tmpl ? substitute(tmpl, w, lostMember) : '';
 
   // Apply non-member-loss effects immediately
@@ -13775,13 +15026,23 @@ function startBanditQuiz(w) {
     pool = pool.concat(shuffle(more)).slice(0, 5);
   }
   const questions = shuffle(pool).slice(0, 5);
+  // v3.3.1 — item 5: pick a random quiz_variant for each fact if available.
+  // Same fact, different question wording on replay. Promise that you only
+  // get questioned on stuff you saw is preserved.
+  const resolvedQuestions = questions.map(f => {
+    if (f.quiz_variants && f.quiz_variants.length > 0 && Math.random() < 0.66) {
+      const variant = f.quiz_variants[Math.floor(Math.random() * f.quiz_variants.length)];
+      return { quiz_question: variant.question, correct: variant.correct, wrong: variant.wrong, _factTitle: f.title };
+    }
+    return f;
+  });
   let answers = [];
   let qIdx = 0;
   function showQuestion() {
-    if (qIdx >= questions.length) return finishQuiz();
-    const q = questions[qIdx];
+    if (qIdx >= resolvedQuestions.length) return finishQuiz();
+    const q = resolvedQuestions[qIdx];
     const options = shuffle([q.correct].concat(q.wrong));
-    const html = '<div class="quiz-progress">Question ' + (qIdx + 1) + ' of ' + questions.length + '</div>' +
+    const html = '<div class="quiz-progress">Question ' + (qIdx + 1) + ' of ' + resolvedQuestions.length + '</div>' +
       '<div class="quiz-q-text">' + escapeHtml(q.quiz_question) + '</div>' +
       '<div class="quiz-options" id="quiz-opts"></div>' +
       '<div class="quiz-timer-bar"><div class="quiz-timer-fill" id="quiz-timer-fill" style="width:100%;"></div></div>';
@@ -14255,19 +15516,16 @@ function endGame() {
 
   content.appendChild(el('h1', { class: 'title', textContent: gameState.wagons.some(w => w.finished) ? "Trail's End" : "The Trail Holds Them" }));
 
-  // Trail Journals
-  gameState.wagons.forEach(w => {
-    const journal = el('div', { class: 'journal' });
-    journal.appendChild(el('h3', { textContent: w.name + ' — A Trail Journal' }));
-    journal.appendChild(el('p', { style: 'font-style:italic;color:#5C4A36;margin-bottom:10px;', textContent: 'By ' + w.playerName + ' · April 15, 1848 to ' + dateForDay(w.finishedDay || w.daysTraveled) }));
-    const text = w.journal.map(j => 'Day ' + j.day + '. ' + j.text).join('\n\n');
-    const closing = w.finished ? '\n\nWe came down the last hill into the Willamette Valley. We were here. We had come.'
-      : w.eliminated && w.causeOfElimination === 'winter' ? '\n\nThe snow came. We did not see Oregon this year.'
-      : w.eliminated ? '\n\nThe wagon is left behind. Their story will not be forgotten.'
-      : '';
-    journal.appendChild(el('div', { class: 'entries', textContent: text + closing }));
-    content.appendChild(journal);
-  });
+  // v3.3.1 — item 13 "What You Learned" header. Trail Journal preserved
+  // as collapsible <details> at the bottom of the page (Gabby's mom asked
+  // it stay).
+  if (gameState.wagons.length > 0 && gameState.teacherMode) {
+    const teacherHeader = el('div', { style: 'background:#FFF;border:1px dashed var(--rose);border-radius:8px;padding:10px;margin-bottom:14px;font-size:13px;color:#5C4A36;' });
+    teacherHeader.innerHTML = '<strong>Class:</strong> ' + escapeHtml(gameState.teacherClass || '—') +
+      ' &nbsp;·&nbsp; <strong>Teacher:</strong> ' + escapeHtml(gameState.teacherName || '—') +
+      ' &nbsp;·&nbsp; <strong>Date:</strong> ' + new Date().toLocaleDateString();
+    content.appendChild(teacherHeader);
+  }
 
   // Score breakdown
   const sb = el('div', { class: 'scoreboard' });
@@ -14328,6 +15586,26 @@ function endGame() {
     content.appendChild(v33);
   });
 
+  // v3.3.1 — item 13 sections 2-6.
+  gameState.wagons.forEach(w => v33RenderWhatYouLearned(w, content));
+
+  // v3.3.1 — item 13: Trail Journal preserved as collapsible accordion at
+  // the bottom of the page. Gabby's mom loves the journal; we keep it.
+  gameState.wagons.forEach(w => {
+    const det = el('details', { style: 'margin-top:18px;background:#FFF;border:1px solid var(--tan);border-radius:8px;padding:14px;' });
+    const sum = el('summary', { style: 'cursor:pointer;font-weight:bold;color:var(--rose-dark);font-size:16px;' });
+    sum.textContent = 'Read the Trail Journal — ' + w.name;
+    det.appendChild(sum);
+    det.appendChild(el('p', { style: 'font-style:italic;color:#5C4A36;margin:10px 0;', textContent: 'By ' + w.playerName + ' · April 15, 1848 to ' + dateForDay(w.finishedDay || w.daysTraveled) }));
+    const text = w.journal.map(j => 'Day ' + j.day + '. ' + j.text).join('\n\n');
+    const closing = w.finished ? '\n\nWe came down the last hill into the Willamette Valley. We were here. We had come.'
+      : w.eliminated && w.causeOfElimination === 'winter' ? '\n\nThe snow came. We did not see Oregon this year.'
+      : w.eliminated ? '\n\nThe wagon is left behind. Their story will not be forgotten.'
+      : '';
+    det.appendChild(el('div', { class: 'entries', textContent: text + closing }));
+    content.appendChild(det);
+  });
+
   // Save to leaderboard
   gameState.wagons.forEach(w => saveLeaderboardEntry({
     name: w.playerName + ' (' + w.name + ')',
@@ -14338,9 +15616,19 @@ function endGame() {
   }));
   renderLeaderboard(content);
 
+  // v3.3.1 — item 14: Class Session aggregation. If teacherMode + sessionId
+  // are present, append this run's wagons to the localStorage-backed Class
+  // Session and offer a dashboard button.
+  if (gameState.teacherMode && gameState.classSessionId) {
+    try { v33SaveClassSessionWagons(gameState); } catch (e) {}
+  }
+
   // Action buttons
   const actions = el('div', { class: 'actions' });
   actions.appendChild(el('button', { textContent: 'Print Journal', onclick: () => window.print() }));
+  if (gameState.teacherMode && gameState.classSessionId) {
+    actions.appendChild(el('button', { textContent: 'View Class Dashboard', onclick: () => v33ShowClassDashboard(gameState.classSessionId) }));
+  }
   // What if?
   const usefulPivotal = (gameState.wagons[0].pivotal_choice_log || []).length > 0;
   if (usefulPivotal && !gameState._whatIfUsed) {
@@ -14689,17 +15977,35 @@ const V32_PRICES = {
 const V32_DAILY = { food_lbs: 2.0, water_gal: 0.5 };
 
 const V32_SHOCKS = {
-  food_spoil:      { p: 0.16,  mag: [25, 50] },
-  water_spill:     { p: 0.16,  mag: [5, 14] },
-  supplies_lost:   { p: 0.10,  mag: [1, 3] },
-  wagon_damage:    { p: 0.18,  mag: [15, 35] },
-  broken_axle:     { p: 0.04,  mag: [50, 75] },
-  sickness_minor:  { p: 0.12 },
-  sickness_severe: { p: 0.06 },
-  bandit_demand:   { p: 0.06,  mag: [8, 22] },
-  cholera:         { p: 0.025 },
-  lost_trail:      { p: 0.05 },
-  theft:           { p: 0.03,  mag: [4, 12] }
+  food_spoil:           { p: 0.16,  mag: [25, 50] },
+  water_spill:          { p: 0.16,  mag: [5, 14] },
+  supplies_lost:        { p: 0.10,  mag: [1, 3] },
+  wagon_damage:         { p: 0.18,  mag: [15, 35] },
+  broken_axle:          { p: 0.04,  mag: [50, 75] },
+  sickness_minor:       { p: 0.12 },
+  sickness_severe:      { p: 0.06 },
+  bandit_demand:        { p: 0.06,  mag: [8, 22] },
+  cholera:              { p: 0.025 },
+  lost_trail:           { p: 0.05 },
+  theft:                { p: 0.03,  mag: [4, 12] },
+  // v3.3 — item 6 expansion (14 new shock types). Probabilities and
+  // protections from GAME_DATA.calamities_v3_3.shocks. Total catalog
+  // now 25 entries; cumulative daily fire probability ~0.65-0.80.
+  lightning_strike:     { p: 0.020, v33: true },
+  saleratus_poisoning:  { p: 0.030, v33: true },
+  hailstorm:            { p: 0.040, v33: true,  mag: [8, 12] },
+  snake_bite:           { p: 0.040, v33: true },
+  sunstroke:            { p: 0.050, v33: true },
+  gun_accident:         { p: 0.020, v33: true },
+  alkaline_water:       { p: 0.040, v33: true },
+  prairie_fire:         { p: 0.025, v33: true,  mag: [12, 20] },
+  buffalo_stampede:     { p: 0.020, v33: true,  mag: [20, 30] },
+  tornado:              { p: 0.010, v33: true,  mag: [35, 50] },
+  quicksand:            { p: 0.015, v33: true },
+  lost_child:           { p: 0.015, v33: true },
+  ferry_rope_snap:      { p: 0.010, v33: true,  ferry_only: true },
+  powder_keg_explosion: { p: 0.005, v33: true,  mag: [25, 35] },
+  tooth_abscess:        { p: 0.040, v33: true }
 };
 
 function v32Rand(min, max)    { return min + Math.random() * (max - min); }
@@ -14877,6 +16183,122 @@ function v32ResolveShock(w, s) {
       return { kind: s, narrative: 'Coins missing from the strongbox. $' + loss.toFixed(2) + ' gone.' };
     }
     return null;
+  }
+  // v3.3 — item 6 calamity handlers (14 new shocks). Pull narrative
+  // arrays from GAME_DATA.calamities_v3_3.shocks; pick a random variant.
+  if (def && def.v33) {
+    const cdef = (((typeof GAME_DATA !== 'undefined' && GAME_DATA.calamities_v3_3) || {}).shocks || {})[s] || null;
+    const narratives = (cdef && cdef.narratives) || ['A misfortune struck the camp.'];
+    const narr = narratives[Math.floor(Math.random() * narratives.length)];
+    if (s === 'lightning_strike') {
+      w._oxen_panic_turns = (w._oxen_panic_turns || 0) + 1;
+      const m = (typeof v33LoseMemberByFrailty === 'function') ? v33LoseMemberByFrailty(w, 'lightning') : v32LoseRandomMember(w, 'lightning');
+      if (m) w.members_lost++;
+      return { kind: s, narrative: narr };
+    }
+    if (s === 'saleratus_poisoning') {
+      // Cook or Doctor protects fully (sourced from GAME_DATA protections list)
+      if (v32AnyAlive(w, 'Cook') || v32AnyAlive(w, 'Doctor')) return { kind: s, narrative: narr + ' (Knowledge of the soil prevented worse.)' };
+      const healthy = w.team.filter(m => !m.lost && (m.health == null || m.health > 50));
+      if (healthy.length) { const m = healthy[Math.floor(Math.random() * healthy.length)]; m.health = 35; m.weakened = true; }
+      return { kind: s, narrative: narr };
+    }
+    if (s === 'hailstorm') {
+      let hpLoss = v32Rand(def.mag[0], def.mag[1]);
+      let foodLoss = 8;
+      if (v32AnyAlive(w, 'Carpenter')) { hpLoss *= 0.5; foodLoss *= 0.5; }
+      w.wagon_hp = Math.max(0, w.wagon_hp - hpLoss);
+      w.food = Math.max(0, w.food - foodLoss);
+      return { kind: s, narrative: narr };
+    }
+    if (s === 'snake_bite') {
+      if (v32AnyAlive(w, 'Doctor'))       return { kind: s, narrative: narr + ' Your Doctor sucked the wound and bound it. Full recovery.' };
+      if (v32AnyAlive(w, 'Native Guide')) return { kind: s, narrative: narr + ' Your Native Guide had warned us; the strike was glancing. No lasting harm.' };
+      const healthy = w.team.filter(m => !m.lost && (m.health == null || m.health > 50));
+      if (healthy.length) { const m = healthy[Math.floor(Math.random() * healthy.length)]; m.health = 30; m.weakened = true; }
+      return { kind: s, narrative: narr };
+    }
+    if (s === 'sunstroke') {
+      if (w.water >= 10 || v32AnyAlive(w, 'Scout')) return { kind: s, narrative: narr + ' We had water enough to revive them.' };
+      const healthy = w.team.filter(m => !m.lost && (m.health == null || m.health > 50));
+      if (healthy.length) { const m = healthy[Math.floor(Math.random() * healthy.length)]; m.health = 40; m.weakened = true; }
+      return { kind: s, narrative: narr };
+    }
+    if (s === 'gun_accident') {
+      if (v32AnyAlive(w, 'Hunter') || v32AnyAlive(w, 'Cowboy') || v32AnyAlive(w, 'Trapper')) {
+        if (Math.random() < 0.6) return { kind: s, narrative: narr + ' A near-miss; experience prevented worse.' };
+      }
+      const healthy = w.team.filter(m => !m.lost);
+      if (healthy.length) { const m = healthy[Math.floor(Math.random() * healthy.length)]; m.health = Math.max(20, (m.health || 100) - 40); m.weakened = true; }
+      return { kind: s, narrative: narr };
+    }
+    if (s === 'alkaline_water') {
+      if (v32AnyAlive(w, 'Native Guide') || v32AnyAlive(w, 'Scout')) return { kind: s, narrative: narr + ' Your guide warned us off in time.' };
+      // Lose an "ox" — proxy as movement penalty + small resource loss
+      w._ox_lost = (w._ox_lost || 0) + 1;
+      w.water = Math.max(0, w.water - 4);
+      return { kind: s, narrative: narr };
+    }
+    if (s === 'prairie_fire') {
+      let foodLoss = 15, hpLoss = 20;
+      if (v32AnyAlive(w, 'Cowboy')) { foodLoss *= 0.5; hpLoss *= 0.5; }
+      w.food = Math.max(0, w.food - foodLoss);
+      w.wagon_hp = Math.max(0, w.wagon_hp - hpLoss);
+      return { kind: s, narrative: narr };
+    }
+    if (s === 'buffalo_stampede') {
+      let hpLoss = v32Rand(def.mag[0], def.mag[1]);
+      if (v32AnyAlive(w, 'Hunter') || v32AnyAlive(w, 'Cowboy')) hpLoss *= 0.5;
+      w.wagon_hp = Math.max(0, w.wagon_hp - hpLoss);
+      if (Math.random() < 0.30) {
+        const healthy = w.team.filter(m => !m.lost);
+        if (healthy.length) { const m = healthy[Math.floor(Math.random() * healthy.length)]; m.health = Math.max(15, (m.health || 100) - 50); m.weakened = true; }
+      }
+      return { kind: s, narrative: narr };
+    }
+    if (s === 'tornado') {
+      const hpLoss = v32Rand(def.mag[0], def.mag[1]);
+      w.wagon_hp = Math.max(0, w.wagon_hp - hpLoss);
+      const m = (typeof v33LoseMemberByFrailty === 'function') ? v33LoseMemberByFrailty(w, 'tornado') : v32LoseRandomMember(w, 'tornado');
+      if (m) w.members_lost++;
+      return { kind: s, narrative: narr };
+    }
+    if (s === 'quicksand') {
+      if (v32AnyAlive(w, 'Scout')) return { kind: s, narrative: narr + ' Your Scout found a firmer ford upstream.' };
+      w.force_stop_days = (w.force_stop_days || 0) + 1;
+      w.supplies = Math.max(0, w.supplies - 2);
+      return { kind: s, narrative: narr };
+    }
+    if (s === 'lost_child') {
+      if (v32AnyAlive(w, 'Native Guide') || v32AnyAlive(w, 'Scout')) return { kind: s, narrative: narr + ' Your scout found them by midday. Safe.' };
+      w.force_stop_days = (w.force_stop_days || 0) + 1;
+      if (Math.random() < 0.20) {
+        const m = v32LoseRandomMember(w, 'lost on the trail');
+        if (m) w.members_lost++;
+      }
+      return { kind: s, narrative: narr };
+    }
+    if (s === 'ferry_rope_snap') {
+      if (v32AnyAlive(w, 'Carpenter')) return { kind: s, narrative: narr + ' Your Carpenter rerigged the line. We crossed without further loss.' };
+      if (Math.random() < 0.5) {
+        const m = (typeof v33LoseMemberByFrailty === 'function') ? v33LoseMemberByFrailty(w, 'drowned at ferry') : v32LoseRandomMember(w, 'drowned at ferry');
+        if (m) w.members_lost++;
+      }
+      return { kind: s, narrative: narr };
+    }
+    if (s === 'powder_keg_explosion') {
+      const hpLoss = v32Rand(def.mag[0], def.mag[1]);
+      w.wagon_hp = Math.max(0, w.wagon_hp - hpLoss);
+      const m = (typeof v33LoseMemberByFrailty === 'function') ? v33LoseMemberByFrailty(w, 'powder explosion') : v32LoseRandomMember(w, 'powder explosion');
+      if (m) w.members_lost++;
+      return { kind: s, narrative: narr };
+    }
+    if (s === 'tooth_abscess') {
+      if (v32AnyAlive(w, 'Doctor')) return { kind: s, narrative: narr + ' Your Doctor pulled the tooth. Recovery took two days, but full.' };
+      const healthy = w.team.filter(m => !m.lost && (m.health == null || m.health > 50));
+      if (healthy.length) { const m = healthy[Math.floor(Math.random() * healthy.length)]; m.health = 50; m.weakened = true; }
+      return { kind: s, narrative: narr };
+    }
   }
   return null;
 }
@@ -15318,7 +16740,57 @@ function v33StartingWagon(professions, difficulty) {
   w.bandit_quiz_correct = 0;
   w.forts_visited = 0;
   w.forts_bypassed = 0;
+  // v3.3.1 — item 10 event_shadows: per-wagon array of active shadows.
+  // Each shadow: { shadow_class, multiplier, started_day, duration_turns }.
+  w.event_shadows = [];
+  w.fortunes_seen = 0;
   return w;
+}
+
+// v3.3.1 — item 10. After a triggering event resolves, register shadows
+// from GAME_DATA.event_shadows_v3_3.shadows that match.
+function v33RegisterShadows(w, triggerEvent) {
+  const shadowDefs = (((typeof GAME_DATA !== 'undefined' && GAME_DATA.event_shadows_v3_3) || {}).shadows) || [];
+  for (const def of shadowDefs) {
+    if (def.trigger_event === triggerEvent) {
+      w.event_shadows.push({
+        shadow_class: def.shadow_class || def.shadow_class_1,
+        multiplier:   def.multiplier   || def.multiplier_1   || 2.0,
+        started_day:  w.days_traveled,
+        duration:     def.duration_turns || 2
+      });
+      if (def.shadow_class_2) {
+        w.event_shadows.push({
+          shadow_class: def.shadow_class_2,
+          multiplier:   def.multiplier_2 || 2.0,
+          started_day:  w.days_traveled,
+          duration:     def.duration_turns || 2
+        });
+      }
+    }
+  }
+}
+
+// Compute the cumulative shadow multiplier for a given shock class on the
+// current day. Decay: full effect on trigger day and day+1, half on day+2,
+// gone on day+3+. Stack additively up to cap of 4.0.
+function v33ShadowMultFor(w, shockClass) {
+  if (!w.event_shadows || !w.event_shadows.length) return 1.0;
+  let total = 1.0;
+  for (const s of w.event_shadows) {
+    if (s.shadow_class !== shockClass) continue;
+    const age = w.days_traveled - s.started_day;
+    if (age < 0 || age > s.duration + 1) continue;
+    const factor = (age <= s.duration) ? (s.multiplier - 1) : ((s.multiplier - 1) * 0.5);
+    total += factor;
+  }
+  return Math.min(4.0, total);
+}
+
+// Sweep expired shadows. Call once per turn after consume.
+function v33TickShadows(w) {
+  if (!w.event_shadows || !w.event_shadows.length) return;
+  w.event_shadows = w.event_shadows.filter(s => (w.days_traveled - s.started_day) <= s.duration + 1);
 }
 
 // v3.3 shock resolver — wraps v32ResolveShock with residual escape gate
@@ -15490,6 +16962,313 @@ function v33FortVisit(w) {
 // DYK tracking — calibration treats it as a deterministic +0.6 cards per
 // day for short, +0.7 per day for extended (calibrated to hit minimum
 // targets of 12 short / 24 extended).
+// v3.3 — item 7 fortune firing. Picks a random fortune from JSON pool,
+// applies effect, increments per-wagon counter. Live game uses same path
+// via surprise-event firing (separate code path in resolveSpace).
+// v3.3.1 — item 14: Class Session storage. Append this game's wagons to
+// the localStorage-backed Class Session keyed by session ID.
+function v33SaveClassSessionWagons(gs) {
+  if (typeof localStorage === 'undefined') return;
+  const key = 'class_session_' + gs.classSessionId;
+  let session = null;
+  try { session = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) {}
+  if (!session) {
+    session = {
+      id: gs.classSessionId,
+      class_name: gs.teacherClass || '',
+      teacher_name: gs.teacherName || '',
+      period: gs.teacherPeriod || '',
+      created_at: new Date().toISOString(),
+      wagons: []
+    };
+  }
+  gs.wagons.forEach(w => {
+    session.wagons.push({
+      wagon_name: w.name,
+      player_name: w.playerName,
+      finished: !!w.finished,
+      eliminated: !!w.eliminated,
+      days_traveled: w.daysTraveled,
+      members_alive: w.team.filter(m => m.state !== 'lost').length,
+      members_lost: w.team.filter(m => m.state === 'lost').length,
+      members_start: w.teamStartCount,
+      facts_seen: (w.factsShownTitles || []).slice(),
+      lost_causes: w.team.filter(m => m.state === 'lost').map(m => m.causeOfDeath || m.cause || 'unknown'),
+      bandit_score: w.bandit_quiz_results ? w.bandit_quiz_results.baseScore : 0,
+      score_v33: w.scoreV33 || null,
+      pivotal_choices: (w.pivotal_choice_log || []).map(p => ({ event: p.event || p.choice, option: p.option || p.choice })),
+      forts_visited: w.forts_visited || (w.forts || []).length || 0,
+      saved_at: new Date().toISOString()
+    });
+  });
+  try { localStorage.setItem(key, JSON.stringify(session)); } catch (e) {}
+}
+
+function v33ShowClassDashboard(sessionId) {
+  if (typeof localStorage === 'undefined') return;
+  let session;
+  try { session = JSON.parse(localStorage.getItem('class_session_' + sessionId) || 'null'); } catch (e) {}
+  if (!session) { alert('No class session data found for ID: ' + sessionId); return; }
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:flex-start;justify-content:center;z-index:10000;overflow:auto;padding:20px;';
+  const card = document.createElement('div');
+  card.style.cssText = 'background:#FBF6F0;max-width:900px;width:100%;padding:24px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.4);';
+  const closeBtn = '<button id="cs-close" style="float:right;padding:6px 14px;cursor:pointer;border:1px solid var(--rose);background:#FFF;border-radius:4px;">Close</button>';
+  const printBtn = '<button id="cs-print" style="float:right;margin-right:8px;padding:6px 14px;cursor:pointer;border:1px solid var(--rose);background:#FFF;border-radius:4px;">Print Dashboard</button>';
+  const wagons = session.wagons || [];
+  const totalAlive = wagons.reduce((s, w) => s + w.members_alive, 0);
+  const totalStart = wagons.reduce((s, w) => s + w.members_start, 0);
+  const totalLost  = wagons.reduce((s, w) => s + w.members_lost, 0);
+  const finished   = wagons.filter(w => w.finished).length;
+  const avgDays    = wagons.length ? Math.round(wagons.reduce((s, w) => s + (w.days_traveled || 0), 0) / wagons.length) : 0;
+  // Heatmap: facts seen by all / some / none
+  const factCounts = {};
+  wagons.forEach(w => (w.facts_seen || []).forEach(t => { factCounts[t] = (factCounts[t] || 0) + 1; }));
+  const factsAll  = Object.keys(factCounts).filter(t => factCounts[t] === wagons.length).sort();
+  const factsSome = Object.keys(factCounts).filter(t => factCounts[t] < wagons.length && factCounts[t] > 0).sort();
+  const allFactTitles = (GAME_DATA.historical_facts || []).map(f => f.title);
+  const factsNone = allFactTitles.filter(t => !factCounts[t]).sort();
+  // Aggregate decisions
+  const decisionCounts = {};
+  wagons.forEach(w => (w.pivotal_choices || []).forEach(p => {
+    const key = (p.event || '?') + ' → ' + (p.option || '?');
+    decisionCounts[key] = (decisionCounts[key] || 0) + 1;
+  }));
+  // Causes of death
+  const causeCounts = {};
+  wagons.forEach(w => (w.lost_causes || []).forEach(c => { causeCounts[c] = (causeCounts[c] || 0) + 1; }));
+  const html =
+    closeBtn + printBtn +
+    '<h1 style="color:var(--rose-dark);margin:0 0 4px;">Class Dashboard — ' + escapeHtml(session.class_name || '—') + '</h1>' +
+    '<div style="font-size:12px;color:#5C4A36;margin-bottom:14px;">Teacher: ' + escapeHtml(session.teacher_name || '—') + ' &nbsp;·&nbsp; Period: ' + escapeHtml(session.period || '—') + ' &nbsp;·&nbsp; Session: ' + escapeHtml(session.id) + ' &nbsp;·&nbsp; Wagons: ' + wagons.length + '</div>' +
+    // Section 1 — Standards Coverage Matrix (simplified)
+    '<h3 style="margin-top:14px;">Standards Coverage</h3>' +
+    '<div style="font-size:12px;color:#3D2817;">Cross-cutting anchors covered: SS.5.A.6 (Westward Expansion); SS.6.G.1, SS.6.G.4 (Geographic interpretation); ELA.6.R.2 (Informational text). FL benchmark sub-codes pending verification at cpalms.org.</div>' +
+    '<div style="font-size:12px;color:#3D2817;margin-top:6px;">Total facts encountered across the class: <strong>' + Object.keys(factCounts).length + ' of ' + allFactTitles.length + '</strong></div>' +
+    // Section 2 — Class Heatmap
+    '<h3 style="margin-top:14px;">Class Heatmap — Did You Know Cards</h3>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px;">' +
+    '  <div style="background:#E8F0E0;padding:8px;border-radius:4px;"><strong>All wagons saw (' + factsAll.length + ')</strong><div style="margin-top:4px;color:#3D2817;line-height:1.4;">' + (factsAll.slice(0, 8).map(escapeHtml).join('<br>') || '—') + '</div></div>' +
+    '  <div style="background:#FFF3D6;padding:8px;border-radius:4px;"><strong>Some wagons (' + factsSome.length + ')</strong><div style="margin-top:4px;color:#3D2817;line-height:1.4;">' + (factsSome.slice(0, 8).map(escapeHtml).join('<br>') || '—') + '</div></div>' +
+    '  <div style="background:#F4D3DA;padding:8px;border-radius:4px;"><strong>No wagons (' + factsNone.length + ')</strong><div style="margin-top:4px;color:#3D2817;line-height:1.4;">' + (factsNone.slice(0, 8).map(escapeHtml).join('<br>') || '—') + '</div></div>' +
+    '</div>' +
+    // Section 3 — Aggregate Decisions
+    '<h3 style="margin-top:14px;">Aggregate Decisions</h3>' +
+    '<div style="font-size:12px;color:#3D2817;line-height:1.6;">' +
+    (Object.keys(decisionCounts).length ? Object.keys(decisionCounts).map(k => escapeHtml(k) + ' — ' + decisionCounts[k] + ' wagon(s)').join('<br>') : 'No major fork-in-the-road decisions logged this session.') +
+    '</div>' +
+    // Section 4 — Aggregate Outcomes
+    '<h3 style="margin-top:14px;">Aggregate Outcomes</h3>' +
+    '<div style="font-size:12px;color:#3D2817;line-height:1.6;">' +
+    'Wagons finished: <strong>' + finished + ' of ' + wagons.length + '</strong> (' + (wagons.length ? Math.round(finished / wagons.length * 100) : 0) + '%)<br>' +
+    'Class members started: <strong>' + totalStart + '</strong> &nbsp;·&nbsp; alive at end: <strong>' + totalAlive + '</strong> &nbsp;·&nbsp; lost: <strong>' + totalLost + '</strong> (' + (totalStart ? Math.round(totalLost / totalStart * 100) : 0) + '%)<br>' +
+    'Average days to Oregon (or end): <strong>' + avgDays + '</strong><br>' +
+    'Causes of loss: ' + (Object.keys(causeCounts).length ? Object.keys(causeCounts).map(c => escapeHtml(c) + ' (' + causeCounts[c] + ')').join(', ') : 'None') +
+    '</div>' +
+    '<p style="font-size:11px;color:#5C4A36;font-style:italic;margin-top:8px;">The historical Oregon Trail death rate was about 1 in 10. The class itself becomes a wagon train.</p>' +
+    // Section 5 — Top Discussion Prompts
+    '<h3 style="margin-top:14px;">Top Discussion Prompts</h3>' +
+    '<div style="font-size:12px;color:#3D2817;line-height:1.6;">' +
+    '1. Of the ' + wagons.length + ' wagons in our class, ' + finished + ' reached Oregon. What strategies did the wagons that finished have in common?<br>' +
+    '2. The class lost ' + totalLost + ' people out of ' + totalStart + '. How does that compare to the historical 1-in-10 rate?<br>' +
+    '3. Look at the "no wagons saw" facts. Which ones surprise you that no one encountered? What might that say about the random paths the trail offered?<br>' +
+    '4. Of the wagons that ' + (totalLost > 0 ? 'lost members' : 'finished intact') + ', what do their causes tell us about the real dangers of the trail?<br>' +
+    '5. Which two wagons had the most different outcomes? What was different about how they played?' +
+    '</div>' +
+    '<div style="margin-top:18px;text-align:right;font-size:10px;color:#5C4A36;">Generated ' + new Date().toLocaleString() + ' · Teacher signature: __________________________</div>';
+  card.innerHTML = html;
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+  $('cs-close').addEventListener('click', () => overlay.remove());
+  $('cs-print').addEventListener('click', () => window.print());
+}
+
+// v3.3.1 — item 13. Render the 5 additional "What You Learned" sections
+// for one wagon (sections 2-6; section 1 = 4-track scoring is rendered
+// inline in endGame). Sections: What History You Met, The Choices You
+// Made, The People You Lost (or Saved), Discussion Questions, Standards
+// Demonstrated. Trail Journal stays as collapsible at end (handled in
+// endGame).
+function v33RenderWhatYouLearned(w, parent) {
+  const wrap = el('div', { class: 'wyl-wrap', style: 'background:#FBF6F0;border:2px solid var(--tan);border-radius:12px;padding:16px;margin-top:18px;' });
+  wrap.appendChild(el('h2', { textContent: w.name + ' — What You Learned', style: 'color:var(--rose-dark);margin-bottom:6px;' }));
+  wrap.appendChild(el('p', { style: 'font-style:italic;color:#5C4A36;font-size:13px;margin-bottom:14px;', textContent: 'A trail teaches more than its mileage. Here is what you carried home from it.' }));
+
+  // Section 2 — What History You Met
+  const histSec = el('div', { style: 'margin-bottom:18px;' });
+  histSec.appendChild(el('h3', { textContent: 'What History You Met', style: 'color:#3D2817;border-bottom:1px solid var(--tan);padding-bottom:4px;' }));
+  const facts = (GAME_DATA.historical_facts || []).filter(f => (w.factsShownTitles || []).includes(f.title));
+  histSec.appendChild(el('p', { style: 'font-size:13px;color:#5C4A36;margin:6px 0;', textContent: 'You learned about ' + facts.length + ' historical topics on this trail.' }));
+  if (facts.length === 0) {
+    histSec.appendChild(el('div', { style: 'color:#5C4A36;font-style:italic;', textContent: 'No facts encountered. The trail flew past without lessons.' }));
+  } else {
+    const grid = el('div', { style: 'display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:8px;' });
+    facts.slice(0, 24).forEach(f => {
+      const card = el('div', { style: 'background:#FFF;border:1px solid var(--tan-soft);border-radius:6px;padding:10px;font-size:12px;' });
+      card.appendChild(el('div', { textContent: f.title, style: 'font-weight:bold;color:var(--rose-dark);margin-bottom:4px;' }));
+      card.appendChild(el('div', { textContent: (f.fact || '').slice(0, 140) + ((f.fact || '').length > 140 ? '…' : ''), style: 'color:#3D2817;line-height:1.4;' }));
+      if (f.fl_standards_primary || f.category) {
+        const tag = (f.fl_standards_primary && f.fl_standards_primary[0]) || ('cat: ' + (f.category || ''));
+        card.appendChild(el('div', { textContent: tag, style: 'margin-top:6px;font-size:10px;color:#7A9DBE;font-family:monospace;' }));
+      }
+      grid.appendChild(card);
+    });
+    histSec.appendChild(grid);
+  }
+  wrap.appendChild(histSec);
+
+  // Section 3 — The Choices You Made
+  const choiceSec = el('div', { style: 'margin-bottom:18px;' });
+  choiceSec.appendChild(el('h3', { textContent: 'The Choices You Made', style: 'color:#3D2817;border-bottom:1px solid var(--tan);padding-bottom:4px;' }));
+  const pivotal = (w.pivotal_choice_log || []);
+  if (pivotal.length === 0) {
+    choiceSec.appendChild(el('div', { style: 'color:#5C4A36;font-style:italic;font-size:13px;margin-top:6px;', textContent: 'The trail offered few major forks this run. Or you took every quiet path.' }));
+  } else {
+    pivotal.forEach(p => {
+      const row = el('div', { style: 'background:#FFF;border-left:3px solid var(--rose);padding:8px 10px;margin-top:8px;font-size:13px;' });
+      row.appendChild(el('div', { textContent: 'Day ' + (p.day || '?') + ': ' + (p.event || p.choice || '—'), style: 'font-weight:bold;color:#3D2817;' }));
+      row.appendChild(el('div', { textContent: 'You chose: ' + (p.option || p.choice || '—'), style: 'color:#5C4A36;margin-top:3px;' }));
+      if (p.outcome) row.appendChild(el('div', { textContent: 'What happened: ' + p.outcome, style: 'color:#5C4A36;font-style:italic;margin-top:3px;' }));
+      choiceSec.appendChild(row);
+    });
+  }
+  wrap.appendChild(choiceSec);
+
+  // Section 4 — People You Lost (or Saved)
+  const peopleSec = el('div', { style: 'margin-bottom:18px;' });
+  peopleSec.appendChild(el('h3', { textContent: 'The People You Lost (or Saved)', style: 'color:#3D2817;border-bottom:1px solid var(--tan);padding-bottom:4px;' }));
+  const grid2 = el('div', { style: 'display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-top:8px;' });
+  w.team.forEach(m => {
+    const lost = (m.state === 'lost');
+    const card = el('div', { style: 'background:#FFF;border:1px solid var(--tan-soft);border-radius:6px;padding:10px;font-size:12px;border-left:4px solid ' + (lost ? '#A32D2D' : '#5F7A5F') + ';' });
+    card.appendChild(el('div', { textContent: m.name, style: 'font-weight:bold;color:#3D2817;' }));
+    card.appendChild(el('div', { textContent: m.profession + (lost ? ' — Lost' : ' — Made it to Oregon'), style: 'color:#5C4A36;font-size:11px;margin-top:3px;' }));
+    if (lost) {
+      const cause = m.causeOfDeath || m.cause || 'unknown';
+      const day = m.lostOnDay || '?';
+      card.appendChild(el('div', { textContent: 'Day ' + day + ': ' + cause, style: 'color:#A32D2D;font-style:italic;font-size:11px;margin-top:3px;' }));
+    }
+    if (m.traits && typeof v33TraitDescriptors === 'function') {
+      const desc = v33TraitDescriptors(m.traits);
+      if (desc.length) card.appendChild(el('div', { textContent: desc.join(', '), style: 'color:#7A9DBE;font-size:10px;margin-top:4px;' }));
+    }
+    grid2.appendChild(card);
+  });
+  peopleSec.appendChild(grid2);
+  wrap.appendChild(peopleSec);
+
+  // Section 5 — Discussion Questions for Your Teacher
+  const dqSec = el('div', { style: 'margin-bottom:18px;' });
+  dqSec.appendChild(el('h3', { textContent: 'Discussion Questions for Your Teacher', style: 'color:#3D2817;border-bottom:1px solid var(--tan);padding-bottom:4px;' }));
+  const lostCount = w.team.filter(m => m.state === 'lost').length;
+  const days = w.daysTraveled || w.finishedDay || 0;
+  const facts2 = (w.factsShownTitles || []);
+  const dqs = [
+    'About 1 in 10 Oregon Trail emigrants died on the journey. Your wagon lost ' + lostCount + ' of ' + w.teamStartCount + '. How does your wagon\'s outcome compare to the historical death rate?',
+    'Your team finished (or attempted to finish) on day ' + days + '. The winter deadline at Oregon City was day 165. What strategy choices on the trail brought you closer to or further from that deadline?',
+    'You encountered ' + facts2.length + ' historical facts on the trail. Which one surprised you most? Why?',
+    'The Donation Land Claim Act (1850) explicitly excluded Native peoples, Black Americans, and Hawaiians from owning land in Oregon. How does that exclusion change how we should think about the "promise" of the trail?',
+    'Pioneer women on the trail did most of the cooking, child care, and medical work — on top of walking 2,000 miles. Why do you think their diaries are the main source historians use for daily trail life?'
+  ];
+  dqs.forEach((q, i) => {
+    dqSec.appendChild(el('div', { textContent: (i+1) + '. ' + q, style: 'background:#FFF;border-left:2px solid var(--rose);padding:8px 12px;margin-top:6px;font-size:13px;color:#3D2817;line-height:1.5;' }));
+  });
+  wrap.appendChild(dqSec);
+
+  // Section 6 — Standards Demonstrated
+  const stSec = el('div', { style: 'margin-bottom:8px;' });
+  stSec.appendChild(el('h3', { textContent: 'Standards Demonstrated', style: 'color:#3D2817;border-bottom:1px solid var(--tan);padding-bottom:4px;' }));
+  // Aggregate standard codes from the facts seen
+  const stdMap = {};
+  facts.forEach(f => {
+    (f.fl_standards_primary || []).forEach(c => { stdMap[c] = (stdMap[c] || 0) + 1; });
+    (f.fl_standards_skill   || []).forEach(c => { stdMap[c] = (stdMap[c] || 0) + 1; });
+  });
+  const std = Object.keys(stdMap);
+  if (std.length === 0) {
+    stSec.appendChild(el('div', { style: 'color:#5C4A36;font-style:italic;font-size:13px;margin-top:6px;', textContent: 'FL benchmark codes pending verification at cpalms.org. Cross-cutting anchors covered: SS.5.A.6 (Westward Expansion), SS.6.G.1 / SS.6.G.4 (Geographic interpretation), ELA.6.R.2 (Informational text comprehension).' }));
+  } else {
+    const list = el('ul', { style: 'margin-top:6px;font-size:12px;color:#3D2817;' });
+    std.forEach(c => {
+      const li = el('li', { textContent: c + ' — encountered in ' + stdMap[c] + ' fact' + (stdMap[c] > 1 ? 's' : ''), style: 'margin-bottom:3px;font-family:monospace;' });
+      list.appendChild(li);
+    });
+    stSec.appendChild(list);
+  }
+  wrap.appendChild(stSec);
+
+  parent.appendChild(wrap);
+}
+
+function v33FireFortune(w) {
+  const pool = (((typeof GAME_DATA !== 'undefined' && GAME_DATA.fortunes_v3_3) || {}).fortunes) || [];
+  if (!pool.length) return null;
+  // Weight-aware random pick
+  const totalWeight = pool.reduce((s, f) => s + (f.weight || 1), 0);
+  let r = Math.random() * totalWeight;
+  let chosen = pool[0];
+  for (const f of pool) { r -= (f.weight || 1); if (r <= 0) { chosen = f; break; } }
+  w.fortunes_seen = (w.fortunes_seen || 0) + 1;
+  // Apply effect by category (best-effort interpretation of spec strings)
+  const effect = chosen.effect || '';
+  if (chosen.name === 'Native Trade for Salmon' || chosen.name === 'Snake River Salmon Run') {
+    w.food = Math.min(999, w.food + (chosen.name.indexOf('Snake') !== -1 ? 15 : 10));
+  } else if (chosen.name === 'Native Trade for Horses') {
+    w._extra_movement = (w._extra_movement || 0) + 1; w.money = Math.max(0, w.money - 3);
+  } else if (chosen.name === 'Friendly Mountain Man with Map') {
+    w._next_lost_trail_blocked = true;
+  } else if (chosen.name === 'Fellow Emigrants Share Tools') {
+    w._next_wagon_damage_reduced = (w._next_wagon_damage_reduced || 0) + 1;
+  } else if (chosen.name === 'Fort Doctor Cheap Visit') {
+    if (w.money >= 1) {
+      w.money -= 1;
+      const sick = w.team.find(m => !m.lost && (m.weakened || (m.health != null && m.health < 70)));
+      if (sick) { sick.health = 95; sick.weakened = false; }
+    }
+  } else if (chosen.name === 'Fort Blacksmith Barters') {
+    w.wagon_hp = Math.min(100, w.wagon_hp + 12); w.hides = Math.max(0, (w.hides || 0) - 2);
+  } else if (chosen.name === 'Missionary Holds Healing Service') {
+    if (v32AnyAlive(w, 'Priest')) w._healing_recovery_bonus = 0.10;
+    else w.team.forEach(m => { if (!m.lost) m.morale = Math.min(10, (m.morale || 7) + 1); });
+  } else if (chosen.name === 'Eastbound Traveler with News') {
+    w.dyk_cards_seen = (w.dyk_cards_seen || 0) + 1;
+    w.team.forEach(m => { if (!m.lost) m.morale = Math.min(10, (m.morale || 7) + 1); });
+  } else if (chosen.name === 'Discarded Cache from Earlier Train') {
+    w.food = Math.min(999, w.food + 5); w.supplies = Math.min(20, w.supplies + 2);
+  } else if (chosen.name === 'Wagon Master Joins Train') {
+    w._wm_protection_bonus_until = (w.days_traveled || 0) + 5;
+  } else if (chosen.name === 'Letter from Home Waiting at Fort') {
+    w.team.forEach(m => { if (!m.lost) m.morale = Math.min(10, (m.morale || 7) + 2); });
+  } else if (chosen.name === 'Bumper Buffalo Herd') {
+    w._next_hunt_bonus = 25;
+  } else if (chosen.name === 'Soda Springs Carbonation') {
+    w.team.forEach(m => { if (!m.lost) m.morale = Math.min(10, (m.morale || 7) + 1); });
+  } else if (chosen.name === 'Plum and Berry Season') {
+    w.food = Math.min(999, w.food + 5);
+  } else if (chosen.name === 'Camas Root Foraging') {
+    w.food = Math.min(999, w.food + 3); w.team.forEach(m => { if (!m.lost) m.morale = Math.min(10, (m.morale || 7) + 1); });
+  } else if (chosen.name === 'Wild Horses Worth Trading') {
+    w.hides = (w.hides || 0) + 3;
+  } else if (chosen.name === 'Antelope Hunt Success') {
+    if (v32AnyAlive(w, 'Hunter')) { w.food = Math.min(999, w.food + 18); w.hides = (w.hides || 0) + 1; }
+  } else if (chosen.name === 'Calm Low-Water River Crossing') {
+    w._next_river_safe = true;
+  } else if (chosen.name === 'Independence Rock by July 4th' || chosen.name === 'Reunion with Old Friend') {
+    w.team.forEach(m => { if (!m.lost) m.morale = Math.min(10, (m.morale || 7) + (chosen.name.indexOf('Reunion') !== -1 ? 1 : 2)); });
+    if (chosen.name === 'Reunion with Old Friend') w.dyk_cards_seen = (w.dyk_cards_seen || 0) + 1;
+  } else if (chosen.name === 'Mild Weather All Summer') {
+    w._weather_shocks_blocked_until = (w.days_traveled || 0) + 5;
+  } else if (chosen.name === 'Baby Born on the Trail') {
+    w.team.forEach(m => { if (!m.lost) m.morale = Math.min(10, (m.morale || 7) + 3); });
+  } else if (chosen.name === 'Rainbow over Independence Rock') {
+    w.team.forEach(m => { if (!m.lost) m.morale = Math.min(10, (m.morale || 7) + 1); });
+  } else {
+    // Generic fallback: small morale bump
+    w.team.forEach(m => { if (!m.lost) m.morale = Math.min(10, (m.morale || 7) + 1); });
+  }
+  return chosen;
+}
+
 function v33TickDyk(w, length) {
   const target = (V33_DYK_QUOTAS.minimums || {})[length] || { minimum: 12 };
   const totalDays = length === 'extended' ? 40 : 20;
@@ -15519,12 +17298,15 @@ function v33SimulateJourney(team, difficulty, length) {
   // hard hits harder (this is the primary lever differentiating Easy/Hard
   // outcomes for a given team composition). Extended journeys get a slight
   // discount because raw 40-day exposure compounds shock cumulatively.
-  const _baseMult = { easy: 0.72, medium: 1.0, hard: 1.50 }[difficulty] || 1.0;
-  const SHOCK_MULT = (length === 'extended') ? _baseMult * 0.80 : _baseMult * 1.10;
+  // Recalibrated for v3.3.1 — catalog grew from 11 to 25 shock types
+  // (item 6) and 1-shock-per-day picker now dilutes high-impact shocks.
+  // Compensated with mortality_mult bumped on Hard for cholera/sickness.
+  const _baseMult = { easy: 0.62, medium: 0.85, hard: 1.30 }[difficulty] || 1.0;
+  const SHOCK_MULT = (length === 'extended') ? _baseMult * 0.85 : _baseMult * 1.15;
   // Mortality multiplier — applied to per-member death rolls in cholera /
   // sickness so Hard difficulty actually kills more even when shock counts
   // are similar. Shock probability and mortality are independent levers.
-  const MORT_MULT  = { easy: 0.78, medium: 1.0, hard: 1.55 }[difficulty] || 1.0;
+  const MORT_MULT  = { easy: 0.72, medium: 1.0, hard: 1.65 }[difficulty] || 1.0;
   w._mort_mult = MORT_MULT;
   let day = 1;
   while (day <= totalDays) {
@@ -15557,15 +17339,19 @@ function v33SimulateJourney(team, difficulty, length) {
     v33Consume(w);
     if (v32Alive(w) <= 0) { w.eliminated = true; break; }
 
-    // Shock (with v3.3 residuals + difficulty multiplier)
+    // Shock (with v3.3 residuals + difficulty multiplier + item 10 shadows)
+    v33TickShadows(w);
     if (Math.random() >= ((v32AnyAlive(w, 'Guide') ? 0.30 : 0) + (v32AnyAlive(w, 'Scout') ? 0.10 : 0))) {
       const triggered = [];
       for (const [name, def] of Object.entries(V32_SHOCKS)) {
-        if (Math.random() < def.p * SHOCK_MULT) triggered.push(name);
+        const shadowMult = v33ShadowMultFor(w, name);
+        if (Math.random() < def.p * SHOCK_MULT * shadowMult) triggered.push(name);
       }
       if (triggered.length > 0) {
         const s = triggered[Math.floor(Math.random() * triggered.length)];
         v33ResolveShock(w, s);
+        // Register shadows from this triggering event (item 10)
+        v33RegisterShadows(w, s);
       }
     }
 
@@ -15576,33 +17362,23 @@ function v33SimulateJourney(team, difficulty, length) {
     if (v32AnyAlive(w, 'Hunter') && Math.random() < 0.30) {
       w.food = Math.min(999, w.food + (5 + Math.random() * 3));
     }
-    // v3.3 fortune-proxy scaffold. Item 7 (40-fortune expansion) is
-    // deferred to v3.3.x. The spec calibration is balanced against an
-    // ecosystem that includes upside events; without them, teams
-    // accumulate only downsides and over-fail. This proxy gives a small
-    // compensating upside until the full fortune library lands.
-    // Removed when item 7 ships. Length-aware: Extended journeys get
-    // more fortunes because there's more time for them to occur in
-    // proportion to the per-day shock load.
-    const fortuneRate = (length === 'extended') ? 0.135 : 0.040;
-    if (Math.random() < fortuneRate) {
-      const r = Math.random();
-      if      (r < 0.30) w.food     = Math.min(999, w.food + 12);
-      else if (r < 0.55) w.water    = Math.min( 99, w.water +  3);
-      else if (r < 0.75) w.money    += 3;
-      else if (r < 0.92) w.wagon_hp = Math.min(100, w.wagon_hp + 8);
-      else               w.dyk_cards_seen += 1;
-    }
+    // v3.3 — item 7 fortune firing. Reads from GAME_DATA.fortunes_v3_3
+    // (24 new + atmospheric existing). Calibrated to ~1 surprise per 2.5
+    // turns for Short, ~1 per 2 turns for Extended; targets at least 3
+    // fortune events per Short and 6 per Extended.
+    const fortuneRate = (length === 'extended') ? 0.42 : 0.32;
+    if (Math.random() < fortuneRate) v33FireFortune(w);
 
     // Push-On Tax thresholds
     v33ApplyPushOnTax(w);
-    // Daily wagon damage cap — even on the worst day, the wagon can't
-    // lose more than 55 HP. Models pioneers patching what they can
-    // overnight; catastrophic loss requires sustained accumulation
-    // (which is what we want for differentiating careless teams).
+    // Daily wagon damage cap — difficulty-aware. Easy: 35 HP/day cap.
+    // Medium: 50. Hard: NO CAP (catastrophic single-day damage allowed).
+    // Models pioneers patching what they can overnight; on Hard, the
+    // damage outpaces the patching.
     const _hpLossThisDay = _hpBefore - w.wagon_hp;
-    if (_hpLossThisDay > 55) {
-      w.wagon_hp = _hpBefore - 55;
+    const _dailyCap = { easy: 35, medium: 50, hard: 999 }[difficulty] || 50;
+    if (_hpLossThisDay > _dailyCap) {
+      w.wagon_hp = _hpBefore - _dailyCap;
     }
     if (w.wagon_hp <= 0) { w.eliminated = true; break; }
 
