@@ -75,7 +75,10 @@
 
   <div class="ornament">✦ ✦ ✦</div>
 
-  <p class="signature">— Pink Oregon Trail v3.3.x — Teacher Edition</p>
+  <h2>What's new in v3.4 (this edition)</h2>
+  <p>Since v3.3, the game added a <strong>pre-journey outfitting screen</strong> (kids pick a wagon, an animal team, and up to two heirlooms before naming the team — a real economic decision with reward/risk uncertainty), a <strong>tightened economy</strong> (starting purse $110-$160 with daily money depletion, fort prices roughly doubled), a <strong>medicine-choice modal with visible survival percentages</strong> when a member falls ill, an <strong>always-visible "Spot N of M" indicator</strong> in the calendar bar so kids can match the screen to the printed board, two new <strong>36×24 print posters</strong> (Short and Extended), and a <strong>kid-friendly DIY map guide</strong> for art-class extension. Also: the California ending has been removed; all teams now finish at Oregon City.</p>
+
+  <p class="signature">— Pink Oregon Trail v3.4.1 — Teacher Edition</p>
 
   <div class="page-number">Page 1 of 10</div>
 </div>
@@ -92,7 +95,10 @@
   <p>The Oregon Trail killed about one in ten emigrants in 1849. The game honors that. Players sometimes lose. Members sometimes die. We do not soften the trail, and we do not pretend everyone made it. The trail teaches its own lesson, and that lesson is part of the curriculum. About thirty thousand people are buried along the historical route, most in unmarked graves. The game treats those deaths with weight — a brief funeral scene, a journal entry, a moment of silence in the music.</p>
 
   <h2>2. Strategy must matter</h2>
-  <p>Earlier versions of the game produced identical outcomes for skilled and careless wagons — both finished one hundred percent of the time. The current version corrects that: a careful Hunter+Doctor team reliably finishes, while a careless team without protective skills often fails. Strategy choices — which professions to hire, when to push on, when to stop at a fort, whether to take the Sublette Cutoff or the slower Bridger road — measurably affect the outcome. Kids who pay attention finish more often than kids who don't. That's the lesson.</p>
+  <p>Earlier versions of the game produced identical outcomes for skilled and careless wagons — both finished one hundred percent of the time. The current version corrects that: a careful Hunter+Doctor team reliably finishes, while a careless team without protective skills often fails. Strategy choices — which wagon and animals to outfit at Independence, which heirlooms to bring, which professions to hire, when to push on, when to stop at a fort, whether to take the Sublette Cutoff or the slower Bridger road, when to spend a precious dose of medicine and when to save it — measurably affect the outcome. Kids who pay attention finish more often than kids who don't. That's the lesson.</p>
+
+  <h2>2a. Decisions cost something (v3.4)</h2>
+  <p>Before the trail begins, every team spends from a starting purse of $110-$160 on a wagon, animal team, and up to two heirlooms. Every dollar spent is a dollar not available for food, repair, or medicine on the trail. Then on the trail itself, each Push On day quietly drains a small amount for tolls, oxen feed, and barter — money is never stagnant. The medicine-choice modal asks the player to weigh a single dose against a member's daily survival probability, with a clear "save the medicine" option. None of these decisions has a single right answer — but each has visible trade-offs the player can reason about. That is what economic and moral judgment under uncertainty looks like.</p>
 
   <h2>3. Surprise is part of the lesson</h2>
   <p>Sometimes a profession that doesn't seem useful turns out to be essential. A Musician keeping morale up across a hard week. An Artist whose sketches lift the team's spirits at Independence Rock. A Banker whose extra coin pays the Barlow Road toll the day the Columbia raft would have killed them. The narrative engine surfaces these unexpected wins so kids learn that every team member has unique gifts. Optimal team-building isn't always the right answer; diverse teams can beat "perfect" ones because of who's there when something unexpected happens. This is a real lesson about people and groups, not just about Oregon Trail tactics.</p>
@@ -230,7 +236,8 @@
   <div class="lesson-step">
     <div class="step-title">2. Game setup with Class Session ID</div>
     <div class="step-time">3-5 minutes · students setup their wagons</div>
-    <p>Have students open the game. Walk them through the setup screens together: pick Short trail (15-20 minute version), pick Medium difficulty, build a team of seven by choosing professions. <strong>Turn on Teacher Mode</strong> and have every team enter the same Class Session ID (write it on the board: e.g., "6A-2026-04-28"). This is what makes the post-game class dashboard work.</p>
+    <p>Have students open the game. Walk them through the setup screens together: pick Short trail (15-20 minute version), pick Medium difficulty, then <strong>outfit at Independence</strong> (wagon + animals + up to two heirlooms — a real economic decision; see Page 3 of the Student Edition). Then build a team of seven by choosing professions (the picker is alphabetical for quick scanning). <strong>Turn on Teacher Mode</strong> and have every team enter the same Class Session ID (write it on the board: e.g., "6A-2026-04-28"). This is what makes the post-game class dashboard work.</p>
+    <p style="font-size: 12px; color: var(--brown); font-style: italic;">Teaching moment during outfitting: ask groups <em>"Why didn't every team pick the most expensive wagon?"</em> Listen for the trade-off articulation. Some will spend everything on protection and arrive broke; some will skimp on the wagon to keep cash for forts. Both can finish; both can fail.</p>
   </div>
 
   <div class="lesson-step">
@@ -510,6 +517,10 @@
   <p>These numbers come from running each game configuration five hundred times in a Monte Carlo simulator and averaging the results. Two reference team types are used to bracket the range — your students' actual teams will fall between, depending on team composition and play strategy.</p>
 
   <div class="info-box">
+    <p><strong>v3.4 calibration note:</strong> The numbers below were calibrated against the v3.3 economy. v3.4 raised starting money to $110-$160, doubled fort prices, added daily money depletion, and introduced loadout costs. The doubled prices roughly cancel the doubled purse, so finish rates should remain near the bands shown — but a class that consistently finishes well above or below these numbers might warrant a fresh <code>#calibrate3=500</code> run before the next session.</p>
+  </div>
+
+  <div class="info-box">
     <p><strong>Strong team (HD)</strong> = wagon with both a <strong>Hunter</strong> (food supply via Hunt action and passive income) AND a <strong>Doctor</strong> (87% cholera save rate, sickness mitigation). Represents a well-prepared wagon.</p>
     <p><strong>Weak team (MA)</strong> = wagon with a <strong>Musician</strong> AND <strong>Artist</strong> — both morale-only specialists, no protection. Represents a wagon that focused on culture and not survival skills.</p>
   </div>
@@ -644,9 +655,17 @@
 
   <p>The game is open and free. Students may keep their wagon journal printouts as historical-thinking artifacts.</p>
 
+  <h2>Companion documents</h2>
+  <ul>
+    <li><strong>pink_oregon_trail_rules.html</strong> — student-facing rules booklet (9 pages, prints to letter paper). Updated for v3.4.1.</li>
+    <li><strong>docs/board_v33_poster_short_36x24.html</strong> — print-ready 36×24 poster with the 25 Short-trail stops. Send to a print service for an Engineer Print, mount on foam board.</li>
+    <li><strong>docs/board_v33_poster_extended_36x24.html</strong> — same, with all 50 Extended-trail stops.</li>
+    <li><strong>docs/make_your_own_map.html</strong> — kid-friendly art-class extension. Thirteen-step DIY guide for making a 22×28 poster-board map with watercolor and crayons. Letter paper print.</li>
+  </ul>
+
   <div class="ornament">✦ ✦ ✦</div>
 
-  <p class="signature">Pink Oregon Trail v3.3.x — Teacher Edition. Designed by Gabriella Kasdaglis with her father, for her sixth-grade history class — and beyond.</p>
+  <p class="signature">Pink Oregon Trail v3.4.1 — Teacher Edition. Designed by Gabriella Kasdaglis with her father, for her sixth-grade history class — and beyond.</p>
 
   <div class="page-number">Page 10 of 10</div>
 </div>
