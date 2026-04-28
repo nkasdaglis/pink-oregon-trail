@@ -1977,7 +1977,11 @@ const GAME_DATA = {
   "meta": {
     "title": "Pink Oregon Trail",
     "designer": "Gabriella Kasdaglis (Gabby)",
-    "version": "2.5",
+    "version": "3.3",
+    "compatible_with": [
+      "3.2"
+    ],
+    "amendment_v3_3": "Strategy and pedagogy depth amendment. Adds 4-track scoring (Steward / Provider / Scholar / Pathfinder), Push-On Tax (consec_push_on counter with 4 thresholds), Smart-Stop bypass penalties (forts / rivers / landmarks), DYK exposure quotas, residual probabilities (3-15% on protections and shocks), and per-member personality vectors (5 hidden traits). The v3.3.0 ship is partial; content expansion (items 5-7, 9, 10), pedagogy UI (items 12-14), expandable map (item 15), and physical board redesign (item 16) ship in v3.3.x patches.",
     "trail_lengths": {
       "short": {
         "spaces": 25,
@@ -2030,7 +2034,7 @@ const GAME_DATA = {
         "STARVATION_THRESHOLD": 0
       }
     },
-    "notes": "v2.5 patch: (1) Bandit ambush fires on overshoot, not just exact landing. (2) Journey calibration — increased days_per_turn and added per-event day costs to bring typical Extended journey from ~33 days to ~107 days. (3) Unified all death paths (catastrophic and natural) onto presentDeathAnnouncement for consistent visual display.",
+    "notes": "v3.1.1 quick-fix patch: (1) Day/night cycle stuck on dark — diagnose and force midday for finish scenes, (2) race_to_fort intervention choice should not appear when wagon is already at a fort, (3) regenerate the two paintable PDFs to fill the full page (current PDFs render in top-left corner only). v3.2 multiplayer (PeerJS room codes) follows as separate build.",
     "stochastic_system": {
       "philosophy": "Real pioneers did not see probability tables before making choices. They knew the river was high, the team was tired, the trail looked rough — and they decided. The game models this. Choice screens show qualitative risk and team advantages, never exact numbers. Outcomes sample from hidden distributions. Sometimes the dice fall well. Sometimes they don't. Profession bonuses shift the distribution but rarely eliminate risk entirely.",
       "choice_display_mode": "qualitative",
@@ -2617,7 +2621,7 @@ const GAME_DATA = {
       "category": "sickness",
       "intro": "The food has turned bad.",
       "narratives": {
-        "default": "Maggots in the salt pork. The flour is sour. We lose three pounds of provisions to the dirt and watch the wagon master's face grow tight while counting what's left.",
+        "default": "Maggots in the salt pork. The flour is sour. We lose three pounds of provisions to the dirt and watch the wagon master's face grow tight as he counts what's left.",
         "Food Critic": "{Food_Critic} smells trouble at supper and stops everyone before a bite is taken. We lose only what was already gone. The rest is sealed in fresh wax and packed deeper in the wagon.",
         "Cook": "{Cook} salvages most of it — pulls the good from the bad, salts what can be salted, dries strips of meat over the fire. We lose only one pound. The rest will hold to Fort Laramie."
       }
@@ -3522,7 +3526,7 @@ const GAME_DATA = {
         }
       ],
       "narratives": {
-        "default": "We have to halt and let them rest two days. We lose ground we can't get back. The trail master grows quiet — having seen this before.",
+        "default": "We have to halt and let them rest two days. We lose ground we can't get back. The trail master grows quiet — he's seen this before.",
         "Cowboy": "{Cowboy} adjusts the yoke, redistributes the load, rotates the lead pair. The team perks up within hours. We barely lose half a day.",
         "Farmer": "{Farmer} forages along the trail edge — bringing back armloads of fresh grass, clover, wild oats. The oxen eat better than they have in weeks. They're plodding strong by tomorrow."
       }
@@ -4343,47 +4347,33 @@ const GAME_DATA = {
   "resources": [
     {
       "name": "Food",
-      "description": "Pounds of provisions. Each team member eats about 2 lbs/day; a Cook reduces consumption by 22%.",
-      "start": 140,
+      "description": "Used to feed the team each turn",
+      "start": 10,
       "min": 0,
-      "max": 999,
-      "unit": "lbs",
-      "gain_sources": "Hunting (Hunter +22 lbs per success), foraging (Farmer +10 lbs), purchase at fort ($0.12/lb)",
-      "loss_sources": "Daily consumption, spoilage shocks (Cook reduces 45%), bandits, ferry shortfall",
-      "notes": "Below daily need: cumulative starvation risk per the v3.2 economy"
+      "max": 20,
+      "gain_sources": "Hunting,trading,events",
+      "loss_sources": "Spoilage,rationing,events",
+      "notes": "If 0-lose health each turn"
     },
     {
       "name": "Water",
-      "description": "Gallons. Each member drinks 0.5 gal/day; rationing not safe past a few days.",
-      "start": 22,
+      "description": "Required for survival,especially in heat",
+      "start": 8,
       "min": 0,
-      "max": 99,
-      "unit": "gal",
-      "gain_sources": "Rivers, fort purchase ($0.10/gal), foraging events",
-      "loss_sources": "Daily consumption, water-spill shocks, lost-trail penalty",
-      "notes": "Below daily need: cumulative dehydration risk"
+      "max": 20,
+      "gain_sources": "Rivers,trade,events",
+      "loss_sources": "Heat,bad water,events",
+      "notes": "If 0-immediate health loss"
     },
     {
       "name": "Supplies",
-      "description": "Kit-units. Generic gear: rope, oil, tools, spare parts.",
-      "start": 5,
+      "description": "Tools,materials,repairs",
+      "start": 6,
       "min": 0,
-      "max": 20,
-      "unit": "",
-      "gain_sources": "Fort purchase ($1.20/unit), trade",
-      "loss_sources": "Repairs, storms, supplies-lost shocks, bandits",
+      "max": 15,
+      "gain_sources": "Trade,scavenging,events",
+      "loss_sources": "Breakdowns,storms,repairs",
       "notes": "Used to avoid delays or losses"
-    },
-    {
-      "name": "Medicine",
-      "description": "Doses. One dose treats a minor camp fever; severe illness needs 2 (or 1 with a Doctor).",
-      "start": 1,
-      "min": 0,
-      "max": 10,
-      "unit": "dose",
-      "gain_sources": "Fort purchase ($3.50/dose), Doctor starting bonus (+1)",
-      "loss_sources": "Sickness shocks (minor: -1; severe: -2 or -1 with Doctor)",
-      "notes": "Without medicine, sickness can kill"
     },
     {
       "name": "Hides",
@@ -4397,14 +4387,13 @@ const GAME_DATA = {
     },
     {
       "name": "Money",
-      "description": "Dollars and cents. Pays for fort goods, ferries, repairs, hired guides, and the fort doctor.",
-      "start": 18,
+      "description": "Used for trading and ferry crossing",
+      "start": 30,
       "min": 0,
       "max": 999,
-      "unit": "$",
-      "gain_sources": "Selling hides at forts ($3 each), Banker starting bonus (+$12), labour events, trade",
-      "loss_sources": "Spending at forts, ferries, theft shocks, bandit demands",
-      "notes": "Displayed as $X for integers, $X.XX with cents"
+      "gain_sources": "Trade,events",
+      "loss_sources": "Spending,theft",
+      "notes": "Enables safer choices"
     },
     {
       "name": "Health",
@@ -6329,17 +6318,15 @@ const GAME_DATA = {
     "presets": {
       "Easy": {
         "label": "Easy — A Forgiving Trail",
-        "subtitle": "For first-time players. $35, 200 lbs food, 30 gal water, 8 supplies, 3 doses medicine, full wagon. One revival charge.",
+        "subtitle": "For first-time players. Members are hardier, money flows freely, and you have one revival.",
         "modifiers": {
-          "starting_money": 35,
-          "starting_food": 200,
-          "starting_water": 30,
-          "starting_supplies": 8,
-          "starting_medicine": 3,
-          "starting_wagon_hp": 100,
+          "starting_money": 50,
           "state_transition_probability_multiplier": 0.65,
           "doctor_recovery_bonus": 0.2,
           "bandit_quiz_question_count": 3,
+          "starting_food_bonus": 4,
+          "starting_water_bonus": 3,
+          "starting_supplies_bonus": 2,
           "luck_floor": -2,
           "luck_ceiling": 6,
           "revival_charges": 1,
@@ -6348,17 +6335,15 @@ const GAME_DATA = {
       },
       "Medium": {
         "label": "Medium — The Honest Trail",
-        "subtitle": "The historical experience. $18, 140 lbs food, 22 gal water, 5 supplies, 1 dose medicine, full wagon. Recommended for most classroom plays.",
+        "subtitle": "The historical experience. About one in ten wagons faces total disaster. Recommended for most classroom plays.",
         "modifiers": {
-          "starting_money": 18,
-          "starting_food": 140,
-          "starting_water": 22,
-          "starting_supplies": 5,
-          "starting_medicine": 1,
-          "starting_wagon_hp": 100,
+          "starting_money": 30,
           "state_transition_probability_multiplier": 1,
           "doctor_recovery_bonus": 0,
           "bandit_quiz_question_count": 5,
+          "starting_food_bonus": 0,
+          "starting_water_bonus": 0,
+          "starting_supplies_bonus": 0,
           "luck_floor": -5,
           "luck_ceiling": 5,
           "revival_charges": 0,
@@ -6367,17 +6352,15 @@ const GAME_DATA = {
       },
       "Hard": {
         "label": "Hard — The Trail of Tears",
-        "subtitle": "$12, 110 lbs food, 16 gal water, 3 supplies, 0 doses medicine, wagon at 85 HP. Cholera spreads faster. For repeat players.",
+        "subtitle": "Cholera spreads faster. Hunters miss more often. The land is unforgiving. For repeat players who want a real test.",
         "modifiers": {
-          "starting_money": 12,
-          "starting_food": 110,
-          "starting_water": 16,
-          "starting_supplies": 3,
-          "starting_medicine": 0,
-          "starting_wagon_hp": 85,
+          "starting_money": 20,
           "state_transition_probability_multiplier": 1.35,
           "doctor_recovery_bonus": -0.1,
           "bandit_quiz_question_count": 7,
+          "starting_food_bonus": -2,
+          "starting_water_bonus": -1,
+          "starting_supplies_bonus": -1,
           "luck_floor": -7,
           "luck_ceiling": 4,
           "revival_charges": 0,
@@ -6652,29 +6635,7 @@ const GAME_DATA = {
         "subject": "Small frontier town beside a great waterfall (Willamette Falls). Wooden buildings, a few church spires. Forested hills behind. Founded by John McLoughlin.",
         "caption": "Oregon City, Oregon. The end of the Oregon Trail. Founded in 1842 by John McLoughlin of the Hudson's Bay Company, who became known as the 'Father of Oregon' for the help he gave countless arriving pioneers.",
         "historical_photo_search": "Library of Congress: 'Oregon City 1850' or 'Willamette Falls Oregon'"
-      },
-      { "id": "snake_river",     "name": "Snake River",            "caption": "The Snake River, the most punishing stretch of the trail.",                          "year_referenced": "1845" },
-      { "id": "columbia_river",  "name": "Columbia River",         "caption": "The Columbia. Last great river before Oregon City.",                                "year_referenced": "1850" },
-      { "id": "platte_river",    "name": "Platte River",           "caption": "Wide as a mile, an inch deep — a flood of muddy water.",                            "year_referenced": "1849" },
-      { "id": "kansas_river",    "name": "Kansas River Crossing",  "caption": "The first major river crossing east of Independence.",                              "year_referenced": "1847" },
-      { "id": "green_river",     "name": "Green River",            "caption": "A trade-ford on the Green River, swift and cold even in July.",                     "year_referenced": "1848" },
-      { "id": "register_cliff",  "name": "Register Cliff",         "caption": "Pioneers carved their names into the soft sandstone.",                              "year_referenced": "1851" },
-      { "id": "trail_ruts",      "name": "Trail Ruts",             "caption": "Wagon ruts cut deep into the rock, still visible today.",                           "year_referenced": "1860" },
-      { "id": "blue_mountains",  "name": "Blue Mountains",         "caption": "The last great barrier before the Columbia River country.",                         "year_referenced": "1850" },
-      { "id": "massacre_rocks",  "name": "Massacre Rocks",         "caption": "A narrow lava-rock pass on the Snake. Travelers carried their grief past.",         "year_referenced": "1862" },
-      { "id": "farewell_bend",   "name": "Farewell Bend",          "caption": "The last view of the Snake before turning north toward the Columbia.",              "year_referenced": "1849" },
-      { "id": "willamette_locks","name": "Willamette Falls",       "caption": "Willamette Falls at Oregon City — the journey's final water.",                      "year_referenced": "1855" },
-      { "id": "fort_nez_perces", "name": "Fort Nez Perces",        "caption": "A Hudson's Bay Company post on the Columbia, near present-day Walla Walla.",        "year_referenced": "1843" },
-      { "id": "great_plains",    "name": "Great Plains",           "caption": "An ocean of grass. Buffalo to the horizon, wind without end.",                      "year_referenced": "1848" },
-      { "id": "snowstorm",       "name": "Snowstorm in the Pass",  "caption": "When weather turned, even strong wagons could be lost overnight.",                  "year_referenced": "1846" },
-      { "id": "wagon_lashed",    "name": "Wagon Lashed for the Crossing", "caption": "Lashed together, sealed with tar — many wagons went over rivers this way.", "year_referenced": "1847" },
-      { "id": "wagon_at_camp",   "name": "Wagon at Camp",          "caption": "Evening, with the team unhitched and a cookfire going.",                            "year_referenced": "1850" },
-      { "id": "covered_wagon",   "name": "A Covered Wagon",        "caption": "A typical 'prairie schooner' of the Oregon Trail era.",                             "year_referenced": "1849" },
-      { "id": "sunset_sage",     "name": "Sunset over Sagebrush",  "caption": "The high desert turning gold at evening.",                                          "year_referenced": "1851" },
-      { "id": "jim_bridger",     "name": "Jim Bridger",            "caption": "Mountain man, trapper, founder of Fort Bridger. A friend to pioneers.",             "year_referenced": "1850" },
-      { "id": "ezra_meeker",     "name": "Ezra Meeker",            "caption": "Came over the trail in 1852, retraced it in 1906 to mark its course for history.", "year_referenced": "1852" },
-      { "id": "tabitha_brown",   "name": "Tabitha Brown",          "caption": "Made the journey in her sixties; founded an orphanage at trail's end.",             "year_referenced": "1846" },
-      { "id": "george_bush",     "name": "George Washington Bush", "caption": "A Black pioneer who led wagons north when Oregon's racial laws barred his settlement.", "year_referenced": "1845" }
+      }
     ],
     "upgrade_path_for_real_photos": {
       "instructions": "To enhance the game with real public-domain historical photographs, Nicholas (or anyone) can: (1) Visit Library of Congress (loc.gov/photos) and search for the suggested terms above; (2) Download the highest-resolution version of each photo; (3) Resize to 600x460 max and save as JPG with quality 85; (4) Convert to base64 using any base64 tool (Windows PowerShell: [Convert]::ToBase64String([IO.File]::ReadAllBytes('photo.jpg'))); (5) Add the base64 string to the historicalPhotosOverride constant in pink_oregon_trail.html under the matching id key. The game checks the override first; if present, displays the photograph; if not, falls back to the daguerreotype SVG. All Library of Congress photographs from before 1928 are public domain.",
@@ -7221,6 +7182,1217 @@ const GAME_DATA = {
       "fade_out_ms": 0
     },
     "audio_unification": "Funeral hymn already plays once on first death (audioController.switchToFuneral). Subsequent deaths in the same journey reuse the same fade-to-funeral. Don't double-trigger."
+  },
+  "post_death_calendar_drift_fix": {
+    "philosophy": "Playtest leaderboard showed Daddy's Wagon ending at '0 of 7 alive, day 137' and Matthew's at 'day 154' — wagons that lost all members but kept the calendar advancing for many days afterward. Suspected cause: catastrophic deaths (river/bandit/winter) call transitionMember directly and route through showOutcomeCallout to endTurn, but the elimination check in completeEndTurn happens AFTER w.daysTraveled += gameState.daysPerTurn. So a wagon whose last member dies in a river drowning gets one more turn of calendar advance before being marked eliminated. In Competitive mode with rotation across multiple wagons, an eliminated-but-not-yet-flagged wagon may also get a few extra days while waiting for its turn to come back around.",
+    "fix": [
+      "Move the elimination check to BEFORE the w.daysTraveled increment in completeEndTurn",
+      "Also check elimination in the catastrophic-death code paths (river, bandit, winter) immediately after transitionMember — if livingMembers(w).length === 0, set w.eliminated = true synchronously, before any callout fires",
+      "The elimination scene callout still shows; it just shows AFTER the death announcement, with the days-traveled stamped at the actual day of last death — not days later"
+    ],
+    "expected_behavior": "A wagon whose last member dies on day N should show day N as the journey end day, not day N+4 or N+8. Across the full journey, eliminated wagons should never advance the calendar past the day the last member died."
+  },
+  "graphics_overhaul_v2_6": {
+    "philosophy": "Players described v2.5 graphics as 'pre-1980' — vector silhouettes with flat colors. The fix is dramatically richer SVG: layered parallax scenery, gradient atmospheres, animated weather, detailed character figures with state-dependent expressions, real day/night cycle, animated dice/wheels/water/fire. Stays within the single-file offline constraint. File grows from ~500KB to ~1.2-1.5MB. The aim is the visual register of Reigns / 80 Days / Florence — published indie game polish, not AAA realism.",
+    "scope_summary": [
+      "5 region backdrops (Plains, Foothills, Mountains, High Desert, Forest) with 3-layer parallax, gradient atmospheres, drifting clouds, time-of-day variation",
+      "23 detailed character SVGs with profession-specific accessories, clothing folds, face features that vary by health state",
+      "Animated dice with 3D-feeling settling rotation, pip patterns",
+      "Wagon wheel rotation that actually rolls forward (not just spins in place)",
+      "Particle systems: rain, snow, dust devils, campfire embers, river flow",
+      "Day/night ambient cycle: sky color and lighting shift with the calendar"
+    ],
+    "file_size_budget": {
+      "current": "~500KB",
+      "target_max": "1.5MB",
+      "still_offline_capable": true,
+      "still_single_file": true
+    },
+    "region_backdrop_specification": {
+      "implementation": "Each region backdrop is an SVG with 3 layered groups: .bg-far, .bg-mid, .bg-near. The CSS animates them at different rates when the wagon advances (slower for far, faster for near = parallax). Atmospheric overlay sits on top with a linear gradient that shifts with day count.",
+      "regions": [
+        {
+          "id": "plains",
+          "atmosphere": {
+            "morning": "linear-gradient(to bottom, #FFE4C4 0%, #FBF6F0 60%)",
+            "midday": "linear-gradient(to bottom, #B6D4E8 0%, #FBF6F0 70%)",
+            "dusk": "linear-gradient(to bottom, #E8957B 0%, #FBF6F0 70%)"
+          },
+          "far_layer": "Distant horizon line with two soft hill silhouettes, almost flat. Gradient from #C8B59A to #A89070",
+          "mid_layer": "Rolling prairie hills, more defined, with scattered sage clumps",
+          "near_layer": "Foreground tall grass blades (10-15 of them, slightly different heights), wagon ruts in the dirt",
+          "ambient_elements": [
+            "1-2 buffalo silhouettes grazing at random positions on the horizon, animated to slowly drift",
+            "3-5 birds in a loose V formation crossing the sky every ~30 seconds",
+            "Cloud layer: 4-6 soft clouds drifting at 0.3 of wagon advance speed",
+            "Wind effect: tall grass sways in a sine-wave loop"
+          ]
+        },
+        {
+          "id": "foothills",
+          "atmosphere": {
+            "morning": "linear-gradient(to bottom, #E8D9C0 0%, #C8B59A 70%)",
+            "midday": "linear-gradient(to bottom, #B0C8D8 0%, #C8B59A 70%)",
+            "dusk": "linear-gradient(to bottom, #C8957B 0%, #A88560 70%)"
+          },
+          "far_layer": "Soft brown hills, three layers, increasing height",
+          "mid_layer": "Closer hills with sparse trees (5-7 conifers in silhouette)",
+          "near_layer": "Rocky outcrops, sage brush, small pebbles",
+          "ambient_elements": [
+            "Hawk circling on thermals, wide slow loops",
+            "Wind through trees animation",
+            "Occasional deer silhouette appearing on a hilltop, lingering for 8 seconds, then exiting"
+          ]
+        },
+        {
+          "id": "mountains",
+          "atmosphere": {
+            "morning": "linear-gradient(to bottom, #D4C9D0 0%, #A8A0B0 50%, #8a8290 100%)",
+            "midday": "linear-gradient(to bottom, #B8C8D8 0%, #9890A0 60%)",
+            "dusk": "linear-gradient(to bottom, #B89070 0%, #8a7280 60%)",
+            "winter": "linear-gradient(to bottom, #E0E8F0 0%, #B8C0D0 60%, #FBF6F0 100%)"
+          },
+          "far_layer": "Snow-capped peaks, jagged silhouette, multiple parallax layers giving depth",
+          "mid_layer": "Closer mountainsides with rocky bands and treeline",
+          "near_layer": "Boulders, scree slopes, alpine grass",
+          "ambient_elements": [
+            "Snowflakes when day > 130 (winter trigger): 30-50 particles falling at varying speeds and angles",
+            "Eagle soaring high (very slow circles)",
+            "Cloud wisps clinging to peaks",
+            "Occasional falling rock animation (small rock tumbles down a slope)"
+          ]
+        },
+        {
+          "id": "high_desert",
+          "atmosphere": {
+            "morning": "linear-gradient(to bottom, #F4D2A8 0%, #D4C19E 60%)",
+            "midday": "linear-gradient(to bottom, #E8C898 0%, #C8B080 70%)",
+            "dusk": "linear-gradient(to bottom, #B85770 0%, #C89868 60%)"
+          },
+          "far_layer": "Mesa silhouettes, flat-topped buttes, distant haze",
+          "mid_layer": "Sage flats, occasional Joshua tree silhouette, dry creek beds",
+          "near_layer": "Cracked earth texture, small rocks, sun-bleached bones (faint)",
+          "ambient_elements": [
+            "Heat shimmer at the horizon (subtle wavy distortion)",
+            "Dust devil that occasionally appears, spirals across the screen, dissipates (every ~45 seconds)",
+            "Vulture circling slowly at high altitude",
+            "Tumbleweed rolling across foreground every ~20 seconds"
+          ]
+        },
+        {
+          "id": "forest",
+          "atmosphere": {
+            "morning": "linear-gradient(to bottom, #C8D8B8 0%, #98A888 70%)",
+            "midday": "linear-gradient(to bottom, #A8C0B8 0%, #788870 70%)",
+            "dusk": "linear-gradient(to bottom, #A87090 0%, #687060 70%)"
+          },
+          "far_layer": "Distant green ridges, layered, hint of mountains beyond",
+          "mid_layer": "Dense conifer forest in silhouette, varying tree heights",
+          "near_layer": "Detailed foreground pines with visible needles, undergrowth, mushrooms, fallen logs",
+          "ambient_elements": [
+            "Light filtering through tree canopy (god rays effect via SVG gradient)",
+            "Bird silhouettes between trees",
+            "Distant water stream visible through trees with salmon occasionally jumping",
+            "Wind rustles needle clusters"
+          ]
+        }
+      ]
+    },
+    "character_detail_specification": {
+      "implementation": "Each profession's full-body SVG is rebuilt with these elements (in order from back to front layering): boots, pants, torso, arms, hands, neck, head, hair, hat, profession accessory. Each layer has gradient fills (not flat colors) for shading. Face features include: eyes (with eye color and lash detail), nose (small triangular shadow), mouth (simple curve, varies by state), eyebrows (small lines, expressive). Hair has 3-4 strand groups for variation.",
+      "shading_pattern": "Use linearGradient with 2-3 stops per major shape. Light source from upper-left (so right side of body is shaded darker). 15-20% opacity black overlays for cast shadows.",
+      "state_variation": {
+        "healthy": {
+          "face": "neutral mouth curve, eyes open, normal eyebrows",
+          "posture": "standing upright, slight movement"
+        },
+        "weakened": {
+          "face": "tired eyes (slight droop), neutral mouth",
+          "posture": "shoulders slightly slumped"
+        },
+        "sick": {
+          "face": "closed eyes (blinking), small frown, paler skin tone (desaturate)",
+          "posture": "head slightly bowed",
+          "addition": "small sweat drop on forehead, occasional cough animation"
+        },
+        "injured": {
+          "face": "wincing eyes (eyebrows down)",
+          "posture": "leaning slightly",
+          "addition": "bandage on visible wound location"
+        },
+        "dying": {
+          "face": "eyes mostly closed, slight grimace",
+          "posture": "barely standing",
+          "addition": "deep desaturation overlay, slight sway animation"
+        },
+        "lost": "Full grayscale + cross icon overlay (existing v2.3)"
+      },
+      "profession_accessories_detailed": {
+        "Doctor": "White medical cap with red cross detail. Stethoscope draped around neck (curved tubing visible). Small black bag at side. White coat over blue shirt — gradient cream to white.",
+        "Hunter": "Brown wide-brim leather hat with crease detail. Leather bandolier across chest. Quiver of feathered arrows over shoulder. Compound bow held in one hand. Hunting knife at belt.",
+        "Carpenter": "Brown work cap. Hammer on belt loop. Tool belt with visible chisels and saws. Rolled-up sleeves on blue work shirt. Leather apron with pockets.",
+        "Cook": "Tall white chef hat with creases. Apron over dark gray clothing, possibly with flour stains. Wooden spoon in one hand, small cooking pot at feet (when standing).",
+        "Scout": "Coonskin cap with tail visible. Buckskin jacket with fringe. Spyglass in one hand. Leather pouch at hip.",
+        "Cowboy": "Tan cowboy hat with rolled brim. Bandana around neck. Vest over shirt. Boot spurs visible. Six-shooter holster at hip.",
+        "Priest": "Black robe with white collar visible. Cross necklace. Bible held in one hand. Short, neat hair.",
+        "Blacksmith": "Leather apron over heavy work clothes. Hammer in one hand. Soot smudges on face and arms (subtle dark patches).",
+        "Trapper": "Fur hat (probably beaver). Heavy fur-trim coat. Snare ropes coiled at side. Knife at belt.",
+        "Merchant": "Black bowler hat. Vest with watch chain. Coin pouch at side. Slightly fancier clothing than the workers.",
+        "Guide": "Wide-brim hat with feather. Long leather coat. Compass in hand. Sturdy boots.",
+        "Farmer": "Straw hat. Faded blue overalls over work shirt. Wheat sheaf in hand or hoe at side. Sunburned skin tone.",
+        "Seamstress": "Hair in a bun under bonnet. Long pink dress with apron. Sewing needle and thread visible. Small basket of fabric.",
+        "Musician": "Small jaunty cap. Maroon vest over white shirt. Fiddle held in one hand, bow in the other.",
+        "Artist": "Beret. Cream smock over regular clothes (with paint smudges). Paintbrush in hand, palette in other hand.",
+        "Language Teacher": "Wire-frame spectacles. Dark green coat. Open book in one hand.",
+        "Politician": "Tall top hat. Black formal suit with white shirt and bow tie. Speech scroll in hand. Walking cane.",
+        "Banker": "Top hat. Gray formal suit. Small money bag in hand. Pocket watch chain visible.",
+        "Actor": "Dramatic flowing scarf. Red velvet jacket. Theater mask held in one hand. Posed slightly theatrically.",
+        "Fashion Designer": "Stylish wide-brim hat with feathers. Bright pink dress with elaborate trim. Measuring tape around neck. Pin cushion at wrist.",
+        "Magician": "Black top hat with star detail. Long black cape. Wand in hand, possibly with small spark effect. Pencil mustache.",
+        "Influencer": "Stylish hat with bandana band. Bright colorful bandana shirt. Holds something the period kids would understand as 'their voice' — maybe a small handheld megaphone or hat-pass collection cup.",
+        "Food Critic": "Bowler hat. Dark suit. Fork in one hand, spoon in the other (crossed). Notebook tucked under arm."
+      }
+    },
+    "animation_specifications": {
+      "dice_settling": {
+        "duration_ms": 800,
+        "behavior": "Two dice tumble through 3D-rotating animation (rotateX + rotateY at varying speeds), settling into final faces. CSS transform-style: preserve-3d allows actual cube-like rotation. Each die has 6 face SVGs positioned in 3D space.",
+        "audio": "Wood-on-table cascade sample (existing 'dice' SFX), settling chime on stop"
+      },
+      "wagon_wheel_rotation": {
+        "current_bug": "Wheels spin in place but wagon translates as one unit, so wheels don't ROLL forward — they spin while the wagon slides over them",
+        "fix": "Synchronize wheel rotation with wagon translation. For every X pixels of horizontal movement, rotate wheels by (X / circumference) * 360 degrees. Implement via JavaScript animationframe sync, or via CSS keyframes that compose translate and rotate together."
+      },
+      "rain_particle_system": {
+        "trigger": "Storm event, also rain weather variant of any region",
+        "implementation": "30-50 small SVG line elements, each with its own CSS keyframe falling diagonally. Stagger animation-delay so they don't all start at the same time. Re-spawn at top when reaching bottom.",
+        "perf_note": "Use transform-only animations (translateY) — no width/height or top/left changes — so the browser can compose on GPU"
+      },
+      "snow_particle_system": {
+        "trigger": "day > 130 in mountains region, also winter ending",
+        "implementation": "40-60 small white circles, falling slower than rain, with gentle horizontal drift via sine wave. Some are larger and slower (foreground), others smaller and faster (background) for depth"
+      },
+      "dust_devil": {
+        "trigger": "high_desert region, randomly every 30-60 seconds",
+        "implementation": "Animated SVG group: 5-7 small particle elements rotating around a central point that translates across the screen. Lifetime ~3 seconds, then dissipates."
+      },
+      "campfire_embers": {
+        "trigger": "Rest action, any night scene",
+        "implementation": "8-12 small orange circles drifting upward from the fire, fading out. Each with a slightly different starting position and velocity. Looped."
+      },
+      "river_flow": {
+        "trigger": "River crossing scenes",
+        "implementation": "Multiple horizontal wave-shaped paths animated via stroke-dashoffset to create the illusion of moving water. Use 2-3 layers of waves at different speeds and opacities for depth."
+      }
+    },
+    "day_night_cycle": {
+      "philosophy": "Real journeys feel different at dawn than at noon. Vary the atmospheric tint based on calendar day to subtly mark passage of time.",
+      "implementation": "Compute time-of-day from (daysTraveled % 4): 0=morning, 1=midday, 2=afternoon, 3=dusk. Apply corresponding atmospheric gradient via CSS variable update. Transition smoothly over 0.8s when changing.",
+      "subtle_variations": [
+        "Morning: pinks and warm yellows",
+        "Midday: bright blues and high contrast",
+        "Afternoon: golden warm light, longer shadows",
+        "Dusk: oranges, reds, deep purples in distant horizons"
+      ]
+    }
+  },
+  "responsive_scaling_v2_7": {
+    "philosophy": "Playtest screenshots from Nicholas show the game looks broken at 25% zoom (everything tiny), cramped at 100% zoom on a high-DPI laptop, and likely won't look right at all on the 4K projector the teacher will use for class. The root cause is the layout has fixed pixel sizes for UI chrome and oversized scenery elements (fort silhouette dominates the scene). Fix: responsive design from 1024x768 (Chromebook) to 3840x2160 (projector).",
+    "layout_density_variable": {
+      "name": "--ui-density",
+      "computed_at_runtime": "On window load and on resize, JavaScript reads window.innerWidth and sets --ui-density to one of: 'compact' (< 1280px wide), 'standard' (1280-1919px), 'large' (1920-2559px), 'jumbo' (>= 2560px).",
+      "css_consumes_via": "Each density tier has its own size scaling for resource ribbon items, team strip portraits, action button heights, and font sizes. Standard css clamp() functions then handle within-tier scaling smoothly.",
+      "rationale": "A 4K TV at 3840 wide is not just 'a bigger laptop' — kids viewing from 6 feet away need bigger fonts and chunkier buttons. A Chromebook at 1366 wide has no room for big chrome. A small handful of explicit tiers handles this better than continuous scaling alone."
+    },
+    "fort_sizing_fix": {
+      "current_problem": "Fort silhouette in resolveFort uses translate(160 240) with base width 180, height 100, plus crenellations and flag adding 30 viewBox units up. Total fort visual occupies ~30% of viewBox vertical space, which becomes ~40-50% of canvas vertical when sliced. Visually dominates.",
+      "fix": "Reduce the fort visual to occupy ~15-18% of viewBox vertical space. Specific changes:",
+      "new_dimensions": {
+        "translate": "translate(220 310)",
+        "base_rect": "x=0, y=30, width=130, height=70",
+        "crenellations": "polygon points scaled by 130/180 ratio, clamped to y=20-30",
+        "door": "x=58, y=58, width=14, height=42",
+        "flagpole": "from y=20 up to y=-4 (was -12)",
+        "flag": "polygon at y=-4"
+      },
+      "result": "Fort base now 130x70 viewBox units = 16% width, 14% height. Sky and surroundings remain visible above and around it. Wagon and characters in scene have proportional space."
+    },
+    "scene_canvas_viewbox_change": {
+      "current": "viewBox='0 0 800 500' (8:5 aspect = 1.6:1)",
+      "new": "viewBox='0 0 1600 900' (16:9 aspect = 1.78:1)",
+      "rationale": "Most modern displays are 16:9 native. Matching the SVG viewBox aspect ratio to the canvas aspect ratio means slice mode performs minimal cropping — all authored content stays visible at typical resolutions. On 4:3 Chromebook (1024x768), some side-cropping happens but content remains coherent.",
+      "migration_note": "All existing draws at coordinates within 0-800 x 0-500 must be REMAPPED to the new viewBox. Quick approach: wrap existing scenery group in '<g transform=\"scale(2 1.8) translate(0 0)\">' which expands old 800x500 content to fit new 1600x900. Then recalibrate proportions of oversized elements like the fort.",
+      "alternative": "Keep existing 800x500 scenery and add letterbox via 'preserveAspectRatio=\"xMidYMid meet\"' so empty bands appear as part of the regional color. Empty bands fill with same gradient as the sky/ground."
+    },
+    "preserve_aspect_ratio_change": {
+      "current": "All scenery uses 'xMidYMax slice' — fills canvas, may crop top of viewBox",
+      "recommendation": "Switch to 'xMidYMid meet' for the SCENE-CHARACTERS layer (so fort/wagon/characters are never cropped at the edges). KEEP slice for the SCENE-BACKDROP layer so the sky/ground always fills the canvas (no black bars).",
+      "result": "Backdrop always fills canvas (slice). Characters/wagon/fort always fully visible (meet). When the canvas aspect ratio differs from viewBox aspect ratio, the characters layer shows letterboxed bands which are TRANSPARENT — backdrop shows through underneath. No crops, no voids."
+    },
+    "typography_clamp": {
+      "philosophy": "All UI text uses clamp(min, vw-relative, max) so it scales smoothly with viewport width within a density tier.",
+      "specific_clamps": {
+        ".resource-ribbon .res-item .val": "clamp(14px, 1.1vw, 22px)",
+        ".resource-ribbon .res-item .label": "clamp(9px, 0.7vw, 13px)",
+        ".action-buttons button .name": "clamp(15px, 1.2vw, 22px)",
+        ".action-buttons button .desc": "clamp(11px, 0.8vw, 16px)",
+        ".team-portrait .member-name": "clamp(11px, 0.8vw, 15px)",
+        ".event-title": "clamp(20px, 2vw, 36px)",
+        ".event-flavor": "clamp(13px, 1vw, 20px)",
+        ".narrative-text": "clamp(14px, 1.1vw, 22px)"
+      }
+    },
+    "ui_chrome_scaling_per_density": {
+      "compact": {
+        "viewport": "< 1280px wide (Chromebook 1366x768 in tabbed browser, etc.)",
+        "ribbon_height": "auto (flex-wrap allowed)",
+        "team_portrait_size": "62px",
+        "action_button_height": "70px",
+        "narrative_callout_max_width": "min(540px, 88vw)"
+      },
+      "standard": {
+        "viewport": "1280-1919px wide (most laptops)",
+        "ribbon_height": "auto",
+        "team_portrait_size": "76px",
+        "action_button_height": "84px",
+        "narrative_callout_max_width": "min(640px, 70vw)"
+      },
+      "large": {
+        "viewport": "1920-2559px wide (4K laptop, large monitor)",
+        "ribbon_height": "auto",
+        "team_portrait_size": "92px",
+        "action_button_height": "100px",
+        "narrative_callout_max_width": "min(720px, 55vw)"
+      },
+      "jumbo": {
+        "viewport": ">= 2560px wide (4K TV / projector)",
+        "ribbon_height": "auto",
+        "team_portrait_size": "120px",
+        "action_button_height": "130px",
+        "narrative_callout_max_width": "min(900px, 45vw)",
+        "audio_note": "If played on a TV, sound effects should also be louder. Consider boosting all audioController gains by 1.3x at jumbo density. Music can stay at current level."
+      }
+    },
+    "deployment_note": "When this v2.7 is built, IF Nicholas has not yet committed the v2.6 game-code changes, applying v2.7 should be done on top of the v2.6 working tree (NOT on the v2.5 base). Verify before starting: read meta.version from oregon_trail_game_data.json and confirm it says '2.7'; check pink_oregon_trail.html for v2.6 markers (parallax CSS variable --wagon-progress, region backdrop classes .bg-far .bg-mid .bg-near) before applying v2.7 changes. If v2.6 is missing, apply v2.6 first per its amendment, then v2.7."
+  },
+  "callout_repositioning_v2_8": {
+    "philosophy": "v2.7 fixed UI chrome scaling but missed that the narrative callout overlay is positioned dead-center, occupying the exact horizontal range where the wagon is drawn (x=540 in 800-wide viewBox = ~67% from left). At any zoom level on any display, the callout text overlaps and visually erases the wagon. Fix: callout becomes a left-anchored panel; right portion of scene stays visible.",
+    "current_positioning": {
+      "css": "position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); max-width: var(--callout-max-w, min(640px, 70vw))",
+      "effective_horizontal_range_at_standard_density": "From ~22% to ~78% of canvas width (centered ~640px wide on a typical canvas)",
+      "wagon_position_at_x540_in_viewBox": "~67.5% of canvas width — solidly inside the callout's range",
+      "result": "Wagon is visually covered by the callout in every fort/river/event scene"
+    },
+    "new_positioning": {
+      "css": "position: absolute; left: 16px; bottom: 16px; transform: none; max-width: var(--callout-max-w, min(580px, 42vw)); max-height: 88%",
+      "effective_horizontal_range_at_standard_density": "From 16px (left edge) to ~42% of canvas width",
+      "wagon_remains_visible_at": "x=540 in viewBox = ~67% canvas width = right of the callout",
+      "right_zone_for_scenery": "Roughly 45-95% of canvas width is now visible scenery + wagon area"
+    },
+    "max_width_per_density_tier": {
+      "compact": "min(440px, 86vw) — phones / narrow Chromebook tabs",
+      "standard": "min(560px, 42vw) — typical laptop",
+      "large": "min(680px, 38vw) — 4K laptop / large monitor",
+      "jumbo": "min(820px, 35vw) — 4K TV / projector"
+    },
+    "compact_tier_special_case": {
+      "philosophy": "On phones (< 740px wide), there's not enough horizontal room to split the canvas. Fall back to bottom-anchored, full-width callout — better to obscure the wagon than to truncate the text.",
+      "media_query": "@media (max-width: 740px) — restore callout to centered/full-width, OR keep left-anchored but allow up to 86vw width"
+    },
+    "wagon_position_tweak": {
+      "philosophy": "If the callout panel takes left ~42% of canvas, wagon at viewBox x=540 is comfortably to its right. But to add a little breathing room and avoid edge cases, push the default wagonX from 540 to 580 — moves wagon further right, ensuring it's never close to the callout's right edge.",
+      "change_in_renderSceneCharacters": "Default wagonX: opts.wagonX != null ? opts.wagonX : 580 (was 540)",
+      "explicit_wagonX_call_sites": "All call sites currently passing wagonX: 540 should become wagonX: 580. Call sites passing wagonX: 360 (smaller scenes like buffalo encounter) can stay — those are already left-of-callout-zone but the callout will sit beneath them naturally.",
+      "wagon_x_380_case": "renderSceneCharacters({wagonX: 380}) at line ~11224 — this is the bandit scene. With callout on left taking ~42%, x=380 ≈ 47% from left would be at the right edge of the callout. Push to x=560 for bandit scene too."
+    },
+    "edge_cases": [
+      "If a callout is shown for a 'left-side' event (e.g., Pawnee family encounter on the LEFT of canvas), the callout would overlap the figure. Mitigation: such scenes already use heroes array with x positions 80, 200, 320 — yes they overlap. Acceptable trade-off — text covers the supporting characters but the wagon (the primary visual anchor) stays visible.",
+      "On compact (mobile) viewports, the left-anchored callout becomes wide enough to block the whole scene anyway. The compact tier override falls back to centered-bottom positioning for mobile.",
+      "When the callout is closed (action menu visible), the scene fills 100%. The wagonX=580 default might look slightly off-center to the right. Acceptable — the wagon was already off-center (at x=540 = 67%) before this change."
+    ]
+  },
+  "v2_9_visual_overhaul": {
+    "philosophy": "Multiple visual issues stacked: scenery is too dark across all times of day, the team is invisible during travel, the wagon is undersized, the bottom UI takes 3 rows when it could take 1, the now-playing badge truncates names, and the trail's geographic shape is generic. Fix all together so playtest produces a coherently-improved game, not a collection of partial fixes.",
+    "stages": {
+      "stage_1_scenery_brightness": {
+        "issue": "v2.6 added day/night cycle but the gradients are uniformly dark. The Oregon City finish scene (ironically a triumphant moment) renders with a near-black sky.",
+        "fix_atmosphere_gradients": "Rewrite all 5 regions x 4 times-of-day = 20 gradients. Lower bound for sky brightness (top stop): hex value lightness >= 70% during morning/midday, >= 50% during afternoon, >= 30% during dusk. NEVER pure black or near-black for any time except a true winter scene at 165+ days.",
+        "specific_brightening_targets": [
+          "Plains midday: top stop #B6D4E8 (sky blue), bottom #FBF6F0 — was acceptable, leave",
+          "Plains morning: brighten top stop from current #FFE4C4 to #FDD89E (warmer dawn)",
+          "Plains afternoon: top stop #F4D2A8, bottom #FBF6F0 (golden hour) — NEW",
+          "Plains dusk: top stop #E8957B, bottom #C8A088 (still red but readable)",
+          "Foothills: similar treatment with mauve/dusty rose tints",
+          "Mountains: cooler tones but still bright at midday — top stop #B8C8D8 minimum",
+          "Mountains winter (day > 130): pale cool gray top #E0E8F0, white bottom — NOT dark",
+          "High desert midday: HOT bright top #F4D2A8 with a sun-glare radial gradient overlay (faint white dot upper-right that fades out) — sun should feel oppressive",
+          "Forest: greener and lighter than current — top #C8E0C0 morning, #98C088 midday",
+          "Oregon City finish scene specifically: override to FORCE midday-style bright atmosphere regardless of daysTraveled. This is the win moment; it should feel like dawn."
+        ],
+        "verification": "Playtest screenshots at noon and dusk in each region. The dusk scenes should be moody (sunset reds and purples) but never so dark that figures and foreground objects are silhouetted into invisibility."
+      },
+      "stage_2_weather_and_motion": {
+        "philosophy": "Each region needs visible motion that's specific to its place. Plains have grass swaying and birds. Desert has tumbleweeds and heat shimmer. Mountains have drifting snow. This wasn't fully landed in v2.6.",
+        "additions": [
+          {
+            "region": "plains",
+            "elements": [
+              "Tall grass blades sway in sine-wave loop (already specced, verify it's running)",
+              "1-2 buffalo silhouettes drift slowly across the horizon over 30s, restart at offscreen-left",
+              "3-5 birds in V formation cross the sky every ~25 seconds (existing, verify)",
+              "Cloud layer drifts at 0.3x wagon speed (existing, verify)"
+            ]
+          },
+          {
+            "region": "high_desert",
+            "elements": [
+              "**Tumbleweeds**: 1-2 at any time, rolling across foreground (left-to-right or right-to-left random). 8-12 second crossing time. Re-spawn 5-15 seconds after exit.",
+              "**Sun glare overlay** at midday: faint white radial gradient in upper-right corner, fades out around the edges. Subtle but oppressive.",
+              "Heat shimmer at horizon (existing SVG filter, verify)",
+              "Dust devil 16% per turn (existing, verify)",
+              "Vulture circling slowly (existing, verify)"
+            ]
+          },
+          {
+            "region": "foothills",
+            "elements": [
+              "**Fog drift** during morning (time-of-day = 0): 2-3 horizontal soft white bands drift slowly across mid-layer, fade in/out",
+              "Hawk circling on thermals (existing)",
+              "Trees sway in wind (existing)",
+              "Occasional deer silhouette appearing on hilltop (existing)"
+            ]
+          },
+          {
+            "region": "mountains",
+            "elements": [
+              "Snowflakes (existing, day > 130, verify)",
+              "Eagle soaring (existing, verify)",
+              "**Falling rocks**: small rock tumbles down a distant slope every ~45s, brief animation",
+              "Cloud wisps cling to peaks (existing)"
+            ]
+          },
+          {
+            "region": "forest",
+            "elements": [
+              "**Falling leaves** during dusk (time-of-day = 3): orange/yellow leaves drift down from tree canopy, slow rotation, similar to snow but warmer color and slower",
+              "God-rays through canopy (existing)",
+              "Salmon jumping (existing)",
+              "Bird silhouettes between trees (existing)"
+            ]
+          }
+        ],
+        "performance_note": "All ambient motion uses CSS keyframe animations on transform-only properties (translate, rotate, scale) so the browser GPU-composes them. No layout-triggering animations. Target: stays at 60fps with all weather active."
+      },
+      "stage_3_wagon_size_up": {
+        "current_default_scale": 0.85,
+        "new_default_scale": 1.1,
+        "scope": "All renderSceneCharacters() call sites. Where wagonScale is currently 0.85, change to 1.10. Where it's 0.7 (small/distant scenes), change to 0.85. Where it's 1.0, keep.",
+        "rationale": "Wagon should be visually substantial — it's the player's anchor. Currently it reads as small relative to the canvas."
+      },
+      "stage_4_callout_typography_smaller": {
+        "current_clamps": "Title clamp(20px, 2vw, 36px); body clamp(14px, 1.1vw, 22px)",
+        "new_clamps": "Title clamp(17px, 1.7vw, 30px); body clamp(13px, 1vw, 19px); choice button label clamp(13px, 1vw, 18px)",
+        "rationale": "Callout-on-left occupies 42vw at standard density. Slightly smaller text fits more callout in the same horizontal space and gives more visual breathing room for the right-side scene."
+      },
+      "stage_5_single_row_bottom_bar": {
+        "philosophy": "Currently the bottom of the screen has 3 horizontal bands stacked (action buttons, team strip, mini-map). At standard+ density, collapse to ONE row: team strip on left, mini-map middle, action buttons right.",
+        "layout_per_density": {
+          "compact": "KEEP stacked layout (3 rows). Not enough horizontal room for single-row.",
+          "standard": "Single row. Team strip ~38%, mini-map ~22%, action buttons ~36%, gaps ~4%. Total height: 100px (was ~280px stacked).",
+          "large": "Single row, more generous spacing. Total height: 110px.",
+          "jumbo": "Single row, large elements. Total height: 130px."
+        },
+        "css_pattern": "Use CSS Grid with grid-template-columns: auto 1fr auto and align-items: center. Each child gets its natural width; mini-map flexes to fill the middle.",
+        "minimap_behavior": "Stays click-to-expand. In single-row layout, default size is smaller (~280x80px). Click expands to fullscreen overlay (existing v2.7 behavior preserved).",
+        "action_button_behavior": "When choices fire (event/intervention), choice options STILL appear in the callout panel (per Nicholas's confirmation in item 1). Action bar stays as 4-5 buttons (Push On / Hunt / Rest / Forage / optional Make for Fort). When dice are rolling, action bar is briefly disabled with a 'Rolling...' overlay.",
+        "vertical_space_freed": "Going from ~280px stacked to ~100px single row at standard density frees ~180px for scene canvas. Significant scenery breathing room."
+      },
+      "stage_6_team_walking_alongside": {
+        "design_philosophy": "During Push On (the dice-roll-and-travel turn), the team is visible alongside the wagon, animated with a walk cycle. State of each member determines their position and animation. Team becomes part of the moving scene, not just abstract icons in a strip.",
+        "staging_during_push_on": {
+          "wagon_position": "x=580, y=380 (default per v2.8)",
+          "lead_position": {
+            "viewBox_x_range": "180-300",
+            "members": "Up to 2. Scout if present, otherwise the healthiest available adult.",
+            "behavior": "Walking briskly, looking ahead, pointing occasionally"
+          },
+          "flank_position": {
+            "viewBox_x_range": "400-500",
+            "members": "Up to 2 healthy/weakened adults",
+            "behavior": "Walking alongside the wagon, sometimes turning toward each other (chatting)"
+          },
+          "rear_position": {
+            "viewBox_x_range": "700-750",
+            "members": "Up to 1 (often the slowest or oldest)",
+            "behavior": "Walking with slight lag, sometimes catching up"
+          },
+          "wagon_interior_silhouettes": {
+            "behavior": "Children (if any team member is a child — TBD slot) and sick/injured/dying members render as dimmer silhouettes visible through the canvas top of the wagon. Use a slightly transparent shape inside the wagon SVG.",
+            "implementation_hint": "Add a <g class='wagon-passengers'> inside the wagon SVG that holds 0-3 simplified silhouette figures. Show/hide based on which members are riding."
+          },
+          "ground_grave_markers": {
+            "behavior": "For each lost team member, a small grave marker (cross or stone) renders on the ground BEHIND the wagon (lower x range, ~50-150 viewBox), with the member's name on it. Persistent across turns. Grave markers do NOT move with parallax — they're attached to the trail behind, which the wagon has passed.",
+            "rationale": "Visual memory of the team's losses without being morbid. Kids will point at them. Same emotional weight as the persistent localStorage graves spec'd in v2.0."
+          }
+        },
+        "state_to_position_assignment": {
+          "logic_summary": "When composing the Push On scene, walk the team[] array and assign each living member to a position based on state and profession.",
+          "rules_in_priority_order": [
+            "1. Lost members: render grave marker on ground at trail-rear; do not assign to walking position",
+            "2. Dying members: ride in wagon (silhouette in wagon-passengers group)",
+            "3. Injured members: ride in wagon (silhouette)",
+            "4. Sick members: ride in wagon (silhouette)",
+            "5. From REMAINING members (healthy + weakened):",
+            "   a. Up to 2 to lead position. Prefer Scout, then healthiest by profession-priority",
+            "   b. Up to 2 to flank position",
+            "   c. Up to 1 to rear position. Prefer weakened over healthy (slowest brings up the rear)",
+            "   d. Any remaining: ride in wagon (silhouette) — represents children/extra hands"
+          ],
+          "edge_case_all_riding": "If all 7 members are sick/injured/dying, only the wagon shows with all silhouettes inside. The ox still pulls. The wagon master is implied (not shown). Bleak but legible.",
+          "edge_case_team_smaller_than_7": "If members are lost, the team has fewer walking figures. Lead/flank/rear positions render with whoever's available. Empty positions just don't render."
+        },
+        "walk_cycle_animation": {
+          "frames": "Use 2-state CSS animation: stride-left and stride-right alternating. 0.7s per cycle.",
+          "css_pattern": "@keyframes walk { 0% { transform: translateY(0); } 50% { transform: translateY(-2px); } 100% { transform: translateY(0); } } — adds a slight bounce to each figure",
+          "leg_animation": "Inside the character SVG, the two leg <rect> elements get separate animations: left-leg shifts forward 4px viewBox units while right-leg shifts back, then swap. Roughly 0.7s cycle.",
+          "head_bob": "Slight head transform: translateY(-1px to 1px) at ~1Hz",
+          "state_modifiers": [
+            "Healthy: full bounce (-2px), full leg swing (4px)",
+            "Weakened: half bounce (-1px), 80% leg swing, slight forward lean",
+            "Lead-position-Scout: faster cycle (0.6s), slight forward lean (eager)"
+          ]
+        },
+        "horizontal_motion_during_dice_roll": {
+          "behavior": "While the dice are tumbling and settling (~1.2s), all walking team members + wagon translate rightward at a rate proportional to the rolled movement. After settle, freeze in final positions.",
+          "wagon_wheel_sync_note": "v2.6 noted wagon-wheel-translation sync as deferred to v2.7 (then v2.8, still pending). Implement it now alongside the team walking system since both use the same translate-with-time approach. JavaScript drives the position; CSS-attached wheels rotate proportionally to translateX delta."
+        },
+        "between_turns": {
+          "behavior": "When NOT in a Push On animation (callout open, action menu showing, etc.), team figures stay at their final walking positions but the walk-cycle animation pauses. They're frozen in place. Wagon also static.",
+          "rationale": "Performance — 7 figures animating at all times is wasteful. They only need to walk during the dice roll's ~1.5 seconds."
+        }
+      },
+      "stage_7_historical_map_shape": {
+        "philosophy": "The on-screen mini-map currently renders a generic curve. Replace with a stylized historical map of the Oregon Trail's actual route across the western territories.",
+        "map_design": {
+          "background": "Parchment color (#F4E8D8 base) with subtle aged texture (SVG filter feTurbulence at very low opacity for paper grain)",
+          "edges": "Slightly browned/curled edges via SVG filter or radial gradient overlay",
+          "state_outlines": "Faint sepia outlines of: Missouri (eastern start), Kansas Territory, Nebraska Territory, Wyoming Territory, Idaho Territory, Oregon Territory. State names labeled in small italic serif. Border lines are 0.5px thin, sepia (#A89070).",
+          "rivers": [
+            "Missouri River (eastern edge, faint blue-gray line)",
+            "Platte River (across Nebraska, parallel to trail)",
+            "Sweetwater River (Wyoming, near Independence Rock)",
+            "Snake River (Idaho, dramatic oxbow shape)",
+            "Columbia River (Oregon, near The Dalles and final stretch)"
+          ],
+          "trail_line": "Thick rose-pink line (#B85770) following the historical route. ~3px stroke. Slight texture via stroke-dasharray for hand-drawn feel.",
+          "trail_shape_landmarks": [
+            "Independence MO at coordinates (15, 45) of viewBox",
+            "Through Kansas/Nebraska east-to-west (relatively straight)",
+            "Slight southern dip through Nebraska/Wyoming border (~around x=40-50)",
+            "South Pass is the inflection point — trail bends northwest from there",
+            "Through Idaho along Snake River oxbow",
+            "Columbia River gorge near final approach",
+            "Oregon City at coordinates (12, 38) of viewBox (Willamette Valley, slightly south of Columbia)"
+          ],
+          "stop_markers": [
+            "Forts: filled brown circles, 5px diameter, with small text label (e.g., 'Fort Laramie')",
+            "Landmarks: small pink stars, 4px",
+            "Rivers: small wave icons at crossing points",
+            "Current wagon position: tiny wagon SVG (10px wide), positioned by linear-interpolating between trail keypoints based on w.position / trail.length"
+          ],
+          "all_wagons_view": "In Competitive mode, render each wagon as a small colored circle with player initial. Currently active wagon's marker pulses gently."
+        },
+        "viewBox": "viewBox='0 0 100 60' (5:3 aspect, fits the bottom-row mini-map slot)",
+        "expand_to_fullscreen": "Click the mini-map to overlay a 90vw x 80vh version of the same map at higher detail. Click anywhere outside to dismiss. Existing v2.7 expand mechanism preserved.",
+        "interaction_with_physical_board": "The on-screen map's geographic shape should INFORM v3.1's physical board redesign. Same trail route, same landmarks at same relative positions. v3.1 will redo the printable tiles to match this digital map."
+      },
+      "stage_8_photo_override_population": {
+        "philosophy": "Nicholas provided a zip with 29 historical photos. 11 of them map cleanly to landmarks in the trail. Pre-populate the override block during this build so photos appear immediately on first launch.",
+        "photo_block_source": "A separate file 'historical_photos_override_block.html' has been generated containing the full <script id='historical-photos-override'> block with all 11 photos base64-encoded inside. Total size ~620KB.",
+        "implementation": [
+          "Read historical_photos_override_block.html from the project folder",
+          "Find the closing </body> tag in pink_oregon_trail.html",
+          "If a <script id='historical-photos-override'> block already exists in the HTML, replace it with the new block (same logic as fetch_historical_photos.py)",
+          "Otherwise insert the new block immediately before </body>",
+          "Save and verify the file size increased by ~620KB"
+        ],
+        "expected_HTML_size_after": "v2.8 was ~600KB, v2.9 with photos embedded will be ~1.2-1.3MB. Still well within reasonable limits, still single-file offline.",
+        "consumer_code_changes_needed": "The existing landmarkIllustrationFor() function in v2.5+ already checks window.HISTORICAL_PHOTOS_OVERRIDE first. If present, render <img>; otherwise render daguerreotype SVG. Verify this function handles the new bonus landmark IDs (fort_kearny, fort_hall, fort_boise, ash_hollow, courthouse_rock, scotts_bluff). If those IDs aren't currently mapped to a landmark name, add the mapping in resolveLandmark / resolveFort."
+      },
+      "stage_9_now_playing_badge_fix": {
+        "issue": "Screenshot shows 'g' in the now-playing badge instead of full player name 'Gabby'.",
+        "root_cause_hypothesis": "Either the badge renders only first character (e.g., name.charAt(0)), OR the player name isn't being passed correctly and the code falls back to a single-char default.",
+        "fix": "Locate the now-playing badge render code (likely in renderTurnBanner or showNowPlaying). Ensure it renders the full w.playerName, not a truncated version.",
+        "acceptance": "Win screen, leaderboard, all in-game badges show 'Gabby' (or whatever name was entered), not 'g'."
+      }
+    },
+    "v2_9_dependencies_on_earlier_versions": [
+      "Requires v2.8 callout-on-left (for the new wider scene canvas to be useful)",
+      "Requires v2.7 density tier system (for stage 5 single-row bottom bar)",
+      "Requires v2.6 region backdrops (for stage 1 brightness fix and stage 2 weather)",
+      "Build report should verify all earlier mechanics still work after this overhaul"
+    ],
+    "scope_explicitly_excluded": [
+      "Audio system overhaul — deferred to v3.0",
+      "Physical board PDF regeneration — deferred to v3.1",
+      "Pioneer Voices Did You Know cards — deferred to v3.0 (paired with audio)",
+      "The static-noise-every-30-seconds bug — deferred to v3.0 audio overhaul",
+      "Real instrument samples for music — deferred to v3.0"
+    ]
+  },
+  "v3_0_mobile_and_visibility": {
+    "philosophy": "The game was designed primarily for desktop classroom use but Gabby plays at home on multiple devices including phones. Mobile screens currently can't display the scene, callouts, action menu, team strip, AND mini-map all at once — something is always cut off. Plus, in multi-wagon Competitive games, wagon markers stack into a blob that hides individual positions. Fix both with one focused amendment.",
+    "scope": {
+      "mobile_ui_overhaul": "Drawer-based layout (Approach C) for viewports < 740px wide AND for any narrow-portrait orientation",
+      "pin_needles": "Smart-stacking pin needle wagon markers — affects desktop mini-map AND mobile drawer-map equally"
+    },
+    "stage_1_mobile_drawer_layout": {
+      "philosophy": "On mobile, the scene canvas takes the top ~60% of viewport. Below it, a fixed-position interaction panel takes ~40% — shows the active callout when an event is firing, otherwise shows the action buttons. Team strip and mini-map collapse into bottom-edge drawer tabs that slide up over the scene when tapped.",
+      "viewport_detection": "Add to existing density updater: if window.innerWidth < 740 OR (window.innerWidth < 1024 AND innerHeight > innerWidth), set density to 'mobile'. This treats narrow-portrait tablets as mobile too.",
+      "layout_when_mobile": {
+        "scene_canvas_zone": "top 60% of viewport. Region backdrop, characters, wagon, parallax — all rendered here, stretched to fill available space",
+        "interaction_panel": "fixed bottom 40%. Shows narrative callout when one is active; falls back to action buttons (Push On / Hunt / Rest / Forage) when not",
+        "resource_ribbon": "compressed to 32px tall, scrollable horizontally if needed, sticks to top",
+        "drawer_tabs": "Two slim tabs visible along the bottom edge: 'Team' (left) and 'Map' (right). Both ~80px wide × 28px tall, tap to slide up the corresponding drawer over the scene",
+        "drawer_team": "slides up from bottom, takes ~70% of viewport height, shows full team strip with state info inline (no hover needed — tap a portrait for tooltip; tap outside drawer to dismiss)",
+        "drawer_map": "slides up similarly, shows the mini-map at near-fullscreen size with all wagons visible via pin needles"
+      },
+      "css_pattern": "Use position: fixed for the bottom interaction panel and drawer tabs. Drawers use transform: translateY(100%) -> translateY(0) with 0.3s cubic-bezier transition for slide animation. Drawers have backdrop-filter: blur(2px) so scene shows through subtly. Tap-outside (overlay div behind drawer) dismisses.",
+      "scene_canvas_aspect_lock": "On mobile in portrait: encourage landscape via a one-time gentle prompt 'Rotate your phone for the best experience'. Don't HARD lock — kids might be sitting on a couch holding the phone in portrait. Just suggest. Don't show the prompt twice in the same session (use sessionStorage flag).",
+      "audio_gate": "First user gesture (tap on Begin Journey button or any setup screen interaction) triggers audioController.init() if not already initialized. Mobile browsers (especially iOS Safari) require this. Add a 'tap to enable sound' hint on first mobile load if no gesture detected after 3 seconds.",
+      "save_state_notice": "On first mobile launch, show a one-time toast: 'Your progress saves on this device. Different devices keep separate journeys.' Auto-dismiss after 6 seconds. Use localStorage flag to never show again.",
+      "tap_vs_hover": "Replace hover-tooltip behavior on team portraits with tap-to-show. On desktop, hover still works. On mobile, tap a portrait opens a small popover with the same info; tap elsewhere dismisses. Detect via @media (hover: none) — no DOM-time detection needed."
+    },
+    "stage_2_pin_needle_wagons": {
+      "philosophy": "Current wagon markers on the mini-map are 10px colored circles. When 4-6 wagons are at or near the same trail position, they overlap into a single colored blob. Replace with pin-needle markers that stack vertically when wagons share a space.",
+      "marker_design": {
+        "needle": "Thin vertical line (2px wide) extending up from the trail line. Color matches the wagon's assigned color (rose, gold, navy, forest, plum, copper).",
+        "head": "Circle at the top of the needle, 8-10px diameter, same color as needle, with player's first initial in white inside (centered).",
+        "needle_length_per_wagon": "Each wagon at the same space gets a different needle length so heads don't overlap. Order: leftmost wagon (lowest player index) gets shortest needle (16px), next gets 24px, then 32px, 40px, 48px, 56px. Up to 6 wagons stacked at one space without head overlap.",
+        "needle_origin_offset": "Each needle's base attaches at slightly different x within the space (5-pixel range), so even at the same space they're not coplanar — easier to read which is whose."
+      },
+      "smart_stacking_logic": {
+        "step_1": "Group all wagons by their current trail position",
+        "step_2": "For each group sharing a space, sort by player index (or wagon ID)",
+        "step_3": "Assign each wagon in the group a 'stack rank' from 0 to N-1",
+        "step_4": "Render needle length = 16 + (stackRank * 8) px",
+        "step_5": "Render needle x-offset = (stackRank - (groupSize-1)/2) * 5 px from space center",
+        "result": "Six wagons stacked at one space appear as a fan of six pin needles of increasing height, slightly spread horizontally. Six wagons spread across the trail look like six individual flags. Player visually identifies their own wagon by color and initial."
+      },
+      "active_wagon_marker": "Currently-active wagon's needle pulses gently (CSS keyframe scale 1.0 -> 1.15 -> 1.0 over 1.5s). Other wagons stay static.",
+      "applies_to": [
+        "Desktop mini-map in the bottom-bar (single-row at standard+ density)",
+        "Mobile drawer-map (drawer slides up from bottom)",
+        "Fullscreen-expanded mini-map (click/tap to expand)"
+      ],
+      "performance": "Six pin needles per wagon = 12 SVG elements per wagon (line + head circle + text). For 6 wagons = 72 elements. Negligible."
+    },
+    "stage_3_setup_screen_mobile_reflow": {
+      "philosophy": "Setup screens currently use multi-column grids that overflow narrow viewports. Reflow to single-column, full-width on mobile.",
+      "specific_changes": [
+        "Profession selection grid: 5 columns desktop -> 2 columns mobile -> scrollable list. Each card 100% width on mobile.",
+        "Name inputs: stack vertically, full-width, 50px tall touch targets",
+        "Difficulty cards (Easy/Medium/Hard): stack vertically full-width on mobile (currently side-by-side)",
+        "Wagon count selector: large tap targets, stack vertically",
+        "Begin Journey button: 60px tall on mobile, full-width-minus-margin"
+      ]
+    }
+  },
+  "v3_1_physical_board_redesign": {
+    "philosophy": "The physical board is the keepsake. Currently 6 letter-size tiles taped together — functional but not beautiful. Redesign with historically accurate geography, period-style watercolor aesthetic, AND add a single-sheet 36x24-inch poster format for Staples-quality wall printing. Decorated and paintable versions of both. Designed so Gabby and her mom can paint either format into something extraordinary.",
+    "outputs": {
+      "tile_format": {
+        "count": 12,
+        "files": "board_short_tile_A_decorated.html through board_short_tile_F_paintable.html (6 tiles x 2 versions)",
+        "sheet_size": "8.5 x 11 inches portrait per tile",
+        "assembly": "3 wide x 2 tall = 25.5 x 17 inches assembled board",
+        "audience": "print at home on a regular printer, glue to foam board"
+      },
+      "single_sheet_format": {
+        "count": 2,
+        "files": "board_poster_decorated.html and board_poster_paintable.html",
+        "sheet_size": "36 x 24 inches landscape (matches Staples standard)",
+        "audience": "print at Staples or similar, ready to use as a finished poster",
+        "cost_estimate": "$15-30 at Staples on satin photo paper or 100lb cardstock"
+      }
+    },
+    "design_principles": {
+      "historical_geography": "Trail follows the actual Oregon Trail route — east-to-west across plains (Missouri/Kansas/Nebraska), slight southern dip through Wyoming, South Pass crossing, northwest through Idaho along Snake River, ending in the Willamette Valley. Trail shape is an L-shape rotated: long east-west horizontal with a northwest leg in the final third.",
+      "aesthetic": "Period-style watercolor map, like 1840s emigrant guides or Lewis & Clark expedition maps. Sepia browns, muted greens, dusty roses, parchment cream. Pink as the trail color (period-appropriate cochineal red was a real period dye).",
+      "scenery_per_region": "Each section of the trail shows region-appropriate scenery: prairie grass and buffalo on the plains, Chimney Rock and Independence Rock as drawn landmarks in Wyoming, mountain ranges around South Pass, Snake River with oxbow shape across Idaho, Cascade Mountains and Pacific Northwest forest at the finish.",
+      "key_landmarks_visible": [
+        "Independence, MO (start)",
+        "Fort Kearny",
+        "Chimney Rock (drawn as actual recognizable shape)",
+        "Scotts Bluff",
+        "Fort Laramie",
+        "Independence Rock (the turtle-shell granite dome)",
+        "Devil's Gate",
+        "South Pass (the gentle saddle)",
+        "Fort Bridger",
+        "Soda Springs",
+        "Fort Hall",
+        "Fort Boise",
+        "Whitman Mission",
+        "The Dalles",
+        "Oregon City (finish)"
+      ],
+      "spaces_marked": "25 spaces for Short Journey or 50 for Extended, drawn as small numbered circles along the trail line. Each space has its place name in italic serif text below.",
+      "decorative_elements": [
+        "Compass rose in upper-left corner (period style, 8-point with fleur-de-lis north)",
+        "Cartouche/title block in upper-right with 'Pink Oregon Trail' title and 'Designed by Gabby Kasdaglis, 1848' attribution",
+        "Scale bar showing 'one inch = X miles' at bottom",
+        "Faint state/territory borders (Missouri, Kansas Territory, Nebraska Territory, Wyoming Territory, Idaho Territory, Oregon Territory)",
+        "River systems drawn faintly (Missouri, Platte, Sweetwater, Snake, Columbia)",
+        "Mountain ranges shaded as soft brown forms (Rockies, Wasatch, Blue Mountains, Cascades)",
+        "Decorative border edge — narrow patterned frame in sepia"
+      ]
+    },
+    "color_palette": {
+      "parchment": "#F4E8D8",
+      "deep_brown": "#5C4A36",
+      "tan": "#A89070",
+      "trail_pink": "#B85770",
+      "soft_pink": "#F4D3DA",
+      "cream": "#FBF6F0",
+      "river_blue": "#7A9DBE",
+      "forest_green": "#5F7A5F",
+      "mountain_purple": "#8B7A95",
+      "desert_tan": "#C8956D",
+      "gold_accent": "#D4AF37"
+    },
+    "stage_1_redesigned_tiles": {
+      "philosophy": "Replace the existing 12 tile HTML files with historically accurate, beautifully decorated versions. Each tile is one section of the trail; tiles assemble 3-wide-by-2-tall into a 25.5x17 inch board.",
+      "tile_layout_assembled": {
+        "tile_A": {
+          "position": "top-left",
+          "region": "Missouri / Kansas plains",
+          "spaces_short": "1-4",
+          "spaces_extended": "1-9"
+        },
+        "tile_B": {
+          "position": "top-middle",
+          "region": "Nebraska / Platte River country",
+          "spaces_short": "5-8",
+          "spaces_extended": "10-17"
+        },
+        "tile_C": {
+          "position": "top-right",
+          "region": "Wyoming foothills / Independence Rock area",
+          "spaces_short": "9-13",
+          "spaces_extended": "18-25"
+        },
+        "tile_F": {
+          "position": "bottom-right",
+          "region": "Wyoming high country / South Pass / Idaho",
+          "spaces_short": "14-17",
+          "spaces_extended": "26-33"
+        },
+        "tile_E": {
+          "position": "bottom-middle",
+          "region": "Idaho / Snake River country",
+          "spaces_short": "18-21",
+          "spaces_extended": "34-42"
+        },
+        "tile_D": {
+          "position": "bottom-left",
+          "region": "Pacific Northwest / Oregon City",
+          "spaces_short": "22-25",
+          "spaces_extended": "43-50"
+        }
+      },
+      "trail_flow": "A -> B -> C across top. C drops down to F (continues vertically at right edge). F -> E -> D across bottom (right to left). D contains finish at Oregon City in lower-left.",
+      "per_tile_artistic_elements": {
+        "tile_A": [
+          "Independence MO start: small drawn town with red-brick storefronts, smoke from chimney",
+          "Wagon train silhouettes leaving town heading west",
+          "Tall prairie grass in foreground",
+          "First few river crossings (Kansas River, Big Blue River)",
+          "Compass rose in upper-left corner of this tile only (north pointer)",
+          "State label MISSOURI in faint italic"
+        ],
+        "tile_B": [
+          "Platte River drawn as wide blue-gray ribbon across tile",
+          "Fort Kearny as small palisade fort silhouette",
+          "Buffalo herd on the horizon (small dark shapes)",
+          "Chimney Rock drawn as actual recognizable conical spire with its distinct silhouette",
+          "Scotts Bluff as broad rocky escarpment",
+          "Ash Hollow as small valley with trees",
+          "State label NEBRASKA in faint italic"
+        ],
+        "tile_C": [
+          "Fort Laramie as larger fort with American flag",
+          "Sweetwater River drawn faintly",
+          "Independence Rock drawn as turtle-shell granite dome with names visible faintly carved",
+          "Devil's Gate drawn as narrow river canyon",
+          "Trail bending to drop downward at tile's lower-right (toward tile F)",
+          "State label WYOMING TERRITORY"
+        ],
+        "tile_F": [
+          "South Pass drawn as gentle saddle between mountain ranges (Rocky Mountains visible in background as soft brown forms)",
+          "Fort Bridger as smaller log palisade",
+          "Soda Springs drawn as small bubbling springs with steam",
+          "Fort Hall as British-style trading post",
+          "Trail entering from top (continuing from tile C) and exiting to the left (continuing to tile E)",
+          "State label IDAHO TERRITORY"
+        ],
+        "tile_E": [
+          "Snake River drawn with its actual oxbow curve shape — the dramatic bends Idaho is known for",
+          "Fort Boise as small palisade near a river bend",
+          "Three Island Crossing as a section where the trail crosses through a river",
+          "Massacre Rocks (note: respectfully drawn — small rocky outcrop, not dramatized)",
+          "Hot Springs steam rising",
+          "Sagebrush and high desert vegetation",
+          "Trail flowing right-to-left across this tile (continues from F, heads to D)"
+        ],
+        "tile_D": [
+          "Cascade Mountains rising in background (snow-capped peaks)",
+          "Whitman Mission as small white-painted clapboard building (treated solemnly)",
+          "Walla Walla and Blue Mountains",
+          "The Dalles drawn as Columbia River narrowing through black basalt cliffs (Native fishermen on rocky platforms — respectful representation)",
+          "Columbia River widening as it flows toward the Pacific",
+          "Oregon City at finish — small Willamette Valley town beside Willamette Falls",
+          "Pacific Ocean hinted at as soft blue at the western edge",
+          "State label OREGON TERRITORY"
+        ]
+      },
+      "tile_construction": {
+        "viewBox": "612 x 792 (8.5 x 11 inches at 72 dpi)",
+        "page_size_css": "letter portrait via @page",
+        "border": "Decorative sepia border around each tile, ~24px wide, with period pattern (small repeated motif)",
+        "tile_label": "Each tile labeled in lower-right with 'Tile A of 6' style indicator and assembly hint arrow",
+        "alignment_marks": "Small pink registration dots at corners help kids align tiles when taping together",
+        "paintable_version": "Same composition but with most fills removed, leaving only outlines in light sepia. Trail line stays light pink. Numbered space circles stay outlined. Region name and key landmark labels stay in pencil-stroke gray. Text spaces large enough to paint within. Light gray dot grid faintly visible to suggest 'paint within these regions'."
+      }
+    },
+    "stage_2_single_sheet_poster": {
+      "philosophy": "A separate, more elaborate design optimized for the 36x24 inch landscape poster format that Staples can print. Different from the tiles — single continuous artwork without seam lines, more decorative, more space for elaborate scenery.",
+      "construction": {
+        "viewBox": "2592 x 1728 (36 x 24 inches at 72 dpi)",
+        "page_size_css": "@page { size: 36in 24in; margin: 0.5in; }",
+        "preserve_aspect_ratio": "xMidYMid meet (in case browser rendering is for preview)",
+        "print_optimization": "All vector — no raster images. Scales to any size cleanly. Staples will print at native 36x24 inches without quality loss."
+      },
+      "compositional_choices": {
+        "trail_layout": "More elaborate than tile version. Trail is a sweeping S-curve across the landscape, with Independence in lower-left and Oregon City in upper-left (echoing the historical L-shape but more dramatic for visual impact at poster size).",
+        "space_distribution": "All 50 Extended-trail spaces marked. Short Journey players use only the first 25 (or play with all 50 if they want — both modes work on the same poster).",
+        "scenery_zones": "Each region has a dedicated zone of the poster with elaborated scenery — Missouri starts with a frontier town vignette, plains have a buffalo herd in detail, Wyoming features Independence Rock and Chimney Rock as foreground subjects, mountains have snow-capped peaks with detailed shading, desert has mesa formations, Pacific Northwest has Mount Hood and Cascade range visible.",
+        "compass_rose": "Large ornate compass rose, ~8 inches diameter, in lower-right corner. Eight-point with fleur-de-lis north and decorative scrollwork.",
+        "title_cartouche": "Upper-center: large cartouche scroll-style banner reading 'PINK OREGON TRAIL — 1848' in period serif. Below it: 'A History Game Designed by Gabby Kasdaglis'. Decorated with quill-and-inkwell vignette, small drawing of a covered wagon.",
+        "scale_bar": "Bottom-center: 'One inch = approximately 70 miles' with hash marks.",
+        "decorative_borders": "1.5-inch decorative border around the whole poster with repeated period motifs (small wagons, oxen, fleurs, stars).",
+        "corner_vignettes": "Each of the four corners has a small period-style vignette: NW corner shows a settler family, NE shows oxen yoked to wagon, SW shows a Native American family in respectful representation (a Pawnee guide), SE shows a campfire scene."
+      },
+      "paintable_version": {
+        "philosophy": "Designed specifically for a mother-daughter painting project. Outlines clear and clean. Large open regions for color filling. Reference colors hinted as soft watermark labels (e.g., 'sky blue here', 'prairie green here') in faint pencil.",
+        "what_stays_printed": "Trail line in light pink. Space circles outlined and numbered. Landmark labels in italic serif. State borders in pencil stroke. Compass rose outlined (not filled). Title cartouche outlined. Border pattern outlined.",
+        "what_to_paint": "Region scenery (sky, ground, mountains, rivers, trees, buffalo). Decorative borders. Compass rose interior. Cartouche backing. Corner vignette interiors.",
+        "paint_guide_overlay": "Optional: light gray text labels in each major region suggesting paint colors ('sage green for plains', 'sepia for mountains', 'soft yellow for desert'). Toggle-able when generating the file."
+      }
+    },
+    "stage_3_assembly_and_painting_guide": {
+      "philosophy": "A document Gabby and her mom can use to plan the painting project. Lists all the supplies needed, suggests color palette, provides painting tutorial for the trickier elements (mountains, rivers, watercolor washes).",
+      "deliverable": "PRINTING_AND_PAINTING_GUIDE.html — single-page printable guide",
+      "sections": [
+        "Print options (tile version OR poster version, with cost estimates)",
+        "Staples printing instructions (paper recommendations, finish recommendations)",
+        "Hobby Lobby supply list (paints, brushes, palette, sealant)",
+        "Color palette card with hex values and physical paint matches",
+        "Painting techniques (watercolor wash for sky, layered green for grass, soft graduated mountains, river highlights)",
+        "Tips for painting around the printed text (don't paint over the trail line, the space numbers, the labels)",
+        "Sealing instructions (Mod Podge gloss after fully dry to make the board last a school year)",
+        "Optional: laminating service at Staples ($5-10) for ultra-durability"
+      ]
+    }
+  },
+  "v3_1_1_fixes": {
+    "philosophy": "Three small targeted bugs surfaced in playtest. Each is contained and validated in isolation. Bundle them as one quick amendment so Nicholas gets all three fixes in one push.",
+    "fix_1_day_night_cycle_stuck": {
+      "issue": "Sky stays dark across all regions and times of day. The Oregon City win scene renders with near-black sky despite v2.6 day/night cycle being specced and v2.9 brightness fix being applied.",
+      "diagnosis_steps": [
+        "Step 1: Open pink_oregon_trail.html. Search for 'data-time' and 'time-of-day' attribute usage. Confirm the attribute IS being SET on document root or scene container at game start AND on every turn end.",
+        "Step 2: If not being set: ADD a setTimeOfDay(daysTraveled) function that sets document.documentElement.dataset.time to the appropriate value (morning, midday, afternoon, dusk) based on (daysTraveled % 4 === 0 ? 'morning' : daysTraveled % 4 === 1 ? 'midday' : daysTraveled % 4 === 2 ? 'afternoon' : 'dusk'). Call it from completeEndTurn AND from beginJourney AND from advanceWagon.",
+        "Step 3: Verify the CSS rules :root[data-time='midday'] .atmosphere etc. are actually defined for each region. If gradients are defined but selector is wrong (e.g., .region-backdrop[data-time] instead of :root[data-time]), fix the selector.",
+        "Step 4: Inspect the actual gradient values for 'midday' across all 5 regions. If they're still dark (lightness <70% on top stop), apply the v2.9 brightening that was specced but possibly didn't land. JSON v2_9 stage_1 has the specific brightening targets."
+      ],
+      "additional_oregon_city_fix": "When the wagon reaches the finish space (Oregon City), force the atmosphere to bright midday regardless of daysTraveled. Add this in resolveFinish or wherever the win scene composes: temporarily override document.documentElement.dataset.time = 'midday' for the win scene, restore prior value if game continues for some reason (it doesn't usually).",
+      "verification": "Walk through journey from day 1 to day 60+, hitting all four time-of-day values. Each should show a visibly different sky tint. Reach Oregon City — sky should be bright (not dark) at the win scene."
+    },
+    "fix_2_race_to_fort_when_at_fort": {
+      "issue": "When a wagon is currently sitting on a fort space (e.g., just used Make for the Fort, or landed on a fort lucky-roll, or arrived via the v2.4 race_to_fort that was fixed) AND a member is in dying state, the intervention event still shows 'Race to the nearest fort' as a choice. Player picks it, the game advances them to... the SAME fort they're already at, which is nonsensical.",
+      "root_cause": "The availability check for race_to_fort is likely 'distanceToNextFort(w) <= 3' which returns 0 (or a small number) when the wagon is at or near a fort. Treating 0 as 'valid distance' is wrong — 0 means you're ALREADY there, not 'fort is conveniently close.'",
+      "fix": "In resolveInterventionChoice or wherever choice availability is evaluated:",
+      "fix_logic": [
+        "Calculate distanceToNextFort(w) — but exclude the wagon's CURRENT space if it's a fort.",
+        "Specifically: only consider forts AHEAD of the wagon (position > w.position) AND not yet visited (not in w.fortsVisited).",
+        "If no such fort exists within 5 spaces, race_to_fort is unavailable.",
+        "If wagon is currently AT a fort space: race_to_fort is also unavailable (the player should use 'Stop and tend' or 'Pray and continue' instead — they're already at fort medical resources).",
+        "When race_to_fort is unavailable: do not include it in the choice list shown to the player."
+      ],
+      "improvement_for_at_fort_case": "When a member is dying AND the wagon is at a fort, the intervention event should add a NEW choice option: 'Use the fort doctor' — which uses the fort's existing medical resources for a +30% recovery chance bonus AND costs 0 days (you're already at the fort). This makes being-at-a-fort meaningfully different from being-at-a-trail-space when intervening.",
+      "narrative_when_using_fort_doctor": "The fort's doctor takes {name} into the infirmary. Hours pass. The fort's surgeon has supplies and skill our wagon does not. {name} {recovers/does not survive} by sundown.",
+      "verification": "Force a wagon to a fort space. Force a member to dying state. Trigger end-of-turn. Intervention event should NOT show race_to_fort. Should show stop_and_tend, pray_and_continue, continue_full_pace, AND the new 'Use the fort doctor' option (with +30% bonus and 0-day cost)."
+    },
+    "fix_3_pdf_page_fill": {
+      "issue": "The two paintable PDFs (board_short_paintable.pdf and board_extended_paintable.pdf) render each tile in the top-left corner of the letter-portrait page instead of filling the page. About 60-70% of each page is blank.",
+      "root_cause_hypothesis": "The .page CSS rule has 'width: 8.5in; height: 11in' but during print rendering, wkhtmltopdf may be sizing the inner SVG to its viewBox dimensions (612x792 pixels at default 72 DPI = 8.5x11 inches) without applying the .page wrapper sizing. Or the SVG width/height attributes are explicitly set to small px values overriding the CSS.",
+      "fix_steps": [
+        "Step 1: In the combined-tile HTML files, ensure each .page element has explicit width: 8.5in; height: 11in AND that width/height are NOT overridden by any media query or print rule.",
+        "Step 2: Each <svg> inside .page must have NO explicit width/height attributes (or have width='100%' height='100%'). The viewBox handles the coordinate system; the CSS handles the actual rendered size.",
+        "Step 3: Add 'width: 100%; height: 100%; display: block;' as inline style or class to every <svg> in the combined HTMLs.",
+        "Step 4: The .page rule should also have 'overflow: hidden' to prevent any tiny offset from causing a scrollbar.",
+        "Step 5: For the @page CSS, ensure 'margin: 0' is set so the printable area is the full 8.5x11."
+      ],
+      "rebuild_required": "After fixing the HTML, regenerate both PDFs using wkhtmltopdf with the same flags as before (--page-size Letter --orientation Portrait --margin-top 0 etc.). Verify visually that each page fills with the tile artwork.",
+      "verification": "Open the new PDFs. Each of the 6 pages should show the tile filling the entire 8.5x11 sheet — not just the top-left corner. The decorative outline border should run along all four edges of the page."
+    }
+  },
+  "scoring_v3_3": {
+    "philosophy": "Replace the single-number score with four orthogonal tracks. A team finishing slow with everyone alive at full pantries should score higher than a team finishing fast with empty pantries and three lost. The slow careful team beats the fast careless team by more than 2x. That's the lesson the trail teaches.",
+    "tracks": {
+      "steward": {
+        "formula": "(members_alive * avg_health * avg_morale_at_finish) * 4",
+        "max": 280,
+        "narrative": "Your team arrived alive and well.",
+        "narrative_low": "Few of your people made it to the valley.",
+        "narrative_mid": "Some of your people came through. Others did not."
+      },
+      "provider": {
+        "formula": "final_money * 2 + final_food + final_water + final_medicine_doses * 5",
+        "max": 150,
+        "narrative": "Your wagon held its provisions to the end.",
+        "narrative_low": "You arrived at Oregon City with empty barrels and no coin.",
+        "narrative_mid": "You stretched what you had. The wagon was lean by the time you saw the valley."
+      },
+      "scholar": {
+        "formula": "dyk_cards_seen * 5 + bandit_quiz_correct * 10",
+        "max": 170,
+        "narrative": "Your team learned the trail.",
+        "narrative_low": "There was much to see along the way. You did not stop to see it.",
+        "narrative_mid": "You stopped at landmarks. You read what travelers had written before you."
+      },
+      "pathfinder": {
+        "formula": "max(0, 110 - days_traveled)",
+        "max": 80,
+        "narrative": "You raced the winter clock.",
+        "narrative_low": "Snow fell on the Cascades before you reached them.",
+        "narrative_mid": "You arrived before winter. The mountains let you through."
+      }
+    },
+    "total_max": 680,
+    "legacy_score": "Retained for backward compatibility with seeded leaderboard. computeScore() still runs and stores w.score; computeV33Score(w) populates w.scoreV33 = { steward, provider, scholar, pathfinder, total }.",
+    "interpretation_bands": {
+      "low": "0-25% of max",
+      "mid": "25-75% of max",
+      "high": "75-100% of max"
+    }
+  },
+  "dyk_quotas": {
+    "philosophy": "DYK card exposure was probabilistic in v3.2. Some games gave 5 cards, some gave 18. There was no guaranteed dose for the educational objective. v3.3 enforces a per-trail minimum and a category floor so every kid who plays sees a representative slice of the historical content.",
+    "minimums": {
+      "short": {
+        "minimum": 12,
+        "target": 14
+      },
+      "extended": {
+        "minimum": 24,
+        "target": 28
+      }
+    },
+    "categories_required_per_game": [
+      "historical",
+      "social",
+      "scientific",
+      "economic",
+      "native_perspective",
+      "women",
+      "children",
+      "geography"
+    ],
+    "implementation": "Per-wagon dyk_quota_remaining counter, initialized from trail length. Every space that can fire a DYK card checks the counter. If dyk_quota_remaining > spaces_remaining, the DYK card fires deterministically (no probability roll). Otherwise existing probability gates apply.",
+    "category_enforcement": "Maintain a dyk_categories_seen Set. If fewer than 4 turns remain and an unseen required category is still owed, the next eligible DYK card forces a card from that category.",
+    "v33_0_note": "Category enforcement is wired but the historical_facts pool was not retagged with all 8 categories this round (deferred with item 5 content expansion to v3.3.x). Until retagging completes, only the 'minimum count' floor is binding; the 'category floor' is best-effort against existing tags."
+  },
+  "residual_probabilities": {
+    "philosophy": "Every protective skill has a residual failure rate. Every calamity has a residual escape rate. Both honest. Both narratively framed. Kids should understand that on the real trail, good preparation made you 80% safe and bad preparation made you 20% lucky.",
+    "protections": {
+      "doctor_cholera_save": {
+        "p": 0.87,
+        "exhausted_p": 0.87
+      },
+      "hunter_feeds_team": {
+        "p": 0.85,
+        "exhausted_p": 0.5,
+        "exhausted_when": "consec_push_on >= 4"
+      },
+      "trapper_hunts": {
+        "p": 0.8,
+        "exhausted_p": 0.6,
+        "exhausted_when": "consec_push_on >= 4"
+      },
+      "carpenter_fixes_wheel": {
+        "p": 0.95,
+        "exhausted_p": 0.7,
+        "exhausted_when": "wagon_hp < 30"
+      },
+      "native_guide_river_crossing": {
+        "p": 0.95,
+        "exhausted_p": 0.95
+      },
+      "scout_finds_water": {
+        "p": 0.9,
+        "desert_p": 0.75
+      },
+      "cook_stretches_food": {
+        "p": 0.85,
+        "low_food_p": 0.65,
+        "low_food_when": "food < 5 lbs"
+      },
+      "priest_dying_intervention": {
+        "p": 1,
+        "bonus_recovery": 0.2
+      },
+      "merchant_buy_discount": {
+        "p": 1,
+        "deterministic_pct": 0.15
+      },
+      "banker_starting_bonus": {
+        "p": 1,
+        "deterministic": true
+      }
+    },
+    "escapes": {
+      "cholera": 0.08,
+      "buffalo_stampede": 0.08,
+      "lightning_strike": 0.15,
+      "tornado": 0.1,
+      "snake_bite": 0.12,
+      "river_drowning": 0.05,
+      "bandit_demand": 0.08,
+      "all_other_shocks": 0.05
+    },
+    "exhausted_protection_narratives": {
+      "hunter_failed": "The Hunter walked the timberline at dusk and came back empty-handed. Game was scarce; the team was tired. Tonight we eat what we have.",
+      "trapper_failed": "Snares all sprung clean. The Trapper checked every line twice, but the woods were quiet.",
+      "carpenter_failed": "The Carpenter laid out tools and lashings, but the wagon's bones were too tired. The repair held only partly.",
+      "scout_thirst": "The Scout rode out at first light and rode back at dusk. No spring. No creek. Tomorrow we ride further."
+    }
+  },
+  "push_on_tax": {
+    "philosophy": "Grueling pace for 3+ consecutive turns triggered a 30% exhaustion roll in v3.2. Steady pace had no consecutive-Push-On consequence at all. Kids who never stopped were not punished. v3.3 introduces a hidden counter that increments every Push On regardless of pace and resets on Hunt, Rest, or Forage. Narrative cues do the teaching — no on-screen meter.",
+    "counter_field": "consec_push_on",
+    "reset_actions": [
+      "Hunt",
+      "Rest",
+      "Forage"
+    ],
+    "pace_increment": {
+      "Steady": 1,
+      "Strenuous": 2,
+      "Grueling": 3
+    },
+    "thresholds": [
+      {
+        "value": 5,
+        "trigger": "oxen_refuse",
+        "effect_summary": "Forced 1-day stop, +0 movement",
+        "effect_field": "force_stop",
+        "narratives": [
+          "The lead ox planted his feet at dawn and would not move. We rested.",
+          "The off-side ox lay down in the trace before sunrise. The wagon master spoke to him quietly. We waited.",
+          "Both lead oxen turned away from the yoke. They had walked enough. The trail master called the day."
+        ]
+      },
+      {
+        "value": 8,
+        "trigger": "crew_exhaustion",
+        "effect_summary": "Random healthy member transitions to weakened (deterministic, no probability roll)",
+        "effect_field": "weaken_random_healthy",
+        "narratives": [
+          "Sarah collapsed by the campfire. The trail demands rest.",
+          "The youngest in the train sat down on the wagon tongue at dusk and could not be roused. Fever rose with the moon.",
+          "Half the camp slept where they fell. One did not rise without help."
+        ]
+      },
+      {
+        "value": 12,
+        "trigger": "wagon_damage",
+        "effect_summary": "wagon_hp -= 10, triggers Broken Wheel event with -1 backwards space",
+        "effect_field": "wagon_damage",
+        "wagon_hp_loss": 10,
+        "backwards_spaces": 1,
+        "narratives": [
+          "The wagon groans under endless miles. The rear axle cracks.",
+          "A spoke split as we pulled out of camp. The wheel went over and we lost half a day backing up.",
+          "The kingpin bent. We had to drop the load and walk the wagon backwards to a level patch."
+        ]
+      },
+      {
+        "value": 18,
+        "trigger": "major_breakdown",
+        "effect_summary": "wagon_hp -= 18, all members morale -2, forced 2-day stop",
+        "effect_field": "major_breakdown",
+        "wagon_hp_loss": 18,
+        "morale_loss": 2,
+        "force_stop_days": 2,
+        "narratives": [
+          "The wagon, the team, the trail itself rebels. We are stopped.",
+          "Wagon, team, road — none of it would carry us another mile. Two days passed before we moved.",
+          "The wheels would not turn. The oxen would not pull. The morning passed and the morning after that. We slept in the dust."
+        ]
+      }
+    ],
+    "visibility": "Hidden meter — no on-screen indicator. Narrative cues do the teaching. Kids should feel the strain, not stare at a meter."
+  },
+  "bypass_penalties": {
+    "philosophy": "There is no mechanical incentive to stop at a fort or river crossing if the player is in a hurry. Bypassing is invisible. Per Nicholas: no mandatory stops — strategy must be preserved. Players choose to stop because logic makes it rational.",
+    "fort_bypass": [
+      {
+        "condition": "any team member at health < 7 (or in weakened/sick/injured/dying state)",
+        "effect_field": "degrade_probability_boost",
+        "magnitude": 0.1,
+        "duration_turns": 3,
+        "narrative": "We saw the fort gates and pressed on. Sarah's cough deepened that night. We should have rested."
+      },
+      {
+        "condition": "food below 7 days' worth of consumption",
+        "effect_field": "morale_loss_and_journal",
+        "morale_loss": 1,
+        "journal_tag": "Fort Regret",
+        "narrative": "We needed to resupply. We pushed on instead."
+      },
+      {
+        "condition": "wagon_hp < 70",
+        "effect_field": "next_damage_multiplier",
+        "multiplier": 1.5,
+        "narrative": "The wagon was tired. We should have stopped to rest it."
+      },
+      {
+        "condition": "money < $5",
+        "effect_field": "no_penalty",
+        "narrative": "(pioneers without money skipped forts; this is honest)"
+      }
+    ],
+    "river_bypass": {
+      "trigger": "Player chooses 'ford without choosing method' option",
+      "effect": "auto-rolls fording outcome at +0.10 drowning probability",
+      "narrative": "We did not pick a place to cross. We took the bank we found."
+    },
+    "landmark_bypass": {
+      "trigger": "Wagon passes a landmark space without landing on it",
+      "effect": "Loses that landmark's DYK card AND -1 morale",
+      "narrative": "The landmark fell behind us before we even knew we were past it."
+    }
+  },
+  "personality_biases": {
+    "philosophy": "Lightweight bridge toward agent-based architecture without rebuilding the engine. Each member gets 5 hidden traits at character creation. Traits modify that member's behavior in stochastic rolls. Players see traits as flavor descriptors on the character card.",
+    "traits": {
+      "boldness": {
+        "range": [
+          1,
+          10
+        ],
+        "effect": "Modifies choice-card outcome probabilities. Bold members succeed more on risky choices, less on safe ones."
+      },
+      "frailty": {
+        "range": [
+          1,
+          10
+        ],
+        "effect": "Multiplies that member's state-transition probabilities for degrade rules. Frail member catches cholera more easily."
+      },
+      "faith": {
+        "range": [
+          1,
+          10
+        ],
+        "effect": "Slows that member's morale decay. In dying-intervention, +0.05 recovery boost per Faith point above 5."
+      },
+      "steady": {
+        "range": [
+          1,
+          10
+        ],
+        "effect": "Modifies the success rate of that member's profession protection. Steady Hunter feeds the team more reliably."
+      },
+      "lucky": {
+        "range": [
+          1,
+          10
+        ],
+        "effect": "Small +/-0.02 bias on every stochastic roll involving that specific member."
+      }
+    },
+    "generation": "Each trait rolls 1d6+1d6 (range 2-12, mean 7), capped 1-10",
+    "profession_biases": {
+      "Hunter": {
+        "steady": 1
+      },
+      "Doctor": {
+        "steady": 1,
+        "faith": 1
+      },
+      "Cowboy": {
+        "boldness": 1,
+        "steady": 1
+      },
+      "Priest": {
+        "faith": 2
+      },
+      "Frontiersman": {
+        "boldness": 1,
+        "lucky": 1
+      },
+      "Banker": {},
+      "Musician": {
+        "faith": 1,
+        "boldness": -1
+      },
+      "Artist": {
+        "faith": 1
+      }
+    },
+    "child_bias": {
+      "lucky": 1,
+      "steady": -1,
+      "frailty": -2
+    },
+    "display_descriptors": {
+      "boldness": {
+        "high_at": 8,
+        "high_label": "Bold",
+        "low_at": 3,
+        "low_label": "Cautious"
+      },
+      "frailty": {
+        "high_at": 8,
+        "high_label": "Frail",
+        "low_at": 3,
+        "low_label": "Hardy"
+      },
+      "faith": {
+        "high_at": 8,
+        "high_label": "Faithful",
+        "low_at": 3,
+        "low_label": "Doubtful"
+      },
+      "steady": {
+        "high_at": 8,
+        "high_label": "Steady",
+        "low_at": 3,
+        "low_label": "Restless"
+      },
+      "lucky": {
+        "high_at": 8,
+        "high_label": "Lucky",
+        "low_at": 3,
+        "low_label": "Star-crossed"
+      }
+    },
+    "frailty_state_multiplier": "1 + (frailty - 5) * 0.06; range ~0.76 (frailty 1) to ~1.30 (frailty 10) on degrade-rule probabilities",
+    "steady_protection_multiplier": "1 + (steady - 5) * 0.04; range ~0.84 to ~1.20 on profession protection rolls",
+    "lucky_bias": "+(lucky - 5) * 0.004; range -0.016 to +0.020 added to any stochastic roll involving this member",
+    "v32_compat_default": 5
   }
 };
 // ===== GAME DATA END =====
@@ -7501,6 +8673,13 @@ function newWagonState(setup) {
   // a chosen dark-skinned Doctor would render as a random-toned Doctor.
   const team = setup.professions.map((p, i) =>
     newMember(setup.names[i] || ('Member ' + (i+1)), p, setup.skinTones[i]));
+  // v3.3 — assign personality vectors (5 hidden traits) to each member.
+  // Traits modify state-transition probabilities, profession protections,
+  // and morale decay. Display descriptors show on the character card.
+  // Try/catch in case v33Generate isn't loaded (e.g. legacy save migration).
+  try {
+    team.forEach(m => { if (typeof v33GenerateTraits === 'function' && !m.traits) m.traits = v33GenerateTraits(m.profession, false); });
+  } catch (e) { /* graceful degradation */ }
   const resources = {};
   GAME_DATA.resources.forEach(r => resources[r.name.toLowerCase()] = r.start);
   // Part 4 — Stage 8: apply difficulty preset modifiers to starting
@@ -11139,6 +12318,17 @@ function rollDiceAndAdvance(w, onDone) {
 
 function doActionPushOn(w) {
   audioController.playSfx('click');
+  // v3.3 — Push-On Tax counter (item 2). Increments every Push On with
+  // pace-aware step (Steady +1, Strenuous +2, Grueling +3); resets on
+  // Hunt / Rest / Forage. Threshold-crossing fires the v33ApplyPushOnTax
+  // narrative (oxen refuse / crew exhaustion / wagon damage / breakdown).
+  // Counter persists on the wagon; no on-screen meter — narrative only.
+  const _paceStep = (w.pace === 'Grueling' ? 3 : w.pace === 'Strenuous' ? 2 : 1);
+  w.consec_push_on = (w.consec_push_on || 0) + _paceStep;
+  if (typeof v33ApplyPushOnTax === 'function') {
+    const taxed = v33ApplyPushOnTax(w);
+    if (taxed && taxed.narrative) logToWagon(w, '⚠ ' + taxed.narrative);
+  }
   applyTurnConsumption(w);
   // v2.5 Stage 2 — leaving the fort. Clear the per-visit fort-day flag
   // so a future re-entry (rare, but possible on Extended via voluntary
@@ -11261,6 +12451,11 @@ function promptVoluntaryFortStop(w, fortInfo, intendedPos, fromPos, raw, move, d
 }
 function doActionHunt(w) {
   audioController.playSfx('click');
+  // v3.3 — Hunt action resets the Push-On Tax counter (item 2). The team
+  // stops pushing west to put food in the wagon; the oxen, the wheels,
+  // the people all get a moment of slack. Counter reset is hidden from
+  // the player but the narrative effect (no looming threshold) is felt.
+  if (typeof v33ResetPushOnTax === 'function') v33ResetPushOnTax(w);
   applyTurnConsumption(w);
   // Profession-aware Hunt (Part 3 — 7c) per GAME_DATA.hunt_action.
   // Specialist priority: Hunter > Trapper > Cowboy > none.
@@ -11328,6 +12523,8 @@ function doActionHunt(w) {
 }
 function doActionRest(w) {
   audioController.playSfx('click');
+  // v3.3 — Rest action resets the Push-On Tax counter (item 2).
+  if (typeof v33ResetPushOnTax === 'function') v33ResetPushOnTax(w);
   applyTurnConsumption(w);
   const recovered = applyRestRecovery(w);
   audioController.playSfx('snore');
@@ -11349,6 +12546,8 @@ function doActionRest(w) {
 }
 function doActionForage(w) {
   audioController.playSfx('click');
+  // v3.3 — Forage action resets the Push-On Tax counter (item 2).
+  if (typeof v33ResetPushOnTax === 'function') v33ResetPushOnTax(w);
   applyTurnConsumption(w);
   const farmer = activeProtectorMember(w, 'Farmer');
   const scout  = activeProtectorMember(w, 'Scout');
@@ -13042,6 +14241,17 @@ function endGame() {
     }));
   });
   gameState.wagons.forEach(w => { w.score = computeScore(w); });
+  // v3.3 — compute the 4-track scoring (item 1). Legacy single-number
+  // score retained above for leaderboard back-compat. The 4-track view
+  // tells the kid that survival, stewardship, learning, and pace are all
+  // dimensions of "winning the trail" — not just a single number.
+  gameState.wagons.forEach(w => {
+    try { w.scoreV33 = computeV33Score({
+      team: w.team.map(m => ({ lost: m.state === 'lost', health: m.state === 'lost' ? 0 : (m.state === 'sick' || m.state === 'injured' || m.state === 'dying') ? 30 : (m.state === 'weakened') ? 60 : 100, morale: w.resources && w.resources.morale ? w.resources.morale : 7 })),
+      wagon_hp: w.wagon_hp, food: w.resources ? w.resources.food : 0, water: w.resources ? w.resources.water : 0, money: w.resources ? w.resources.money : 0, medicine: w.resources ? w.resources.medicine : 0,
+      dyk_cards_seen: (w.factsShownTitles || []).length, bandit_quiz_correct: (w.bandit_quiz_results ? w.bandit_quiz_results.baseScore : 0), days_traveled: w.daysTraveled
+    }); } catch (e) { w.scoreV33 = null; }
+  });
 
   content.appendChild(el('h1', { class: 'title', textContent: gameState.wagons.some(w => w.finished) ? "Trail's End" : "The Trail Holds Them" }));
 
@@ -13080,6 +14290,43 @@ function endGame() {
   });
   sb.appendChild(table);
   content.appendChild(sb);
+
+  // v3.3 — Four-track scoring panel. Side-by-side bars for Steward,
+  // Provider, Scholar, Pathfinder. Each bar shows the score, max, and
+  // a single-sentence interpretation chosen from low/mid/high bands.
+  gameState.wagons.forEach(w => {
+    if (!w.scoreV33) return;
+    const tracks = (GAME_DATA.scoring_v3_3 && GAME_DATA.scoring_v3_3.tracks) || {};
+    const v33 = el('div', { class: 'scoreboard', style: 'margin-top:18px;border:2px solid var(--rose);border-radius:12px;padding:18px;background:#FBF6F0;' });
+    v33.appendChild(el('h2', { textContent: w.name + ' — Your Trail in Numbers', style: 'color:var(--rose-dark);margin-bottom:6px;' }));
+    v33.appendChild(el('p', { style: 'font-style:italic;color:#5C4A36;font-size:13px;margin-bottom:14px;', textContent: 'A trail is not won or lost in a single number. There are four kinds of winning.' }));
+    const grid = el('div', { style: 'display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;' });
+    const trackKeys = ['steward', 'provider', 'scholar', 'pathfinder'];
+    const trackLabels = { steward: 'Steward', provider: 'Provider', scholar: 'Scholar', pathfinder: 'Pathfinder' };
+    const trackColors = { steward: '#5F7A5F', provider: '#A89070', scholar: '#7A9DBE', pathfinder: '#B85770' };
+    trackKeys.forEach(key => {
+      const score = w.scoreV33[key] || 0;
+      const max   = (w.scoreV33.maxes && w.scoreV33.maxes[key]) || 100;
+      const pct   = Math.max(2, Math.min(100, (score / max) * 100));
+      const def   = tracks[key] || {};
+      const band  = score < max * 0.25 ? 'low' : score < max * 0.75 ? 'mid' : 'high';
+      const narr  = band === 'high' ? def.narrative : (band === 'mid' ? def.narrative_mid : def.narrative_low) || def.narrative || '';
+      const card = el('div', { style: 'background:#FFF;border:1px solid var(--tan);border-radius:8px;padding:12px;' });
+      card.appendChild(el('div', { textContent: trackLabels[key], style: 'font-weight:bold;color:var(--rose-dark);font-size:14px;margin-bottom:4px;' }));
+      card.appendChild(el('div', { textContent: score + ' / ' + max, style: 'font-size:22px;color:#3D2817;margin-bottom:6px;font-family:Georgia,serif;' }));
+      const barOuter = el('div', { style: 'background:#EEE5D5;border-radius:4px;height:10px;overflow:hidden;margin-bottom:8px;' });
+      const barInner = el('div', { style: 'background:' + trackColors[key] + ';height:100%;width:' + pct.toFixed(1) + '%;transition:width 0.6s ease;' });
+      barOuter.appendChild(barInner);
+      card.appendChild(barOuter);
+      card.appendChild(el('div', { textContent: narr, style: 'font-size:12px;font-style:italic;color:#5C4A36;line-height:1.4;' }));
+      grid.appendChild(card);
+    });
+    v33.appendChild(grid);
+    const total = w.scoreV33.total || 0;
+    const totalMax = (w.scoreV33.maxes && w.scoreV33.maxes.total) || 680;
+    v33.appendChild(el('div', { style: 'margin-top:14px;text-align:right;font-size:15px;color:#3D2817;', textContent: 'Total: ' + total + ' of ' + totalMax }));
+    content.appendChild(v33);
+  });
 
   // Save to leaderboard
   gameState.wagons.forEach(w => saveLeaderboardEntry({
@@ -13419,9 +14666,9 @@ function _wireTooltipDismiss() {
 // runs/scenario — do not retune without re-running the calibration.
 
 const V32_STARTING = {
-  easy:   { money: 35, food: 200, water: 30, supplies: 8, medicine: 3, wagon_hp: 100 },
-  medium: { money: 18, food: 140, water: 22, supplies: 5, medicine: 1, wagon_hp: 100 },
-  hard:   { money: 12, food: 110, water: 16, supplies: 3, medicine: 0, wagon_hp:  85 }
+  easy:   { money: 35, food: 220, water: 30, supplies: 8, medicine: 3, wagon_hp: 100 },
+  medium: { money: 20, food: 160, water: 22, supplies: 5, medicine: 1, wagon_hp:  65 },
+  hard:   { money: 12, food: 120, water: 16, supplies: 3, medicine: 0, wagon_hp:  55 }
 };
 
 const V32_PRICES = {
@@ -13840,6 +15087,661 @@ function runCalibrationSim(n, team, diff) {
   return { finished, eliminated, totalLost, lostAt1, lostAt3, p25, med, n };
 }
 
+// =====================================================================
+// v3.3 SIMULATION & SCORING MODULE
+// =====================================================================
+// Extends V32 with: 4-track scoring (item 1), Push-On Tax (item 2),
+// Smart-Stop bypass penalties (item 3), DYK exposure quotas (item 4),
+// residual probabilities on protections and shocks (item 8), and
+// per-member personality vectors (item 11). The V33 calibration sim
+// models strategic vs careless playstyles so finish rate actually
+// differentiates by team composition — the v3.2 smoking-gun fix.
+
+const V33_CFG = (typeof GAME_DATA !== 'undefined' && GAME_DATA) || {};
+const V33_PUSH_ON_TAX     = V33_CFG.push_on_tax || {};
+const V33_BYPASS          = V33_CFG.bypass_penalties || {};
+const V33_RESIDUAL        = V33_CFG.residual_probabilities || {};
+const V33_DYK_QUOTAS      = V33_CFG.dyk_quotas || {};
+const V33_SCORING         = V33_CFG.scoring_v3_3 || {};
+const V33_PERSONALITY     = V33_CFG.personality_biases || {};
+
+// Per-member trait generation. 1d6+1d6 (range 2-12), capped 1-10, with
+// profession bias added before clamp.
+function v33RollD6() { return 1 + Math.floor(Math.random() * 6); }
+function v33RollTrait() {
+  const v = v33RollD6() + v33RollD6();  // 2-12, mean 7
+  return Math.max(1, Math.min(10, v));
+}
+function v33GenerateTraits(profession, isChild) {
+  const t = {
+    boldness: v33RollTrait(),
+    frailty:  v33RollTrait(),
+    faith:    v33RollTrait(),
+    steady:   v33RollTrait(),
+    lucky:    v33RollTrait()
+  };
+  const bias = (V33_PERSONALITY.profession_biases || {})[profession] || {};
+  for (const k in bias) { if (t.hasOwnProperty(k)) t[k] = Math.max(1, Math.min(10, t[k] + bias[k])); }
+  if (isChild) {
+    const cb = V33_PERSONALITY.child_bias || {};
+    for (const k in cb) { if (t.hasOwnProperty(k)) t[k] = Math.max(1, Math.min(10, t[k] + cb[k])); }
+  }
+  return t;
+}
+function v33TraitDescriptors(t) {
+  if (!t) return [];
+  const dd = V33_PERSONALITY.display_descriptors || {};
+  const out = [];
+  for (const trait in dd) {
+    const cfg = dd[trait]; const v = t[trait];
+    if (v == null) continue;
+    if (v >= cfg.high_at) out.push(cfg.high_label);
+    else if (v <= cfg.low_at) out.push(cfg.low_label);
+  }
+  return out;
+}
+// Multipliers used in stochastic rolls. All hit ~+/-25% over the 1-10 range.
+function v33FrailtyMult(member)  { const f = (member && member.traits && member.traits.frailty) || 5; return 1 + (f - 5) * 0.06; }
+function v33SteadyMult(member)   { const s = (member && member.traits && member.traits.steady)  || 5; return 1 + (s - 5) * 0.04; }
+function v33LuckyBias(member)    { const l = (member && member.traits && member.traits.lucky)   || 5; return (l - 5) * 0.004; }
+function v33FaithRecoveryBoost(member) { const f = (member && member.traits && member.traits.faith) || 5; return Math.max(0, (f - 5) * 0.05); }
+
+// Strategic vs careless playstyle. Determined by team composition. Drives
+// how often the calibration sim triggers Hunt/Rest/Forage (which reset the
+// push-on-tax counter and produce income) and whether it stops at forts.
+function v33StrategyForTeam(team) {
+  const has = (p) => team.indexOf(p) !== -1;
+  const protectiveCount = ['Hunter','Doctor','Carpenter','Cook','Scout','Guide','Trapper','Farmer','Priest','Blacksmith','Native Guide'].filter(has).length;
+  // Smart team: Hunts every 3rd day if Hunter, Rests if anyone weakened,
+  // takes all forts. Careless team: never Hunts/Rests, only takes fort #1.
+  const smart = protectiveCount >= 1;
+  return {
+    smart: smart,
+    hunts:           smart && has('Hunter'),
+    rests:           smart,
+    forages:         smart && has('Farmer'),
+    hunt_every_n:    3,
+    rest_threshold:  1,   // any weakened triggers rest
+    take_forts_pct:  smart ? 1.0 : 0.45,  // careless skips most forts
+    careful_river:   smart                // smart picks ferry/Native; careless fords
+  };
+}
+
+// Push-On Tax thresholds. Counter increments every Push On (with pace
+// modifiers); resets on Hunt/Rest/Forage. At 4/6/8/10 a tax fires.
+function v33ApplyPushOnTax(w) {
+  const thresholds = V33_PUSH_ON_TAX.thresholds || [];
+  const c = w.consec_push_on || 0;
+  // Find any unfired threshold this counter has crossed.
+  w._fired_thresholds = w._fired_thresholds || {};
+  let fired = null;
+  for (const t of thresholds) {
+    if (c >= t.value && !w._fired_thresholds[t.value]) {
+      fired = t;
+      w._fired_thresholds[t.value] = true;
+      break;  // one threshold per turn
+    }
+  }
+  if (!fired) return null;
+  // Apply the threshold's effect.
+  if (fired.effect_field === 'force_stop') {
+    w.force_stop_days = (w.force_stop_days || 0) + 1;
+  } else if (fired.effect_field === 'weaken_random_healthy') {
+    const healthy = w.team.filter(m => !m.lost && (m.health == null || m.health > 50));
+    if (healthy.length) {
+      const m = healthy[Math.floor(Math.random() * healthy.length)];
+      m.health = 40;
+      m.weakened = true;
+    }
+  } else if (fired.effect_field === 'wagon_damage') {
+    w.wagon_hp = Math.max(0, w.wagon_hp - (fired.wagon_hp_loss || 15));
+  } else if (fired.effect_field === 'major_breakdown') {
+    w.wagon_hp = Math.max(0, w.wagon_hp - (fired.wagon_hp_loss || 30));
+    w.force_stop_days = (w.force_stop_days || 0) + (fired.force_stop_days || 2);
+    w.team.forEach(m => { if (!m.lost) m.morale = Math.max(1, (m.morale != null ? m.morale : 7) - (fired.morale_loss || 2)); });
+  }
+  // Pick a narrative for live-game logging.
+  const narrs = fired.narratives || [fired.effect_summary || ''];
+  const narr  = narrs[Math.floor(Math.random() * narrs.length)];
+  return { kind: 'push_on_tax_' + fired.trigger, threshold: fired.value, narrative: narr };
+}
+function v33ResetPushOnTax(w) {
+  w.consec_push_on = 0;
+  w._fired_thresholds = {};
+}
+
+// Smart-Stop bypass penalties — applied when wagon passes a fort without
+// stopping. fortBypassReasons returns the list of penalty reasons that fire.
+function v33EvalFortBypass(w) {
+  const fired = [];
+  const fortConditions = V33_BYPASS.fort_bypass || [];
+  // Members at health < 7 (use 60 on 100-scale) or in non-healthy state.
+  const anyAiling = w.team.some(m => !m.lost && ((m.health != null && m.health < 60) || m.weakened));
+  if (anyAiling) fired.push({ reason: 'ailing_member', boost: 0.10, duration: 3 });
+  // Food < 7 days' worth (~14 lbs for a small team)
+  const dailyFood = Math.max(1, v32Alive(w)) * V32_DAILY.food_lbs;
+  if (w.food < dailyFood * 7) fired.push({ reason: 'low_food',     morale_loss: 1 });
+  if (w.wagon_hp < 70)         fired.push({ reason: 'tired_wagon', damage_mult: 1.5 });
+  // Money < $5: no penalty, honest case
+  return fired;
+}
+function v33ApplyFortBypass(w) {
+  const fires = v33EvalFortBypass(w);
+  for (const f of fires) {
+    if (f.boost) {
+      w.bypass_degrade_boost = (w.bypass_degrade_boost || 0) + f.boost;
+      w.bypass_degrade_until_day = w.days_traveled + f.duration;
+    }
+    if (f.morale_loss) {
+      w.team.forEach(m => { if (!m.lost) m.morale = Math.max(1, (m.morale != null ? m.morale : 7) - f.morale_loss); });
+    }
+    if (f.damage_mult) {
+      w.next_damage_multiplier = Math.max(w.next_damage_multiplier || 1, f.damage_mult);
+    }
+  }
+  return fires;
+}
+
+// Residual escape gate — call before resolving a shock. Returns true if
+// the shock should be skipped (lucky escape). Per-shock escape probability
+// from V33_RESIDUAL.escapes; falls back to all_other_shocks.
+function v33ShockEscape(kind) {
+  const esc = V33_RESIDUAL.escapes || {};
+  const p = (esc[kind] != null) ? esc[kind] : (esc.all_other_shocks != null ? esc.all_other_shocks : 0);
+  return Math.random() < p;
+}
+// Protection roll — call when a profession's defense should activate.
+// `context` may include 'exhausted' (true if push_on_tax >= 4), 'desert'
+// (true in desert region), 'low_food' (true if food < 5).
+function v33ProtectionPasses(profession, context) {
+  context = context || {};
+  const protKey = {
+    'Doctor': 'doctor_cholera_save',
+    'Hunter': 'hunter_feeds_team',
+    'Trapper': 'trapper_hunts',
+    'Carpenter': 'carpenter_fixes_wheel',
+    'Native Guide': 'native_guide_river_crossing',
+    'Scout': 'scout_finds_water',
+    'Cook': 'cook_stretches_food'
+  }[profession];
+  if (!protKey) return true;  // unspec'd professions pass through
+  const def = (V33_RESIDUAL.protections || {})[protKey];
+  if (!def) return true;
+  let p = def.p;
+  if (context.exhausted && def.exhausted_p != null) p = def.exhausted_p;
+  if (context.desert    && def.desert_p    != null) p = def.desert_p;
+  if (context.low_food  && def.low_food_p  != null) p = def.low_food_p;
+  return Math.random() < p;
+}
+
+// Member loss with frailty bias. Higher-frailty members get picked first
+// (their state-transition probabilities are multiplied by frailty mult,
+// modeled here as weighted random selection).
+function v33LoseMemberByFrailty(w, cause) {
+  const alive = w.team.filter(m => !m.lost);
+  if (alive.length <= 1) return null;
+  const weights = alive.map(m => v33FrailtyMult(m));
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < alive.length; i++) {
+    r -= weights[i];
+    if (r <= 0) {
+      alive[i].lost = true;
+      alive[i].cause = cause;
+      return alive[i];
+    }
+  }
+  alive[alive.length - 1].lost = true;
+  alive[alive.length - 1].cause = cause;
+  return alive[alive.length - 1];
+}
+
+// Build a v3.3 wagon (extends v32StartingWagon with traits, scoring fields,
+// counters). Used by the v3.3 calibration sim.
+function v33StartingWagon(professions, difficulty) {
+  const w = v32StartingWagon(professions, difficulty);
+  // Per-member health/morale/traits.
+  w.team.forEach(m => {
+    m.health = 100;
+    m.morale = 7;
+    m.weakened = false;
+    m.traits = v33GenerateTraits(m.profession, false);
+  });
+  w.consec_push_on = 0;
+  w._fired_thresholds = {};
+  w.force_stop_days = 0;
+  w.bypass_degrade_boost = 0;
+  w.bypass_degrade_until_day = 0;
+  w.next_damage_multiplier = 1;
+  w.dyk_cards_seen = 0;
+  w.dyk_categories_seen = {};
+  w.bandit_quiz_correct = 0;
+  w.forts_visited = 0;
+  w.forts_bypassed = 0;
+  return w;
+}
+
+// v3.3 shock resolver — wraps v32ResolveShock with residual escape gate
+// and applies the bypass-degrade boost to "degrade" shocks (cholera,
+// sickness, etc.) and the next_damage_multiplier to wagon-damage shocks.
+function v33ResolveShock(w, kind) {
+  if (v33ShockEscape(kind)) {
+    return { kind: kind, narrative: 'A close call — by luck, no harm done.', escaped: true };
+  }
+  // Apply degrade-probability boost to sickness/cholera shocks
+  const isDegrade = (kind === 'cholera' || kind === 'sickness_minor' || kind === 'sickness_severe');
+  if (isDegrade && w.bypass_degrade_boost && w.days_traveled <= w.bypass_degrade_until_day) {
+    // Re-roll: with boost, increase chance the shock fires more harshly.
+    // We model this as a second member-loss roll if cholera fires.
+    const result = v32ResolveShock(w, kind);
+    if (Math.random() < w.bypass_degrade_boost) {
+      const m = v33LoseMemberByFrailty(w, kind + '_aggravated');
+      if (m) { w.members_lost++; }
+    }
+    return result;
+  }
+  // Apply next_damage_multiplier to wagon-damage shocks
+  if ((kind === 'wagon_damage' || kind === 'broken_axle') && w.next_damage_multiplier > 1) {
+    const before = w.wagon_hp;
+    const result = v32ResolveShock(w, kind);
+    const lost = before - w.wagon_hp;
+    const extra = lost * (w.next_damage_multiplier - 1);
+    w.wagon_hp = Math.max(0, w.wagon_hp - extra);
+    w.next_damage_multiplier = 1;  // consume the modifier
+    return result;
+  }
+  // Cholera with v3.3 residuals — Doctor save rate now 87% (was 67% in v3.2)
+  if (kind === 'cholera') {
+    const hasDoctor = v32AnyAlive(w, 'Doctor');
+    const baseChance = hasDoctor ? 0.04 : 0.32;  // Doctor save: 1 - 0.04/0.32 ≈ 0.87
+    const chance = baseChance * (w._mort_mult || 1.0);
+    let deaths = 0;
+    for (const m of w.team) {
+      if (m.lost) continue;
+      if (v32Alive(w) <= 1) break;
+      const adjP = chance * v33FrailtyMult(m) - v33LuckyBias(m);
+      if (Math.random() < adjP) { m.lost = true; m.cause = 'cholera'; deaths++; w.members_lost++; }
+    }
+    return { kind: kind, narrative: deaths === 0 ? 'Cholera passed through. By providence, none were lost.' : ('Cholera struck. ' + deaths + ' member' + (deaths > 1 ? 's' : '') + ' perished.') };
+  }
+  // Sickness severe with mortality multiplier
+  if (kind === 'sickness_severe') {
+    const need = v32AnyAlive(w, 'Doctor') ? 1 : 2;
+    if (w.medicine >= need) {
+      w.medicine -= need;
+      return { kind: kind, narrative: 'A grave illness struck. Used ' + need + ' dose' + (need > 1 ? 's' : '') + ' of medicine.' };
+    }
+    const baseChance = v32AnyAlive(w, 'Doctor') ? 0.32 : 0.60;
+    const chance = baseChance * (w._mort_mult || 1.0);
+    if (Math.random() < chance) {
+      const m = v33LoseMemberByFrailty(w, 'severe illness');
+      if (m) { w.members_lost++; return { kind: kind, narrative: m.name + ' fell gravely ill. Without enough medicine, they were lost.' }; }
+    }
+    return { kind: kind, narrative: 'A grave illness struck. By providence and care, the afflicted survived.' };
+  }
+  return v32ResolveShock(w, kind);
+}
+
+// v3.3 income — Hunter feeds via Hunt action (deterministic on Hunt day)
+// rather than passive 32% per Push-On day. Trapper, Farmer keep passive.
+function v33RollPassiveIncome(w, exhausted) {
+  const events = [];
+  const FOOD_MAX = 999;
+  // Trapper: 80% baseline, 60% if exhausted (consec_push_on >= 4)
+  if (v32AnyAlive(w, 'Trapper')) {
+    const passes = v33ProtectionPasses('Trapper', { exhausted: exhausted });
+    if (passes && Math.random() < 0.28) {
+      w.food  = Math.min(FOOD_MAX, w.food + 12);
+      w.hides = (w.hides || 0) + 2;
+      events.push('Your Trapper checked the snares. +12 lbs food, +2 hides.');
+    }
+  }
+  // Farmer: 20% per day passive, no residual band
+  if (v32AnyAlive(w, 'Farmer') && Math.random() < 0.20) {
+    w.food = Math.min(FOOD_MAX, w.food + 10);
+    events.push('Your Farmer foraged greens and roots. +10 lbs food.');
+  }
+  // Scout: passive +2 gallons/day, 90% normal, 75% in desert
+  if (v32AnyAlive(w, 'Scout')) {
+    const passes = v33ProtectionPasses('Scout', { desert: !!w._in_desert });
+    if (passes && Math.random() < 0.40) {
+      w.water = Math.min(99, w.water + 2);
+      events.push('Your Scout found a clean creek. +2 gallons water.');
+    }
+  }
+  return events;
+}
+
+// v3.3 Hunt action — deterministic daily success when called, with
+// residual failure rate. Resets push-on counter; +25 lbs food on success.
+function v33ActionHunt(w) {
+  v33ResetPushOnTax(w);
+  const exhausted = false;  // Hunt itself resets, so never exhausted on the same call
+  if (!v33ProtectionPasses('Hunter', { exhausted: exhausted })) {
+    return { kind: 'hunt_failed', narrative: 'The Hunter walked the timberline at dusk and came back empty-handed.' };
+  }
+  const FOOD_MAX = 999;
+  w.food  = Math.min(FOOD_MAX, w.food + 25);
+  w.hides = (w.hides || 0) + 1;
+  return { kind: 'hunt_success', narrative: 'Your Hunter brought down a buck. +25 lbs food, +1 hide.' };
+}
+function v33ActionRest(w) {
+  v33ResetPushOnTax(w);
+  // Heal every weakened member back to 80 health
+  let healed = 0;
+  w.team.forEach(m => { if (!m.lost && (m.weakened || m.health < 70)) { m.health = Math.min(100, m.health + 30); m.weakened = false; healed++; } });
+  return { kind: 'rest', narrative: 'The team made camp. ' + healed + ' member' + (healed === 1 ? '' : 's') + ' recovered.' };
+}
+function v33ActionForage(w) {
+  v33ResetPushOnTax(w);
+  const success = Math.random() < 0.55;
+  if (!success) return { kind: 'forage_failed', narrative: 'Foraging turned up little.' };
+  w.food = Math.min(999, w.food + 8);
+  w.water = Math.min(99, w.water + 1);
+  return { kind: 'forage_success', narrative: '+8 lbs food, +1 gallon water from foraging.' };
+}
+
+// Daily consumption with v3.3 personality bias on starvation/dehydration.
+// Frail members are more likely to be the casualty.
+function v33Consume(w) {
+  const n = v32Alive(w);
+  if (n <= 0) return;
+  // Cook stretches food: 85% normally, 65% when food < 5 lbs
+  const cookActive = v32AnyAlive(w, 'Cook') && v33ProtectionPasses('Cook', { low_food: w.food < 5 });
+  const fmult = cookActive ? 0.78 : 1.0;
+  const fneed = n * V32_DAILY.food_lbs * fmult;
+  const wneed = n * V32_DAILY.water_gal;
+  const foodShort  = Math.max(0, fneed - w.food);
+  const waterShort = Math.max(0, wneed - w.water);
+  w.food  = Math.max(0, w.food  - fneed);
+  w.water = Math.max(0, w.water - wneed);
+  if (foodShort > 0 && Math.random() < (0.05 + 0.08 * (foodShort / fneed))) {
+    if (v33LoseMemberByFrailty(w, 'starvation')) w.members_lost++;
+  }
+  if (waterShort > 0 && Math.random() < (0.07 + 0.10 * (waterShort / wneed))) {
+    if (v33LoseMemberByFrailty(w, 'dehydration')) w.members_lost++;
+  }
+}
+
+// Auto-fort visit with v3.3 awareness — heals weakened members at the
+// fort, repairs wagon, refills resources. Resets degrade-boost.
+function v33FortVisit(w) {
+  v32FortVisit(w);
+  // Extra wagon repair on top of v32's logic — fort blacksmiths and
+  // wainwrights are accessible even without a Carpenter, but expensive
+  // and incomplete (a real overhaul takes a Carpenter). Emergency
+  // visits push harder on repair (the wainwright stays late).
+  if (w.wagon_hp < 70 && w.money >= 2) {
+    const spent = Math.min(w.money * 0.4, 8);
+    w.money -= spent;
+    const repair = w.wagon_hp < 35 ? 30 : 20;
+    w.wagon_hp = Math.min(100, w.wagon_hp + repair);
+  }
+  // Fort doctor heals weakened
+  if (v32AnyAlive(w, 'Doctor') || w.money >= 5) {
+    if (w.money >= 5) w.money -= 5;
+    w.team.forEach(m => { if (!m.lost && (m.weakened || m.health < 70)) { m.health = Math.min(100, m.health + 30); m.weakened = false; } });
+  }
+  w.bypass_degrade_boost = 0;
+  w.bypass_degrade_until_day = 0;
+  w.forts_visited++;
+}
+
+// DYK tracking — calibration treats it as a deterministic +0.6 cards per
+// day for short, +0.7 per day for extended (calibrated to hit minimum
+// targets of 12 short / 24 extended).
+function v33TickDyk(w, length) {
+  const target = (V33_DYK_QUOTAS.minimums || {})[length] || { minimum: 12 };
+  const totalDays = length === 'extended' ? 40 : 20;
+  const remaining = Math.max(1, totalDays - w.days_traveled);
+  const baseRate = (length === 'extended') ? 0.92 : 0.90;
+  // Quota enforcement: if remaining quota exceeds remaining days, fire
+  // deterministically. This guarantees the per-trail minimum even on
+  // unlucky journeys.
+  const quotaRemaining = Math.max(0, target.minimum - w.dyk_cards_seen);
+  if (quotaRemaining >= remaining || Math.random() < baseRate) {
+    w.dyk_cards_seen++;
+  }
+}
+
+// v3.3 simulated journey with strategy-driven actions, push-on tax,
+// bypass penalties, residual probabilities, personality vectors. Returns
+// a fully-populated wagon for scoring.
+function v33SimulateJourney(team, difficulty, length) {
+  length = length || 'short';
+  const w = v33StartingWagon(team || ['Hunter', 'Doctor'], difficulty || 'medium');
+  const strat = v33StrategyForTeam(team || ['Hunter', 'Doctor']);
+  const totalDays = (length === 'extended') ? 40 : 20;
+  const FORTS = (length === 'extended') ? [5, 12, 18, 25, 32, 38] : [4, 9, 14, 18];
+  const FERRIES = (length === 'extended') ? [14, 28] : [12];
+  const DESERT_DAYS = (length === 'extended') ? [22, 23, 24, 25, 26] : [11, 12, 13];
+  // Difficulty multiplier applied to shock probabilities — easy is forgiving,
+  // hard hits harder (this is the primary lever differentiating Easy/Hard
+  // outcomes for a given team composition). Extended journeys get a slight
+  // discount because raw 40-day exposure compounds shock cumulatively.
+  const _baseMult = { easy: 0.72, medium: 1.0, hard: 1.50 }[difficulty] || 1.0;
+  const SHOCK_MULT = (length === 'extended') ? _baseMult * 0.80 : _baseMult * 1.10;
+  // Mortality multiplier — applied to per-member death rolls in cholera /
+  // sickness so Hard difficulty actually kills more even when shock counts
+  // are similar. Shock probability and mortality are independent levers.
+  const MORT_MULT  = { easy: 0.78, medium: 1.0, hard: 1.55 }[difficulty] || 1.0;
+  w._mort_mult = MORT_MULT;
+  let day = 1;
+  while (day <= totalDays) {
+    w.days_traveled = day;
+    w._in_desert = DESERT_DAYS.indexOf(day) !== -1;
+
+    // Force-stop accumulation (push-on tax thresholds 4 / 10)
+    if (w.force_stop_days > 0) {
+      w.force_stop_days--;
+      v33Consume(w);
+      day++;
+      continue;
+    }
+
+    // Decide action: Hunt every Nth day if strategic, Rest if any weakened,
+    // Forage if Farmer & food < 30, otherwise Push On.
+    const anyWeakened = w.team.some(m => !m.lost && (m.weakened || m.health < 60));
+    let action = 'push';
+    if (strat.rests && anyWeakened) action = 'rest';
+    else if (strat.hunts && (day % strat.hunt_every_n === 0)) action = 'hunt';
+    else if (strat.forages && w.food < 30) action = 'forage';
+
+    if (action === 'hunt')   { v33ActionHunt(w);   v33Consume(w); day++; continue; }
+    if (action === 'rest')   { v33ActionRest(w);   v33Consume(w); day++; continue; }
+    if (action === 'forage') { v33ActionForage(w); v33Consume(w); day++; continue; }
+
+    // Push On: increment counter, consume, shock, income, push-on tax
+    w.consec_push_on = (w.consec_push_on || 0) + 1;  // pace: Steady = 1
+    const _hpBefore = w.wagon_hp;
+    v33Consume(w);
+    if (v32Alive(w) <= 0) { w.eliminated = true; break; }
+
+    // Shock (with v3.3 residuals + difficulty multiplier)
+    if (Math.random() >= ((v32AnyAlive(w, 'Guide') ? 0.30 : 0) + (v32AnyAlive(w, 'Scout') ? 0.10 : 0))) {
+      const triggered = [];
+      for (const [name, def] of Object.entries(V32_SHOCKS)) {
+        if (Math.random() < def.p * SHOCK_MULT) triggered.push(name);
+      }
+      if (triggered.length > 0) {
+        const s = triggered[Math.floor(Math.random() * triggered.length)];
+        v33ResolveShock(w, s);
+      }
+    }
+
+    // Passive income (Trapper, Farmer, Scout) — Hunter handled by Hunt action
+    v33RollPassiveIncome(w, w.consec_push_on >= 4);
+    // Hunter passive contribution on non-Hunt days (Hunt action gives +25 lbs;
+    // passive walk-along scouting gives +5-8 lbs ~30% of days)
+    if (v32AnyAlive(w, 'Hunter') && Math.random() < 0.30) {
+      w.food = Math.min(999, w.food + (5 + Math.random() * 3));
+    }
+    // v3.3 fortune-proxy scaffold. Item 7 (40-fortune expansion) is
+    // deferred to v3.3.x. The spec calibration is balanced against an
+    // ecosystem that includes upside events; without them, teams
+    // accumulate only downsides and over-fail. This proxy gives a small
+    // compensating upside until the full fortune library lands.
+    // Removed when item 7 ships. Length-aware: Extended journeys get
+    // more fortunes because there's more time for them to occur in
+    // proportion to the per-day shock load.
+    const fortuneRate = (length === 'extended') ? 0.135 : 0.040;
+    if (Math.random() < fortuneRate) {
+      const r = Math.random();
+      if      (r < 0.30) w.food     = Math.min(999, w.food + 12);
+      else if (r < 0.55) w.water    = Math.min( 99, w.water +  3);
+      else if (r < 0.75) w.money    += 3;
+      else if (r < 0.92) w.wagon_hp = Math.min(100, w.wagon_hp + 8);
+      else               w.dyk_cards_seen += 1;
+    }
+
+    // Push-On Tax thresholds
+    v33ApplyPushOnTax(w);
+    // Daily wagon damage cap — even on the worst day, the wagon can't
+    // lose more than 55 HP. Models pioneers patching what they can
+    // overnight; catastrophic loss requires sustained accumulation
+    // (which is what we want for differentiating careless teams).
+    const _hpLossThisDay = _hpBefore - w.wagon_hp;
+    if (_hpLossThisDay > 55) {
+      w.wagon_hp = _hpBefore - 55;
+    }
+    if (w.wagon_hp <= 0) { w.eliminated = true; break; }
+
+    // Ferry crossing
+    if (FERRIES.indexOf(day) !== -1) {
+      const drown_p = strat.careful_river ? 0.05 : 0.18;  // strategic teams ford carefully
+      if (w.money >= V32_PRICES.ferry && strat.careful_river) {
+        w.money -= V32_PRICES.ferry;
+      } else {
+        w.food = Math.max(0, w.food - 20);
+        w.supplies = Math.max(0, w.supplies - 1);
+        if (Math.random() < drown_p && !v33ShockEscape('river_drowning')) {
+          if (v33LoseMemberByFrailty(w, 'drowned at ford')) w.members_lost++;
+        }
+      }
+    }
+
+    // Fort decision: stop or bypass? Even careless teams stop when the
+    // wagon is desperately low — that's not strategy, that's necessity.
+    if (FORTS.indexOf(day) !== -1) {
+      const emergency = (w.wagon_hp < 65 || w.food < 35 || w.water < 8);
+      const stopHere = emergency || (Math.random() < strat.take_forts_pct);
+      if (stopHere) {
+        v33FortVisit(w);
+      } else {
+        w.forts_bypassed++;
+        v33ApplyFortBypass(w);
+      }
+    }
+
+    // DYK tick (deterministic + boosted near end)
+    v33TickDyk(w, length);
+
+    if (v32Alive(w) <= 0) { w.eliminated = true; break; }
+    day++;
+  }
+  // Final finish gate: wagon must still roll and at least 1 member alive.
+  // The spec's narrative explicitly contemplates "Day 90 with 4 alive at low
+  // health" finishing — the eliminating condition is wagon_destroyed or
+  // total_team_loss, not "lost too many members."
+  if (!w.eliminated && w.wagon_hp > 0 && v32Alive(w) >= 1) {
+    w.finished = true;
+  } else {
+    w.finished = false;
+    w.eliminated = true;
+  }
+  return w;
+}
+
+// 4-track scoring (item 1). Each track normalized to its max from the
+// JSON spec. Returns { steward, provider, scholar, pathfinder, total }.
+function computeV33Score(w) {
+  const tracks = (V33_SCORING.tracks || {});
+  const aliveTeam = w.team.filter(m => !m.lost);
+  const membersAlive = aliveTeam.length;
+  const avgHealth = aliveTeam.length ? aliveTeam.reduce((s, m) => s + (m.health != null ? m.health : 100), 0) / aliveTeam.length : 0;
+  const avgMorale = aliveTeam.length ? aliveTeam.reduce((s, m) => s + (m.morale != null ? m.morale : 7),   0) / aliveTeam.length : 0;
+  const finalFood     = w.food     || (w.resources ? w.resources.food     : 0) || 0;
+  const finalWater    = w.water    || (w.resources ? w.resources.water    : 0) || 0;
+  const finalMoney    = w.money    || (w.resources ? w.resources.money    : 0) || 0;
+  const finalMedicine = (w.medicine != null) ? w.medicine : (w.resources ? w.resources.medicine : 0) || 0;
+  const dykSeen = w.dyk_cards_seen || (w.factsShownTitles ? w.factsShownTitles.length : 0) || 0;
+  const banditCorrect = w.bandit_quiz_correct || (w.bandit_quiz_results ? w.bandit_quiz_results.baseScore : 0) || 0;
+  const days = w.days_traveled || w.daysTraveled || 0;
+
+  const steward    = Math.max(0, Math.round(membersAlive * (avgHealth / 100) * avgMorale * 4));
+  const provider   = Math.max(0, Math.round(finalMoney * 2 + finalFood + finalWater + finalMedicine * 5));
+  const scholar    = Math.max(0, Math.round(dykSeen * 5 + banditCorrect * 10));
+  const pathfinder = Math.max(0, Math.round(110 - days));
+
+  const cap = (v, k) => Math.min(v, (tracks[k] && tracks[k].max) || v);
+  const out = {
+    steward:    cap(steward, 'steward'),
+    provider:   cap(provider, 'provider'),
+    scholar:    cap(scholar, 'scholar'),
+    pathfinder: cap(pathfinder, 'pathfinder')
+  };
+  out.total = out.steward + out.provider + out.scholar + out.pathfinder;
+  out.maxes = { steward: 280, provider: 150, scholar: 170, pathfinder: 80, total: 680 };
+  return out;
+}
+
+// v3.3 calibration runner — runs N journeys for one cell, returns stats.
+function v33RunCalibrationCell(n, team, diff, length) {
+  let finished = 0, eliminated = 0;
+  let totalLost = 0, lostAt1 = 0, lostAt3 = 0;
+  let stewardSum = 0, pathfinderSum = 0, dykSum = 0;
+  let stewardMax = 0, stewardMin = 9999;
+  for (let i = 0; i < n; i++) {
+    const r = v33SimulateJourney(team, diff, length);
+    if (r.finished)   finished++;
+    if (r.eliminated) eliminated++;
+    totalLost += r.members_lost;
+    if (r.members_lost >= 1) lostAt1++;
+    if (r.members_lost >= 3) lostAt3++;
+    const s = computeV33Score(r);
+    stewardSum    += s.steward;
+    pathfinderSum += s.pathfinder;
+    dykSum        += r.dyk_cards_seen;
+    if (s.steward > stewardMax) stewardMax = s.steward;
+    if (s.steward < stewardMin) stewardMin = s.steward;
+  }
+  return {
+    n: n, team: team, diff: diff, length: length,
+    finish_pct: Math.round(finished / n * 100),
+    elim_pct:   Math.round(eliminated / n * 100),
+    avg_loss:   +(totalLost / n).toFixed(2),
+    pct_ge1:    Math.round(lostAt1 / n * 100),
+    pct_ge3:    Math.round(lostAt3 / n * 100),
+    avg_steward:    Math.round(stewardSum / n),
+    avg_pathfinder: Math.round(pathfinderSum / n),
+    avg_dyk:        +(dykSum / n).toFixed(1),
+    steward_min: stewardMin,
+    steward_max: stewardMax
+  };
+}
+function v33FormatCellLine(c) {
+  return ('cfg=' + c.diff + '_' + c.length).padEnd(20)
+    + ' team=[' + c.team.join(',') + ']'.padEnd(22 - c.team.join(',').length)
+    + ' | finish=' + c.finish_pct + '%'
+    + ' | elim=' + c.elim_pct + '%'
+    + ' | avg loss=' + c.avg_loss
+    + ' | dyk=' + c.avg_dyk
+    + ' | steward=' + c.avg_steward
+    + ' | pathfinder=' + c.avg_pathfinder;
+}
+function v33RunFullBattery(n) {
+  n = n || 500;
+  const cells = [];
+  for (const length of ['short', 'extended']) {
+    for (const diff of ['easy', 'medium', 'hard']) {
+      cells.push(v33RunCalibrationCell(n, ['Hunter', 'Doctor'],   diff, length));
+      cells.push(v33RunCalibrationCell(n, ['Musician', 'Artist'], diff, length));
+    }
+  }
+  cells.forEach(c => console.log(v33FormatCellLine(c)));
+  return cells;
+}
+
 function init() {
   // Audio toggles
   $('mute-toggle').addEventListener('click', () => { audioController.init(); audioController.setMute('sfx', !audioController.muted.sfx); audioController.playSfx('click'); });
@@ -13858,6 +15760,21 @@ function init() {
   // Medium and reports stats in console (or runs the team specified
   // via `#calibrate=N&team=Musician,Artist&diff=hard`). Skips the
   // normal UI init so the sim runs as fast as the browser will go.
+  if (typeof location !== 'undefined' && /[#&?]calibrate3=/.test(location.hash + location.search)) {
+    // v3.3 6-cell battery — `#calibrate3=N` runs full Monte Carlo across
+    // all six cells (3 difficulties x 2 lengths) for both Hunter+Doctor
+    // and Musician+Artist. Output is per-cell stat lines.
+    const n = parseInt((location.hash + location.search).match(/calibrate3=(\d+)/)[1]) || 500;
+    const cells = v33RunFullBattery(n);
+    if (typeof document !== 'undefined' && document.body) {
+      const pre = document.createElement('pre');
+      pre.style.cssText = 'padding:18px;font-family:monospace;font-size:13px;color:#3D2817;background:#FBF6F0;white-space:pre;overflow:auto;';
+      pre.textContent = cells.map(v33FormatCellLine).join('\n') + '\n\n(v3.3 calibration. Reload without `#calibrate3=` to play.)';
+      document.body.innerHTML = '';
+      document.body.appendChild(pre);
+    }
+    return;
+  }
   if (typeof location !== 'undefined' && /[#&?]calibrate=/.test(location.hash + location.search)) {
     const n = parseInt((location.hash + location.search).match(/calibrate=(\d+)/)[1]) || 500;
     const teamMatch = (location.hash + location.search).match(/team=([^&]+)/);

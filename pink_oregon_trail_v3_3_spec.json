@@ -1,0 +1,699 @@
+{
+  "meta": {
+    "spec_version": "3.3",
+    "additive_to": "3.2",
+    "designer": "Gabriella Kasdaglis (Gabby), age 11, sixth grade",
+    "design_partner": "Nicholas Kasdaglis (father)",
+    "consultant_role": "Florida middle-school social studies teacher (acting role for the AI consultant)",
+    "date": "2026-04-27",
+    "audience": "Claude Code instance implementing this spec",
+    "philosophy": "The current build (v3.2) is mechanically rich but pedagogically and strategically thin. v3.3 fixes three diagnosed problems: (1) strategy doesn't differentiate outcomes enough — the v3.2 calibration shows weak teams (Musician+Artist) finish at 100% on Medium, identical to strong teams (Hunter+Doctor), so good play and bad play produce the same result; (2) educational dose is variable — the number of Did You Know cards a wagon encounters varies by random event firing, with no floor; (3) re-playability is shallow — 16 surprise events, 11 daily shocks, 23 historical facts × 1 quiz question each, so kids see most of the content after 4–5 plays. v3.3 fixes all three plus two production-quality issues: the expandable in-game map is too cramped to read at the resolution kids actually have, and the printable physical board tiles (6 letter-sized sheets that tape together) need a visual rework to match the on-screen map and engage kids. Sixteen items total, all data-driven where possible.",
+    "primary_metric": "Depth of learning. Time-in-game is one input; strategic differentiation is another; educational dose is another; multi-turn surprise variety is another. Design for all four.",
+    "smoking_gun_v32": "v3.2 calibration ran 500 journeys with Hunter+Doctor on Medium: 100% finish, 0% elimination, 0.83 avg loss. Same calibration with Musician+Artist on Medium: also 100% finish, 0% elimination, 3.11 avg loss but no eliminations. A great team and a careless team produce nearly identical finish rates. This is the smoking gun for v3.3 — strategy must differentiate finish rate, not just members lost."
+  },
+
+  "do_not_change": [
+    "The state machine: healthy → weakened → sick → injured → dying → lost (the v3.2 calibration relies on this)",
+    "The 2d6 dice system or the movement cap of 8",
+    "The 25-space Short trail and 50-space Extended trail layouts (GAME_DATA.trails)",
+    "The applyTurnConsumption order of operations: consume → shock → income (keep this exact order)",
+    "The audio controller, music rotation, or sound effects",
+    "The wagon SVG, ox-walk animation, or wheel rotation",
+    "The save/load flow (just ensure new fields have safe defaults so v3.2 saves still load)",
+    "The setup screens (Length → Mode → Difficulty → Wagon → Confirm) flow"
+  ],
+
+  "scope": {
+    "total_items": 16,
+    "groups": {
+      "A_strategy_loops": {
+        "purpose": "Make good strategy reliably win, bad strategy reliably struggle",
+        "item_ids": [1, 2, 3, 4, 5]
+      },
+      "B_content_depth": {
+        "purpose": "Make every game feel new and make probability honest",
+        "item_ids": [6, 7, 8, 9, 10, 11]
+      },
+      "C_pedagogy_classroom": {
+        "purpose": "Make the learning legible to teacher, kid, and admin",
+        "item_ids": [12, 13, 14]
+      },
+      "D_map_physical_board": {
+        "purpose": "Make the trail readable on screen and beautiful in the kids' hands",
+        "item_ids": [15, 16]
+      }
+    },
+    "out_of_scope_v33": [
+      "Agent-based architecture redesign (deferred to v3.4+; personality vectors in item 11 are the bridge)",
+      "Multi-class leaderboard",
+      "Spanish translation",
+      "Native American perspective full layer (\"Through Native Eyes\" alternate journal mode) — partial in v3.3 only",
+      "Save state across multiple class periods (v3.3 supports single-class-period persistence)",
+      "Game-master panel for live teacher overrides"
+    ]
+  },
+
+  "items": {
+
+    "1": {
+      "name": "Re-weighted scoring (4 tracks)",
+      "group": "A",
+      "problem": "Current scoring (+20/member, +10 if before Day 130, +15/fort, +5/fact, +25 quiz) reduces the trail to a single number. Kids read the number as a race and miss the lesson that survival and stewardship matter more than speed.",
+      "design": {
+        "tracks": {
+          "steward": {
+            "formula": "(members_alive × avg_health × avg_morale_at_finish) × 4",
+            "max": 280,
+            "narrative": "Your team arrived alive and well."
+          },
+          "provider": {
+            "formula": "final_money × 2 + (final_food + final_water + final_medicine_doses × 5)",
+            "max": 150,
+            "narrative": "Your wagon held its provisions to the end."
+          },
+          "scholar": {
+            "formula": "dyk_cards_seen × 5 + bandit_quiz_correct × 10",
+            "max": 170,
+            "narrative": "Your team learned the trail."
+          },
+          "pathfinder": {
+            "formula": "max(0, 110 − days_traveled)",
+            "max": 80,
+            "narrative": "You raced the winter clock."
+          }
+        },
+        "total": "sum of four tracks",
+        "rationale": "A team finishing Day 165 with 7 alive at full health and full pantries scores ~280 + 150 + 170 + 0 = 600. A team finishing Day 90 with 4 alive at low health and empty pantries scores ~120 + 30 + 100 + 20 = 270. The slow careful team beats the fast careless team by more than 2×. That's the lesson the trail teaches.",
+        "display": "Four horizontal bars side-by-side at end-of-game. Each bar shows score, max possible, and the single-sentence interpretation."
+      },
+      "where_it_lives": "scoring_v3_3 block in oregon_trail_game_data.json; end-game UI in pink_oregon_trail.html. Legacy single-number score retained as legacy_score for backward compatibility with seeded leaderboard."
+    },
+
+    "2": {
+      "name": "Push-On Tax",
+      "group": "A",
+      "problem": "Grueling pace for 3+ consecutive turns triggers a 30% exhaustion roll. Steady pace has no consecutive-Push-On consequence at all. Kids who never stop are not punished. This is the largest contributor to the v3.2 calibration smoking gun.",
+      "design": {
+        "counter": "consec_push_on (hidden from player), per wagon. Increments by 1 every Push On regardless of pace. Resets to 0 on Hunt, Rest, or Forage.",
+        "thresholds": [
+          {
+            "value": 4,
+            "trigger": "Oxen refuse",
+            "effect": "Forced 1-day stop, +0 movement",
+            "narrative": "The lead ox planted his feet at dawn and would not move. We rested."
+          },
+          {
+            "value": 6,
+            "trigger": "Crew exhaustion",
+            "effect": "Random healthy member transitions to weakened (deterministic, no probability roll)",
+            "narrative": "Sarah collapsed by the campfire. The trail demands rest."
+          },
+          {
+            "value": 8,
+            "trigger": "Wagon damage",
+            "effect": "wagon_hp -= 15, triggers Broken Wheel event with -1 backwards space",
+            "narrative": "The wagon groans under endless miles. The rear axle cracks."
+          },
+          {
+            "value": 10,
+            "trigger": "Major breakdown",
+            "effect": "wagon_hp -= 30, all members morale -2, forced 2-day stop",
+            "narrative": "The wagon, the team, the trail itself rebels. We are stopped."
+          }
+        ],
+        "pace_interaction": "Strenuous adds +1 to counter increment per Push On; Grueling adds +2",
+        "visibility": "Hidden meter — no on-screen indicator. Narrative cues do the teaching. Kids should feel the strain, not stare at a meter."
+      },
+      "where_it_lives": "meta.simulation_system.push_on_tax in JSON; counter logic in pink_oregon_trail.html alongside existing consec counters."
+    },
+
+    "3": {
+      "name": "Smart-Stop Logic (bypass penalties)",
+      "group": "A",
+      "problem": "There is no mechanical incentive to stop at a fort or river crossing if the player is in a hurry. Bypassing is invisible. Per Nicholas: no mandatory stops — strategy must be preserved. Players choose to stop because logic makes it rational.",
+      "design": {
+        "fort_bypass_penalties": [
+          {
+            "condition": "Pass a fort with any team member at health < 7",
+            "effect": "+0.10 state-transition probability (degrade only) for next 3 turns",
+            "narrative": "We saw the fort gates and pressed on. Sarah's cough deepened that night. We should have rested."
+          },
+          {
+            "condition": "Pass a fort with food below 7 days' worth of consumption",
+            "effect": "-1 morale; \"Fort Regret\" entry in journal",
+            "narrative": "We needed to resupply. We pushed on instead."
+          },
+          {
+            "condition": "Pass a fort with wagon_hp < 70",
+            "effect": "Next damage event applies 1.5× HP loss",
+            "narrative": "The wagon was tired. We should have stopped to rest it."
+          },
+          {
+            "condition": "Pass a fort with money < $5",
+            "effect": "No penalty (pioneers without money skipped forts; this is honest)"
+          }
+        ],
+        "river_bypass": "Add explicit 'ford without choosing method' option that auto-rolls fording outcome at +0.10 drowning probability. Honors player's right to skip the choice but charges for it.",
+        "landmark_bypass": "Passing a landmark space without landing on it costs that landmark's DYK card AND -1 morale. Pulls the dice/movement system back toward landing on landmarks.",
+        "philosophy": "A player who skips 2 forts and 1 landmark over a Short trail accumulates ~5 morale-points of regret, ~0.30 cumulative state-transition probability, and 2 missed DYK cards. They feel it in the final scoring tracks without being told what they did wrong. Good kids figure out that stopping is rational."
+      },
+      "where_it_lives": "fort_bypass_penalties, river_bypass_penalty, landmark_bypass_penalty blocks in JSON; bypass detection logic in pink_oregon_trail.html (in resolveSpace and the Push On callback chain)."
+    },
+
+    "4": {
+      "name": "DYK exposure targets",
+      "group": "A",
+      "problem": "DYK card exposure is probabilistic. Some games give 5 cards, some give 18. There is no guaranteed dose for the educational objective.",
+      "design": {
+        "minimums": {
+          "short": { "minimum": 12, "target": 14 },
+          "extended": { "minimum": 24, "target": 28 }
+        },
+        "categories_required_per_game": [
+          "historical",
+          "social",
+          "scientific",
+          "economic",
+          "native_perspective",
+          "women",
+          "children",
+          "geography"
+        ],
+        "implementation": "Per-wagon dyk_quota_remaining counter, initialized from trail length. Every space that can fire a DYK card (landmarks, certain forts, regional transitions, surprise events) checks the counter. If dyk_quota_remaining > spaces_remaining, the DYK card fires deterministically (no probability roll). Otherwise existing probability gates apply.",
+        "category_enforcement": "Maintain a dyk_categories_seen set. If fewer than 4 turns remain and an unseen required category is still owed, the next eligible DYK card forces a card from that category."
+      },
+      "where_it_lives": "dyk_quotas top-level block in JSON; quota check logic in pink_oregon_trail.html (in DYK card firing path)."
+    },
+
+    "5": {
+      "name": "Bandit quiz bank expansion (40+ items)",
+      "group": "A",
+      "problem": "23 historical facts × 1 quiz question each = 23 possible quiz items, drawing 5. After 4 plays kids see every question.",
+      "design": {
+        "target_v33": 40,
+        "growth_path": "60+ in subsequent v3.3.x patches",
+        "schema_change": "Each fact gets quiz_variants array (2-3 question/correct/wrong objects per fact, all asking about the same core fact, phrased differently with different distractor sets)",
+        "selection_logic": "Pool = facts the team saw (existing). For each pulled fact, pick a random variant from quiz_variants. Same DYK card produces a different question on replay; promise that you only get questioned on stuff you saw is preserved.",
+        "authorship_plan": "Claude Code drafts the additional 17 facts and 51 quiz items as a new section to be reviewed by Gabby. Source pool: National Park Service, Oregon-California Trails Association, Smithsonian, BLM National Historic Trails Office, primary-source pioneer journals.",
+        "v32_compat": "Existing top-level quiz_question, correct, wrong fields populated with quiz_variants[0] so legacy code still works"
+      },
+      "where_it_lives": "historical_facts array in JSON expanded; triggerBanditAmbush quiz selection logic in pink_oregon_trail.html updated."
+    },
+
+    "6": {
+      "name": "Calamities expansion (25+ daily shocks)",
+      "group": "B",
+      "problem": "Today's daily shocks: 11 entries (food_spoil, water_spill, supplies_lost, wagon_damage, broken_axle, sickness_minor, sickness_severe, bandit_demand, cholera, lost_trail, theft). Limited variety means after a handful of plays, kids have seen the bad luck.",
+      "design": {
+        "target": 25,
+        "new_shocks": [
+          { "name": "Lightning strike", "probability": 0.02, "effect": "1 member dying-state, oxen panicked (-2 movement next turn)", "protection": "Scout (early warning)" },
+          { "name": "Saleratus poisoning", "probability": 0.03, "effect": "If team forages without Cook/Doctor, 1 member sick", "protection": "Cook, Doctor" },
+          { "name": "Hailstorm", "probability": 0.04, "effect": "wagon_hp -10, food -8 lbs", "protection": "Carpenter (reduces by half)" },
+          { "name": "Snake bite", "probability": 0.04, "effect": "1 member injured", "protection": "Doctor (full recovery), Native Guide (early warning)" },
+          { "name": "Sunstroke", "probability": 0.05, "effect": "If water < 10 gal, 1 random member to weakened", "protection": "Scout (recommends rest)" },
+          { "name": "Gun accident", "probability": 0.02, "effect": "1 member injured (kids playing with rifles)", "protection": "Hunter, Cowboy, Trapper (reduces)" },
+          { "name": "Alkaline water", "probability": 0.04, "effect": "1 ox dead = movement -1 permanent", "protection": "Native Guide, Scout" },
+          { "name": "Prairie fire", "probability": 0.025, "effect": "If region is plains, food -15, wagon_hp -20", "protection": "Cowboy (reduces)" },
+          { "name": "Buffalo stampede", "probability": 0.02, "effect": "wagon_hp -25, possibly 1 member injured", "protection": "Hunter, Cowboy" },
+          { "name": "Tornado", "probability": 0.01, "effect": "wagon_hp -40, 1 member injured", "protection": "(none — luck only, with 8% residual escape)" },
+          { "name": "Quicksand", "probability": 0.015, "effect": "Forced 1-day stop, supplies -2", "protection": "Scout (recommends ford up/downstream)" },
+          { "name": "Lost child", "probability": 0.015, "effect": "Forced 1-day stop, search; 80% found, 20% lost", "protection": "Native Guide, Scout" },
+          { "name": "Ferry rope snap", "probability": 0.01, "effect": "If on river crossing via ferry, 1 member possibly drowning", "protection": "Carpenter (re-rigs)" },
+          { "name": "Powder keg explosion", "probability": 0.005, "effect": "wagon_hp -30, 1 member dying", "protection": "(rare, mostly bad luck)" },
+          { "name": "Tooth abscess", "probability": 0.04, "effect": "1 member to weakened, recoverable", "protection": "Doctor" }
+        ],
+        "calibration": "Cumulative daily shock probability across all 25 entries ~0.65–0.80. Most days have something; quiet days exist. Run Monte Carlo to validate.",
+        "narratives_per_shock": 3
+      },
+      "where_it_lives": "events array (or new daily_shocks block) in JSON; v32ApplyDailyShock in pink_oregon_trail.html extends to consume new entries."
+    },
+
+    "7": {
+      "name": "Fortunes expansion (35-40 surprises)",
+      "group": "B",
+      "problem": "Today's surprise events: 16, mostly atmospheric (Aurora, Lone Fiddler, White Buffalo, Star Falls). Real Oregon Trail pioneers had luck too — and the build is thin on it.",
+      "design": {
+        "target": 40,
+        "categories": {
+          "help_from_people": [
+            "Native Guide gives directions (existing, keep)",
+            "Native trade for salmon (+10 lbs food)",
+            "Native trade for horses (+1 movement permanent, -3 money or -2 hides)",
+            "Friendly mountain man with map (removes next 'lost trail' shock)",
+            "Fellow emigrants share tools (-1 wagon damage on next event)",
+            "Fort doctor cheap visit ($1 visit revives 1 weakened member)",
+            "Fort blacksmith barters (-1 wagon damage, -2 hides instead of -3 money)",
+            "Missionary holds healing service (with Priest: +0.10 recovery on next dying intervention; without: morale +1 only)",
+            "Eastbound traveler with news (free DYK card, +1 morale)",
+            "Discarded cache from a previous train (+5 lbs food, +2 supplies, +1 ammo)",
+            "Wagon master joins train (+0.05 to all profession protection rolls for 5 turns)",
+            "Letter from home waiting at fort (+2 morale)"
+          ],
+          "nature_gives_back": [
+            "Bumper buffalo herd (+25 lbs food on next Hunt)",
+            "Soda Springs natural carbonation (+1 morale, atmospheric)",
+            "Snake River salmon run (+15 lbs food)",
+            "Plum and berry season (+5 lbs food, no Hunter needed)",
+            "Camas root foraging (+3 lbs food, +1 morale)",
+            "Wild horses worth trading (+3 hides equivalent)",
+            "Antelope hunt success (+18 lbs food, +1 hide, requires Hunter)",
+            "Calm low-water river crossing (next river crossing safe automatically)"
+          ],
+          "timing_milestones": [
+            "Independence Rock by July 4th (+2 morale, already a check; v3.3 makes it a named surprise)",
+            "Mild weather all summer (next 5 turns no weather shocks)",
+            "Reunion with old friend (+1 morale, +1 free DYK)",
+            "Baby born on trail and survives (+3 morale, family-name immortalization in journal)"
+          ],
+          "atmospheric_superstition": [
+            "Aurora Borealis (existing, AUDIT per item 12 — strip luck modifier)",
+            "White Buffalo sighting (existing, AUDIT — strip luck modifier; DYK pairs with respectful Lakota-sacred-meaning explanation)",
+            "Lone Fiddler (existing, +2 morale, already correct)",
+            "Star Falls to Earth (existing, AUDIT — strip luck modifier; DYK explains Leonids)",
+            "Rainbow over Independence Rock (NEW v3.3, +1 morale only)"
+          ]
+        },
+        "calibration": "Target one surprise event every 2.5 turns on average. At least 3 fortune events per Short trail and 6 per Extended.",
+        "narrative_variants_per_surprise": "3 for major surprises (river crossings, fort help, Native trade); 1 for single-event surprises (white buffalo, aurora) since they only fire 1-2× per game"
+      },
+      "where_it_lives": "surprise_events array in JSON; surprise event firing logic in pink_oregon_trail.html."
+    },
+
+    "8": {
+      "name": "Residual probabilities (3-15% on both sides)",
+      "group": "B",
+      "principle": "Every protective skill has a residual failure rate. Every calamity has a residual escape rate. Both honest. Both narratively framed. Kids should understand that on the real trail, good preparation made you 80% safe and bad preparation made you 20% lucky.",
+      "residual_failures_on_protections": {
+        "doctor_cholera_save": "87% (existing, keep)",
+        "hunter_feeds_team": "85%; drops to 50% if Hunter exhausted (consec_push_on >= 4)",
+        "trapper_hunts": "80%; drops to 60% if exhausted",
+        "carpenter_fixes_wheel": "95%; drops to 70% if wagon_hp < 30",
+        "native_guide_river_crossing": "95% (keep — 5% historical realism)",
+        "scout_finds_water": "90%; drops to 75% in desert region",
+        "cook_stretches_food": "85%; drops to 65% if food < 5 lbs",
+        "priest_dying_intervention_bonus": "+20% existing (keep — see item 12 prayer note)",
+        "merchant_buy_discount": "deterministic 15% (no residual)",
+        "banker_starting_bonus": "deterministic (no residual)"
+      },
+      "residual_escapes_on_calamities": {
+        "cholera": "8% the member never gets sick despite exposure",
+        "buffalo_stampede": "8% the herd parts around the wagon",
+        "lightning_strike": "15% near miss (huge crash, no harm)",
+        "tornado": "10% the funnel veers",
+        "snake_bite": "12% dry bite (no venom)",
+        "river_drowning": "5% miraculous rescue",
+        "bandit_demand": "8% bandits get scared off (passing wagon train, barking dog, Cowboy stares them down)",
+        "all_other_shocks": "5% residual escape"
+      },
+      "where_it_lives": "Inline modifications to existing protection and shock probability rolls in pink_oregon_trail.html simulation modules and JSON probability tables."
+    },
+
+    "9": {
+      "name": "Narrative variants (3 per major event)",
+      "group": "B",
+      "problem": "Today each event has one default narrative + profession-modifier overrides. Replay shows the same prose immediately.",
+      "design": {
+        "rule": "3 random narrative variants for the default case per major event. Mechanical effect identical, story different.",
+        "example_broken_wheel": [
+          "The right rear wheel splinters as we cross a stretch of rocky ground. The wagon jerks to a halt at an angle. Without a fix, we go nowhere.",
+          "An iron tire band splits with a CRACK that startles the oxen. The wheel binds and locks. The wagon stops.",
+          "We feel the wagon lurch — a spoke has shattered crossing a creek bed. The wheel wobbles and we have to stop before it falls apart entirely."
+        ],
+        "profession_modifier_variants": "2 variants each per profession-modifier narrative",
+        "rollout_priority": "11 existing major events first (river crossings, broken wheel, oxen collapse, cholera, etc.); then 14 new calamities; then 24 new fortunes",
+        "single_event_surprises": "Defer to 1 narrative for one-off surprises (white buffalo, aurora) since they fire 1-2× per game"
+      },
+      "where_it_lives": "narratives_default array on each event in JSON; random selection logic in event resolution in pink_oregon_trail.html."
+    },
+
+    "10": {
+      "name": "Chained event probabilities (shadow effects)",
+      "group": "B",
+      "principle": "Systems feel alive when one event raises probability of related ones. Real wagon trains experienced this — wagon damaged at river was more likely to break down on the next rough stretch; crew with one cholera case had others incubating.",
+      "design": {
+        "structure": "Per-wagon event_shadows array. Each shadow is a 2-turn-window probability boost applied to a related event class.",
+        "shadows": [
+          { "trigger_event": "wagon_damage", "shadow_class": "wagon_damage", "multiplier": 2.0, "duration_turns": 2, "narrative": "The wagon was tougher than we thought, but it shows the wear." },
+          { "trigger_event": "cholera (member sick)", "shadow_class": "cholera", "multiplier": 3.0, "duration_turns": 2, "scope": "other members", "narrative": "Cholera spreads through dirty water — and we drink the same barrel." },
+          { "trigger_event": "lost_trail", "shadow_class_1": "food_spoil", "multiplier_1": 1.5, "shadow_class_2": "water_spill", "multiplier_2": 1.5, "duration_turns": 2, "narrative": "Wandering wastes everything we carry." },
+          { "trigger_event": "river_crossing_failure", "shadow_class_1": "wagon_damage", "multiplier_1": 2.0, "shadow_class_2": "member_injured", "multiplier_2": 1.5, "duration_turns": 2, "narrative": "The wagon is wet through; the harness is fouled." },
+          { "trigger_event": "bandit_demand", "shadow_class": "theft", "multiplier": 3.0, "duration_turns": 2, "narrative": "Word travels among the road agents." },
+          { "trigger_event": "push_on_tax_oxen_refuse", "shadow_class": "oxen_collapse", "multiplier": 2.0, "duration_turns": 2 }
+        ],
+        "decay": "Full effect turn 1, half effect turn 2, gone turn 3",
+        "stacking": "Multiple shadows of the same class stack additively up to a cap of ×4"
+      },
+      "where_it_lives": "event_shadows definitions per event in JSON; shadow accumulation and application in pink_oregon_trail.html simulation core."
+    },
+
+    "11": {
+      "name": "Per-member personality vectors (5 hidden traits)",
+      "group": "B",
+      "principle": "Lightweight bridge toward agent-based architecture without rebuilding the engine. Each member gets 5 hidden traits at character creation. Traits modify that member's behavior in stochastic rolls. Players see traits as flavor descriptors on the character card. Roughly 80% of the experiential payoff of full agent-based architecture, at maybe 5% of the implementation cost.",
+      "design": {
+        "traits": {
+          "boldness": { "range": [1, 10], "effect": "Modifies choice-card outcome probabilities. Bold members succeed more on risky choices, less on safe ones." },
+          "frailty": { "range": [1, 10], "effect": "Multiplies that member's state-transition probabilities for degrade rules. Frail member catches cholera more easily." },
+          "faith": { "range": [1, 10], "effect": "Slows that member's morale decay. In dying-intervention, +0.05 recovery boost per Faith point above 5." },
+          "steady": { "range": [1, 10], "effect": "Modifies the success rate of that member's profession protection. Steady Hunter feeds the team more reliably." },
+          "lucky": { "range": [1, 10], "effect": "Small ±0.02 bias on every stochastic roll involving that specific member." }
+        },
+        "generation": "Each trait rolls 1d6+1d6 (range 2-12, mean 7), capped 1-10",
+        "profession_biases": {
+          "hunter": { "steady": "+1" },
+          "doctor": { "steady": "+1", "faith": "+1" },
+          "cowboy": { "boldness": "+1", "steady": "+1" },
+          "priest": { "faith": "+2" },
+          "frontiersman": { "boldness": "+1", "lucky": "+1" },
+          "banker": "no bias",
+          "musician": { "faith": "+1", "boldness": "-1 (narrative texture, not 'this profession is bad')" },
+          "artist": { "faith": "+1" },
+          "child_if_family_team": { "lucky": "+1", "steady": "-1", "frailty": "-2 (children were more vulnerable)" }
+        },
+        "display_descriptors": {
+          "boldness_8plus": "Bold",
+          "boldness_3minus": "Cautious",
+          "frailty_8plus": "Frail",
+          "frailty_3minus": "Hardy",
+          "faith_8plus": "Faithful",
+          "faith_3minus": "Doubtful",
+          "steady_8plus": "Steady",
+          "steady_3minus": "Restless",
+          "lucky_8plus": "Lucky",
+          "lucky_3minus": "Star-crossed"
+        },
+        "display_example": "Sarah, the Doctor — Steady, slightly Faithful.",
+        "pedagogical_value": "A kid building a wagon now thinks 'Sarah's Frail, I should make sure she gets to rest' before her cholera resistance ever gets tested. Strategy depth without engine rework."
+      },
+      "where_it_lives": "personality_biases block in JSON; trait fields added to each member object structure in pink_oregon_trail.html (with safe defaults of 5/10 if missing — that's the v3.2-compat path); display in character card render."
+    },
+
+    "12": {
+      "name": "Superstition audit",
+      "group": "C",
+      "principle": "The game can show what pioneers believed without endorsing the belief as causal. Kids should learn what people experienced, not absorb magical thinking.",
+      "design": {
+        "two_classifications": {
+          "atmospheric_morale_only": "Effect is restricted to morale and DYK exposure. No hidden luck modifier, no probability bias on subsequent events.",
+          "material_help": "Effect is causal but the cause is human, natural, or social — never supernatural."
+        },
+        "audit_required_events": [
+          { "event": "Aurora Borealis", "current_v32": "+1 morale, +0.05 luck for 3 turns", "v33_classification": "atmospheric (strip luck modifier)", "dyk_pairing": "scientific explanation" },
+          { "event": "White Buffalo", "current_v32": "+1 morale, +0.05 luck for 5 turns", "v33_classification": "atmospheric (strip luck modifier)", "dyk_pairing": "Lakota sacred meaning, respectfully" },
+          { "event": "Lone Fiddler", "current_v32": "+2 morale", "v33_classification": "atmospheric (already correct)" },
+          { "event": "Star Falls to Earth", "current_v32": "+1 morale, +0.05 luck", "v33_classification": "atmospheric (strip luck)", "dyk_pairing": "Leonids meteor shower" },
+          { "event": "Rainbow at Independence Rock (NEW)", "v33_classification": "atmospheric, +1 morale only" },
+          { "event": "Native Guide help", "v33_classification": "material — keep (cause is human knowledge)" },
+          { "event": "Soda Springs", "v33_classification": "atmospheric (NEW pairing with DYK on natural carbonation)" },
+          { "event": "Bumper buffalo herd", "v33_classification": "material — keep (cause is natural plenty)" },
+          { "event": "Letter from home", "v33_classification": "material (information is the cause)" },
+          { "event": "Healing service (Priest)", "v33_classification": "material — keep, narrative neutral. See prayer_note." }
+        ],
+        "prayer_note_designer_private": "The Priest's +20% dying-intervention bonus is retained because community ritual reducing despair, organizing care, and providing time-with-the-dying has measurable effects on outcomes — observed scientifically and unrelated to claims of supernatural intercession. The narrative in player-facing text frames recovery as associated with care, attention, and stopped travel: 'Father Michael gathers the family at the bedside. He leads them in prayer and song through the night. Sarah is held, loved, kept warm. By morning the fever has broken.' Theologically neutral, scientifically defensible, historically grounded. Kids draw their own theological conclusions outside the game. NOT EXPLICIT IN PLAYER DOCUMENTATION.",
+        "pray_and_continue_choice": "Retain existing +20% with-Priest bonus. Soften narrative to: 'We prayed by the bedside as the wagon rolled. Some called it grace; some called it luck. By dawn the fever had broken.'"
+      },
+      "json_field": "Add superstition_class field to each surprise event. Simulator must NOT consult it for any mechanical effect — it exists only to flag designer intent and audit compliance.",
+      "where_it_lives": "Each affected event in JSON; narrative re-writes inline."
+    },
+
+    "13": {
+      "name": "End-of-game 'What You Learned' page",
+      "group": "C",
+      "problem": "Today's end-of-game shows a Trail Journal with ~15 paragraphs of period-voice prose plus a leaderboard score. Beautiful but not pedagogically structured.",
+      "design": {
+        "sections": [
+          { "name": "Your Trail in Numbers", "content": "Four scoring tracks (Steward / Provider / Scholar / Pathfinder) shown side-by-side as horizontal bars. Each: score, max possible, single-sentence interpretation. Brief comparison line." },
+          { "name": "What History You Met", "content": "Gallery of every DYK card shown to the team. Small cards with title + 2-line summary + FL benchmark code. Click reveals full fact and source. Header: 'You learned about [N] historical topics on this trail.'" },
+          { "name": "The Choices You Made", "content": "Retrospective walk-through of the 4-8 major fork-in-the-road moments. For each: what the choice was, what the team chose, what historians say (2-sentence pop-up with citation), what happened to the team." },
+          { "name": "The People You Lost (or Saved)", "content": "Per member: name, profession, state at journey's end, cause if lost, narrative epitaph (1-2 sentences). Tone: somber, dignified, period-appropriate." },
+          { "name": "Discussion Questions for Your Teacher", "content": "Five questions auto-generated from this specific journey. Each tagged to a benchmark." },
+          { "name": "Standards Demonstrated", "content": "List of FL benchmark codes the journey covered, with one-line 'I Can' statement for each." }
+        ],
+        "preserved_v32_content": "Trail Journal narrative preserved as 'Read the Trail Journal' expandable accordion at bottom of new page. Gabby's mom (design partner) loves the journal; we keep it.",
+        "print_formatting": "Entire page fits to 1-2 letter-sized printed pages. Header includes student name, wagon name, date, class period, teacher name (entered at game start in Teacher Mode)."
+      },
+      "where_it_lives": "Replaces existing end-screen Trail Journal flow in pink_oregon_trail.html. CSS @media print rules apply."
+    },
+
+    "14": {
+      "name": "Classroom roll-up dashboard",
+      "group": "C",
+      "philosophy": "The game can save individual journeys today; nothing aggregates across the class. v3.3 adds the Class Session feature — the artifact that proves to admin 'yes, I taught and they learned according to the standard.'",
+      "design": {
+        "registration": "Facilitator (teacher or parent) registers a Class Session at game start. Inputs: class name, date, period, teacher name, list of student/team identifiers. Each wagon attaches via class_session_id field.",
+        "trigger": "When the last wagon in the session finishes, an 'End Class Session' button appears.",
+        "dashboard_sections": [
+          { "name": "Standards Coverage Matrix", "content": "Grid: rows = each FL benchmark targeted, columns = each wagon, cells = Demonstrated / Partial / Not Encountered. Bottom row: per-standard coverage rate across the class.", "purpose": "Artifact teacher hands to administration." },
+          { "name": "Class Heatmap", "content": "Three columns: DYK facts encountered by every wagon (trail-shared), some wagons (divergent), no wagons (gaps for next-day teaching).", "purpose": "Tomorrow's lesson plan." },
+          { "name": "Aggregate Decisions", "content": "Across all wagons: counts of choices made (4 forded, 2 took ferry, 0 used Native Guide, etc.).", "purpose": "Discussion fuel: 'Why did most teams ford?'" },
+          { "name": "Aggregate Outcomes", "content": "Members started, members lost, causes breakdown, average Steward score, average days to Oregon. The class itself becomes a wagon train; 1-in-10 historical death rate emerges at class scale.", "purpose": "Emotionally powerful, historically faithful." },
+          { "name": "Top Discussion Prompts", "content": "8-10 prompts auto-generated from class data, ranked by relevance.", "purpose": "Class discussion seeds." }
+        ],
+        "format": "Single-page printable dashboard, header with class info, footer with timestamps and teacher signature line. One PDF; teacher prints, hands to admin, files with unit's evidence portfolio.",
+        "persistence": "Class Session state in localStorage keyed by session ID — survives browser refresh during a class period. Multi-day persistence deferred to v3.4."
+      },
+      "where_it_lives": "New UI components in pink_oregon_trail.html. New class_sessions block in JSON for templates."
+    },
+
+    "15": {
+      "name": "Expandable map — full zoom, pan, center-on-wagon",
+      "group": "D",
+      "problem": "The current expandable mini-map shows the full 50-space Extended trail at fixed zoom. On a Chromebook screen (~1366px wide), space markers sit ~25px apart and labels collide. Kids can't read the trail. Pin-needle wagon markers from v3.1 are clear; the underlying map is too crowded.",
+      "design": {
+        "zoom_range": "1× (full trail visible — current default) to 4× (only ~12 spaces visible, labels readable at 14pt)",
+        "controls": {
+          "touch": "Pinch-to-zoom, single-finger pan",
+          "desktop": "Scroll wheel zoom (centered on cursor), click-and-drag pan",
+          "always_available": "Floating +/−/⊕ buttons in bottom-right corner of map. 44×44px touch targets. ⊕ = center on my wagon."
+        },
+        "center_on_my_wagon": "Single tap auto-pans and zooms to active wagon at 2.5× zoom. Most-used button — make it most prominent.",
+        "label_legibility": "Font sizes resize INVERSELY to zoom (zoomed-out smaller, zoomed-in larger). Capped 8pt min, 18pt max. Place names always render below space roundel; never overlap.",
+        "pin_needles_at_zoom": "Active wagon needle stays prominent at all zoom levels. Inactive wagons' needles get smaller and labels fade slightly at zoom ≥2× so active wagon stands out.",
+        "scale_indicator": "Small bottom-left readout updates with zoom. '1 inch = ~80 miles' at 1×, '1 inch = ~20 miles' at 4×. Reinforces geographic learning.",
+        "performance": "50 spaces × 6 wagons × pin-needle elements ≈ 300 SVG elements. SVG handles this fine at 4× zoom. No canvas rewrite needed."
+      },
+      "implementation_tip": "Single shared MapZoomController class drives all three containers (mini-map, expand-mini-map, mobile-drawer-map). Holds zoom level (1-4) and pan offset (x,y). Updates SVG viewBox attribute on every change. Throttles via requestAnimationFrame for smooth pinch zoom.",
+      "where_it_lives": "mini-map, expand-mini-map, and mobile-drawer-map containers in pink_oregon_trail.html. New MapZoomController JS class."
+    },
+
+    "16": {
+      "name": "Physical tile redesign — match screen, dial up the fun",
+      "group": "D",
+      "problem": "The current 6-tile (Extended) and 1-tile (Short) physical boards from v3.1 are functional and historically accurate but visually flat compared to the on-screen map. Kids who play the physical board want to look at it. Today they don't.",
+      "goal": "Redesign all tiles so they look like the on-screen map's beautiful illustrated sibling — same color palette, more illustrated detail per region, kid-engagement easter eggs, dialed-up sense of adventure.",
+      "design": {
+        "vignettes_per_tile": {
+          "count_per_tile": "3-5",
+          "style": "1-2 inch illustrated scenes in period watercolor",
+          "examples": {
+            "tile_a_independence_to_fort_kearny": ["Prairie schooner being outfitted", "Family's last meal in Independence", "Oxen being broken to yoke", "Fiddler at evening camp"],
+            "tile_b_fort_kearny_to_chimney_rock": ["Kids picking buffalo chips for fires", "Buffalo herd in the distance", "Violent prairie thunderstorm at horizon", "Pawnee hunter passing in foreground"],
+            "tile_c_scotts_bluff_to_independence_rock": ["Women writing letters home", "Wagon train circled for the night", "Names being carved into Independence Rock", "Wedding on the trail"],
+            "tile_d_south_pass_to_fort_bridger": ["Mountain pass with snow on peaks", "Trappers trading furs", "Shoshone family at trading post", "Wagon being lashed for steep descent"],
+            "tile_e_soda_springs_to_fort_boise": ["Soda Springs with kids drinking natural carbonated water", "Salmon being caught at Snake River tributary", "Missionaries at Whitman station"],
+            "tile_f_the_dalles_to_oregon_city": ["Columbia River raft journey", "Mount Hood looming", "First farms of Willamette Valley", "Families embracing in Oregon City"]
+          }
+        },
+        "wildlife_per_tile": "2-3 illustrations: buffalo on plains, mountain goats and elk in mountains, salmon at Snake River, prairie dogs, eagles, deer, rattlesnakes (small, not scary)",
+        "did_you_know_callout_per_tile": "One parchment-scroll-style decorative element with single historical fact in period typography. Gives kids reading material between turns. Content rotates from DYK pool, region-relevant.",
+        "color_palette_exact": {
+          "parchment": "#F4E8D8",
+          "deep_brown": "#5C4A36",
+          "tan": "#A89070",
+          "trail_pink": "#B85770",
+          "soft_pink": "#F4D3DA",
+          "cream": "#FBF6F0",
+          "river_blue": "#7A9DBE",
+          "forest_green": "#5F7A5F",
+          "mountain_purple": "#8B7A95",
+          "desert_tan": "#C8956D",
+          "gold_accent": "#D4AF37"
+        },
+        "trail_line": "trail_pink, slightly thicker than v3.1's stroke, subtle gradient toward soft_pink at edges",
+        "space_markers": {
+          "shape": "Decorative roundel, 1.2 inch diameter",
+          "outer_ring": "tan with gold_accent inner trim",
+          "number_style": "Period serif, centered, deep_brown",
+          "icon_hints": {
+            "fort": "anchor",
+            "river": "droplet",
+            "landmark": "peak",
+            "travel_space": "simple arrow"
+          },
+          "place_name": "Italic serif, deep_brown, beneath roundel"
+        },
+        "easter_eggs_per_tile": {
+          "count": 3,
+          "categories": ["Hidden critter (fox peeking from grass, raccoon at creek, eagle in tree)", "Period object (silver dollar, prairie flower, lost button, forgotten toy)", "Fellow traveler (Native scout passing, mountain man, missionary, eastbound rider with mail)"],
+          "purpose": "'Find the three hidden things on each tile' becomes a kid-game during downtime. Wins kid attention to historical artifacts."
+        },
+        "typography": {
+          "tile_titles": "Larger, decorative period serif (1850s newspaper-masthead style — heavy weight, generous spacing)",
+          "region_labels": "Flowing italic",
+          "discipline": "All text period-appropriate. No modern fonts, no anachronism."
+        },
+        "decorative_borders": "0.4-inch border with repeated period motifs (small wagons, oxen, fleurs, stars). Border colors match palette.",
+        "corner_vignettes_per_tile": {
+          "tile_a": "Compass rose",
+          "tile_b": "Quill-and-ink",
+          "tile_c": "Campfire",
+          "tile_d": "Yoked oxen pair",
+          "tile_e": "Salmon",
+          "tile_f": "Mount Hood silhouette"
+        },
+        "paintable_variants": "Same structure as decorated (vignettes, easter eggs, borders, redesigned roundels) but in pure outline form. Higher line weights so child's brush doesn't blur lines. Light gray dot grid in larger paint zones.",
+        "poster_36x24_inch": "Existing v3.1 single-sheet poster updated to match new tile aesthetic. Decorated AND paintable variants."
+      },
+      "deliverables_count": 16,
+      "deliverables": [
+        "board_extended_tile_A_decorated.html (UPDATED in place)",
+        "board_extended_tile_A_paintable.html (UPDATED)",
+        "board_extended_tile_B_decorated.html (UPDATED)",
+        "board_extended_tile_B_paintable.html (UPDATED)",
+        "board_extended_tile_C_decorated.html (UPDATED)",
+        "board_extended_tile_C_paintable.html (UPDATED)",
+        "board_extended_tile_D_decorated.html (UPDATED)",
+        "board_extended_tile_D_paintable.html (UPDATED)",
+        "board_extended_tile_E_decorated.html (UPDATED)",
+        "board_extended_tile_E_paintable.html (UPDATED)",
+        "board_extended_tile_F_decorated.html (UPDATED)",
+        "board_extended_tile_F_paintable.html (UPDATED)",
+        "board_short_tile_A_decorated.html (UPDATED)",
+        "board_short_tile_A_paintable.html (UPDATED)",
+        "board_poster_decorated.html (UPDATED)",
+        "board_poster_paintable.html (UPDATED)"
+      ],
+      "performance_constraint": "Each tile file under 800 KB. SVG primitives only — no embedded raster images, no fonts, no external resources. Tiles must work offline on a Chromebook with WiFi off.",
+      "fallback_path": "If pure-SVG watercolor texture proves too heavy for the 800KB budget, fall back to simpler line-art with flat color fills — still kid-engaging, easier to render. Attempt full watercolor approach on Tile B first as proof of concept.",
+      "where_it_lives": "All 16 tile HTML files in project root. Existing v3.1 versions preserved in git history."
+    }
+  },
+
+  "florida_standards_mapping": {
+    "operating_frame": "Per FL B.E.S.T. Standards (2023 revision, verified at cpalms.org), 6th grade Social Studies in Florida is World History (ancient and classical civilizations of Africa, Asia, Europe). Oregon Trail content does NOT fit 6th grade FL standards directly. Lives in: SS.5.A.6 (5th grade — Growth and Westward Expansion, which Gabby's class would have studied last year, making Pink Oregon Trail a defensible review/extension activity), and SS.8.A.4 (8th grade — Westward Expansion, which Gabby will study in 8th, making this preparation/preview).",
+    "cross_cutting_anchors_at_6th_grade": {
+      "SS.6.W.1": "Historical inquiry methodology, primary/secondary sources",
+      "SS.6.G.1": "Geographic interpretation",
+      "SS.6.G.4": "Human-environment interaction",
+      "SS.6.G.6": "Mapping",
+      "BEST_ELA_R.2": "Informational text comprehension",
+      "BEST_ELA_R.3": "Integration of knowledge and ideas"
+    },
+    "tagging_scheme": {
+      "rule": "Every DYK card and every quiz item carries: (1) primary content standard (usually SS.5.A.6.x or SS.8.A.4.x), (2) one or more cross-cutting skill standards (SS.6.W.1.x, SS.6.G.x, or ELA-R.x).",
+      "example_dyk_card": {
+        "title": "Cholera: The Trail's #1 Killer",
+        "fl_standards_primary": ["SS.5.A.6"],
+        "fl_standards_skill": ["SS.6.W.1.3", "ELA.6.R.2.2"]
+      }
+    },
+    "verified_sub_benchmarks": {
+      "SS.5.A.6.5": "Identify the causes and effects of the War of 1812 (verified at CPALMS)",
+      "SS.8.A.4.x": "Westward Expansion sub-benchmarks (Claude Code must verify each at CPALMS before tagging)"
+    },
+    "verification_discipline": "Every benchmark code must be verified at cpalms.org before committing to JSON. Do not invent or guess codes. If no clean match found, leave field empty and surface in NOTES_v3_3.md open questions. Better to ship with missing tag than fabricated one.",
+    "rubric_demonstration_levels": {
+      "recall": "Team SAW the DYK card",
+      "apply": "Team made a CHOICE involving the standard's content",
+      "analyze": "Team got the QUIZ question right"
+    }
+  },
+
+  "calibration_targets": {
+    "primary_table": [
+      { "config": "easy_short",     "hunter_doctor_finish_pct": 95, "musician_artist_finish_pct": 75, "avg_dyk_seen": [12, 14], "avg_minutes_live": [12, 15] },
+      { "config": "medium_short",   "hunter_doctor_finish_pct": 80, "musician_artist_finish_pct": 50, "avg_dyk_seen": [12, 14], "avg_minutes_live": [15, 20] },
+      { "config": "hard_short",     "hunter_doctor_finish_pct": 60, "musician_artist_finish_pct": 25, "avg_dyk_seen": [12, 14], "avg_minutes_live": [18, 22] },
+      { "config": "easy_extended",  "hunter_doctor_finish_pct": 90, "musician_artist_finish_pct": 65, "avg_dyk_seen": [24, 28], "avg_minutes_live": [30, 35] },
+      { "config": "medium_extended","hunter_doctor_finish_pct": 70, "musician_artist_finish_pct": 40, "avg_dyk_seen": [24, 28], "avg_minutes_live": [40, 50] },
+      { "config": "hard_extended",  "hunter_doctor_finish_pct": 50, "musician_artist_finish_pct": 15, "avg_dyk_seen": [24, 28], "avg_minutes_live": [50, 60] }
+    ],
+    "secondary_targets": [
+      "Avg members lost on Hunter+Doctor / Medium / Short: 0.6-1.0",
+      "Avg members lost on Musician+Artist / Medium / Short: 2.5-3.5",
+      "≥3 members lost rate on Musician+Artist / Hard / Extended: 50-70%",
+      "Steward score range across all configs: 100-280",
+      "Pathfinder score range: 0-80",
+      "Bandit quiz item repetition rate across 4 consecutive plays of same trail length: <30%"
+    ],
+    "monte_carlo_runs_per_cell": 500,
+    "discipline": "If any cell misses, retune. Retuning levers: Push-On Tax thresholds (item 2), bypass penalty magnitudes (item 3), profession protection rates (item 8), calamity probabilities (item 6), fortune probabilities (item 7). DO NOT retune by changing the calibration targets themselves."
+  },
+
+  "acceptance_tests": [
+    { "id": 1, "name": "Calibration battery passes", "description": "All 6 configs, all primary and secondary targets, on 500-run Monte Carlo." },
+    { "id": 2, "name": "DYK quota guarantee", "description": "Run 100 games on each trail length. Every game must have ≥minimum DYK card count and all required categories present." },
+    { "id": 3, "name": "Bandit quiz variety", "description": "Play 4 consecutive Short games as same Hunter+Doctor team. Track unique quiz questions seen. Must be ≥14 of possible ~20." },
+    { "id": 4, "name": "Push-On Tax fires", "description": "Manually Push On 10 consecutive turns on Steady. Verify oxen-refuse at 4, exhaustion at 6, wagon damage at 8, major breakdown at 10. Each shows narrative and applies effect." },
+    { "id": 5, "name": "Smart-Stop bypass penalties", "description": "Manually pass Fort Laramie with one member at health 5 and food at 5 lbs. Verify next 3 turns show elevated state-transition rolls in simulation log, +1 morale loss at bypass moment, 'Fort Regret' entry in journal." },
+    { "id": 6, "name": "Scoring tracks render", "description": "Finish a journey. Verify all four tracks (Steward / Provider / Scholar / Pathfinder) display with bars, scores, narrative interpretations. Verify total = sum of four tracks." },
+    { "id": 7, "name": "Personality vectors apply", "description": "Build a wagon. Verify each of 7 members displays trait descriptors. Force a stochastic event involving a high-Frailty member 100 times in calibration; verify their state-transition rate is materially higher than a low-Frailty member's." },
+    { "id": 8, "name": "Superstition audit", "description": "Spot-check 5 atmospheric events in the simulation. Verify they apply ONLY morale changes — no luck modifier, no probability bias on subsequent rolls." },
+    { "id": 9, "name": "What You Learned page renders", "description": "Finish a journey on Medium / Extended with 2 lost members and 22 DYK cards. Verify all 6 sections render, FL benchmark codes display correctly, page is printable on 1-2 letter pages." },
+    { "id": 10, "name": "Classroom roll-up dashboard", "description": "Register a Class Session with 4 wagons, complete all 4 journeys (mix of outcomes), press End Class Session. Verify Standards Coverage Matrix populates correctly, Class Heatmap shows shared/divergent/missing facts, Aggregate Decisions reflects actual choices, Discussion Prompts auto-generated and topical." },
+    { "id": 11, "name": "Narrative variants rotate", "description": "Trigger Broken Wheel event 10 times in calibration. Verify all 3 default narratives appear at least once, none more than 5 times." },
+    { "id": 12, "name": "Chained event probabilities apply", "description": "Force a wagon damage event. Verify subsequent 2 turns show ×2 probability multiplier on wagon_damage in simulator log. Verify shadow decays correctly (full turn 1, half turn 2, gone turn 3)." },
+    { "id": 13, "name": "Expandable map zoom and pan", "description": "Open expanded map. Pinch-zoom (or scroll-zoom) to 4×. Verify all space labels readable, no overlap. Pan to different region. Tap 'center on my wagon'; verify view jumps to active wagon at 2.5× zoom. Verify scale readout updates. Test desktop fullscreen and mobile drawer-map." },
+    { "id": 14, "name": "Physical tile redesign matches screen", "description": "Print Tile B. Place next to on-screen map showing same region (Fort Kearny to Chimney Rock). Both should clearly belong to same visual family. Have a kid spend 30 seconds with printed tile UNPROMPTED. They must find at least one easter egg. Tape Tiles A through F together; verify clean alignment." }
+  ],
+
+  "stage_order": [
+    { "stage": 0, "name": "Orient", "items": [], "actions": "Confirm meta.version === '3.2'. Read BUILD_REPORT_v3_2.md and NOTES_v3_2.md for context. Read this entire spec. Verify v32 calibration sim (#calibrate=N) still works on current build." },
+    { "stage": 1, "name": "Foundations", "items": [1, 4, 8], "actions": "Re-weighted scoring, DYK exposure targets, residual probabilities. Pure JSON + tiny simulator updates. Get them right; the rest depend on the metrics they produce." },
+    { "stage": 2, "name": "Strategy loops", "items": [2, 3, 11], "actions": "Push-On Tax, Smart-Stop Logic, personality vectors. New strategy mechanics that the calibration will test." },
+    { "stage": 3, "name": "Calibration checkpoint", "items": [], "actions": "Run 500-run Monte Carlo for all 6 configs. Compare to calibration target table. DO NOT proceed until all 6 cells pass. Retune via Push-On Tax thresholds, bypass penalty magnitudes, profession protection rates, shock/fortune probabilities. NEVER retune by changing calibration targets." },
+    { "stage": 4, "name": "Content expansion", "items": [5, 6, 7, 9, 10], "actions": "Bandit quiz bank to 40, calamities to 25+, fortunes to 35-40, narrative variants, chained shadow events. Big content writing pass — period-voice prose, sourced facts, quiz variants." },
+    { "stage": 5, "name": "Pedagogy", "items": [12, 13, 14], "actions": "Superstition audit, What You Learned page, Class Session dashboard. New UI work, real but not engine-deep." },
+    { "stage": 6, "name": "Map and tiles", "items": [15, 16], "actions": "Expandable map zoom + 16 board files. Visual deliverables; do last so screenshots in build report show finished work." },
+    { "stage": 7, "name": "Calibration re-check + acceptance battery", "items": [], "actions": "Re-run all 6 calibration cells. Run all 14 acceptance tests. Fix anything that drifted. Write BUILD_REPORT_v3_3.md." }
+  ],
+
+  "build_discipline": {
+    "logic_first": "For each item (1-16), produce TWO walk-throughs in NOTES_v3_3.md: a PRE-IMPLEMENTATION walk-through (what code does today, what brief requires, where the change lands, edge cases anticipated, spec contradictions surfaced) and a POST-IMPLEMENTATION result (PASS/FAIL per acceptance test, what was actually changed, unexpected issues, anything deferred).",
+    "live_journal_file": "NOTES_v3_3.md (in same style as NOTES_v2_5.md and NOTES_v3_2.md)",
+    "build_report_file": "BUILD_REPORT_v3_3.md (in same style as BUILD_REPORT_v3_2.md)",
+    "git_policy": "Per Nicholas's updated direction for v3.3: ONE commit at the very end of the build, after all 16 items are implemented and all 14 acceptance tests pass. NOT during the build. Maintain a 'git work pending' log in NOTES_v3_3.md for the final commit message.",
+    "json_first_code_second": "Almost every change lives in oregon_trail_game_data.json first. The HTML/JS reads from GAME_DATA. After every JSON edit, re-embed using existing .refresh_embedded_gamedata.js (or equivalent) so inline GAME_DATA literal in HTML matches external JSON. Drift between external JSON and embedded literal is a structural risk.",
+    "v32_compat": "Save files from v3.2 must load in v3.3. New fields added with safe defaults; no fields removed. Versioning: meta.version: '3.3', meta.compatible_with: ['3.2'].",
+    "performance_budget": "v32 simulation runs 500 journeys silently in <30s on Chromebook. Adding 14 calamities and 24 fortunes increases per-turn shock-roll cost by ~3×. Expect 500-run calibration to grow to ~60-90s. Acceptable.",
+    "tone_period_voice": "Concrete sensory detail over abstract claims. No anachronism — pioneers didn't say 'vibes.' No preachiness — let the trail teach. Respect for Native American peoples — they were guides, traders, healers, neighbors. Never antagonists. Honest about hardship — kids can handle that people died on the trail. Don't be gratuitous; don't sanitize."
+  },
+
+  "deliverables": [
+    "pink_oregon_trail.html — updated, embedded GAME_DATA refreshed, all v3.3 mechanics live",
+    "oregon_trail_game_data.json — meta.version: '3.3', all new keys present",
+    "NOTES_v3_3.md — live build journal with pre/post walk-throughs per item",
+    "BUILD_REPORT_v3_3.md — final report (executive summary, per-item results, calibration table, acceptance test results, known limitations, self-test summary, git work pending)",
+    "16 board files (12 Extended tiles ×2 versions, 1 Short ×2, poster ×2) — all in matching v3.3 aesthetic",
+    "README.md — updated to mention v3.3 and new features"
+  ],
+
+  "sign_off_checklist": [
+    "All 14 acceptance tests pass",
+    "All 6 calibration cells pass primary and secondary targets on 500-run Monte Carlo",
+    "Every DYK card carries verified FL benchmark code(s)",
+    "Every quiz item carries verified FL benchmark code(s)",
+    "What You Learned page prints cleanly on 1-2 letter pages",
+    "Class Session dashboard prints cleanly on 1 letter page",
+    "Personality vectors display on character cards in a way Gabby can recognize",
+    "All atmospheric-tagged events confirmed atmospheric-only (no hidden luck modifiers)",
+    "Prayer-related narratives reviewed and confirmed neutral on theological causality",
+    "Save files from v3.2 load correctly in v3.3",
+    "Expanded map zoom range tested at 1×, 2×, 4×; labels readable at every level",
+    "All 16 board files printed and verified for visual match to on-screen map",
+    "Tile easter eggs tested with at least one kid; ≥1 found unprompted",
+    "Extended tiles A-F tape together cleanly (trail line, regions, border continuous)",
+    "No console errors during full Short journey or full Extended journey",
+    "BUILD_REPORT_v3_3.md written, summarizing all 16 items + open issues + final commit message",
+    "ONE final git commit made at end of build with comprehensive message"
+  ],
+
+  "open_questions_v33": [
+    "FL benchmark sub-codes for SS.5.A.6.x and SS.8.A.4.x — Claude Code must verify each at CPALMS during Stage 4. Do not invent codes.",
+    "Watercolor texture in pure SVG may exceed 800KB tile budget. Attempt full approach on Tile B first; fall back to flat-color line art if needed (item 16 specifies fallback path).",
+    "Native American perspective full layer ('Through Native Eyes' alternate journal mode) is partial in v3.3 — full perspective deferred to v3.5.",
+    "Multi-class-period save state is single-period only in v3.3. Multi-day persistence deferred to v3.4.",
+    "Items 41-60 in bandit quiz bank deferred to v3.3.x patches — v3.3 ships at 40."
+  ]
+}

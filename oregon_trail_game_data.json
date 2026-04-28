@@ -2,7 +2,9 @@
   "meta": {
     "title": "Pink Oregon Trail",
     "designer": "Gabriella Kasdaglis (Gabby)",
-    "version": "3.2",
+    "version": "3.3",
+    "compatible_with": ["3.2"],
+    "amendment_v3_3": "Strategy and pedagogy depth amendment. Adds 4-track scoring (Steward / Provider / Scholar / Pathfinder), Push-On Tax (consec_push_on counter with 4 thresholds), Smart-Stop bypass penalties (forts / rivers / landmarks), DYK exposure quotas, residual probabilities (3-15% on protections and shocks), and per-member personality vectors (5 hidden traits). The v3.3.0 ship is partial; content expansion (items 5-7, 9, 10), pedagogy UI (items 12-14), expandable map (item 15), and physical board redesign (item 16) ship in v3.3.x patches.",
     "trail_lengths": {
       "short": {
         "spaces": 25,
@@ -6067,5 +6069,231 @@
       "rebuild_required": "After fixing the HTML, regenerate both PDFs using wkhtmltopdf with the same flags as before (--page-size Letter --orientation Portrait --margin-top 0 etc.). Verify visually that each page fills with the tile artwork.",
       "verification": "Open the new PDFs. Each of the 6 pages should show the tile filling the entire 8.5x11 sheet — not just the top-left corner. The decorative outline border should run along all four edges of the page."
     }
+  },
+  "scoring_v3_3": {
+    "philosophy": "Replace the single-number score with four orthogonal tracks. A team finishing slow with everyone alive at full pantries should score higher than a team finishing fast with empty pantries and three lost. The slow careful team beats the fast careless team by more than 2x. That's the lesson the trail teaches.",
+    "tracks": {
+      "steward": {
+        "formula": "(members_alive * avg_health * avg_morale_at_finish) * 4",
+        "max": 280,
+        "narrative": "Your team arrived alive and well.",
+        "narrative_low": "Few of your people made it to the valley.",
+        "narrative_mid": "Some of your people came through. Others did not."
+      },
+      "provider": {
+        "formula": "final_money * 2 + final_food + final_water + final_medicine_doses * 5",
+        "max": 150,
+        "narrative": "Your wagon held its provisions to the end.",
+        "narrative_low": "You arrived at Oregon City with empty barrels and no coin.",
+        "narrative_mid": "You stretched what you had. The wagon was lean by the time you saw the valley."
+      },
+      "scholar": {
+        "formula": "dyk_cards_seen * 5 + bandit_quiz_correct * 10",
+        "max": 170,
+        "narrative": "Your team learned the trail.",
+        "narrative_low": "There was much to see along the way. You did not stop to see it.",
+        "narrative_mid": "You stopped at landmarks. You read what travelers had written before you."
+      },
+      "pathfinder": {
+        "formula": "max(0, 110 - days_traveled)",
+        "max": 80,
+        "narrative": "You raced the winter clock.",
+        "narrative_low": "Snow fell on the Cascades before you reached them.",
+        "narrative_mid": "You arrived before winter. The mountains let you through."
+      }
+    },
+    "total_max": 680,
+    "legacy_score": "Retained for backward compatibility with seeded leaderboard. computeScore() still runs and stores w.score; computeV33Score(w) populates w.scoreV33 = { steward, provider, scholar, pathfinder, total }.",
+    "interpretation_bands": {
+      "low": "0-25% of max",
+      "mid": "25-75% of max",
+      "high": "75-100% of max"
+    }
+  },
+  "dyk_quotas": {
+    "philosophy": "DYK card exposure was probabilistic in v3.2. Some games gave 5 cards, some gave 18. There was no guaranteed dose for the educational objective. v3.3 enforces a per-trail minimum and a category floor so every kid who plays sees a representative slice of the historical content.",
+    "minimums": {
+      "short":    { "minimum": 12, "target": 14 },
+      "extended": { "minimum": 24, "target": 28 }
+    },
+    "categories_required_per_game": [
+      "historical",
+      "social",
+      "scientific",
+      "economic",
+      "native_perspective",
+      "women",
+      "children",
+      "geography"
+    ],
+    "implementation": "Per-wagon dyk_quota_remaining counter, initialized from trail length. Every space that can fire a DYK card checks the counter. If dyk_quota_remaining > spaces_remaining, the DYK card fires deterministically (no probability roll). Otherwise existing probability gates apply.",
+    "category_enforcement": "Maintain a dyk_categories_seen Set. If fewer than 4 turns remain and an unseen required category is still owed, the next eligible DYK card forces a card from that category.",
+    "v33_0_note": "Category enforcement is wired but the historical_facts pool was not retagged with all 8 categories this round (deferred with item 5 content expansion to v3.3.x). Until retagging completes, only the 'minimum count' floor is binding; the 'category floor' is best-effort against existing tags."
+  },
+  "residual_probabilities": {
+    "philosophy": "Every protective skill has a residual failure rate. Every calamity has a residual escape rate. Both honest. Both narratively framed. Kids should understand that on the real trail, good preparation made you 80% safe and bad preparation made you 20% lucky.",
+    "protections": {
+      "doctor_cholera_save":         { "p": 0.87, "exhausted_p": 0.87 },
+      "hunter_feeds_team":           { "p": 0.85, "exhausted_p": 0.50, "exhausted_when": "consec_push_on >= 4" },
+      "trapper_hunts":               { "p": 0.80, "exhausted_p": 0.60, "exhausted_when": "consec_push_on >= 4" },
+      "carpenter_fixes_wheel":       { "p": 0.95, "exhausted_p": 0.70, "exhausted_when": "wagon_hp < 30" },
+      "native_guide_river_crossing": { "p": 0.95, "exhausted_p": 0.95 },
+      "scout_finds_water":           { "p": 0.90, "desert_p": 0.75 },
+      "cook_stretches_food":         { "p": 0.85, "low_food_p": 0.65, "low_food_when": "food < 5 lbs" },
+      "priest_dying_intervention":   { "p": 1.00, "bonus_recovery": 0.20 },
+      "merchant_buy_discount":       { "p": 1.00, "deterministic_pct": 0.15 },
+      "banker_starting_bonus":       { "p": 1.00, "deterministic": true }
+    },
+    "escapes": {
+      "cholera":           0.08,
+      "buffalo_stampede":  0.08,
+      "lightning_strike":  0.15,
+      "tornado":           0.10,
+      "snake_bite":        0.12,
+      "river_drowning":    0.05,
+      "bandit_demand":     0.08,
+      "all_other_shocks":  0.05
+    },
+    "exhausted_protection_narratives": {
+      "hunter_failed":   "The Hunter walked the timberline at dusk and came back empty-handed. Game was scarce; the team was tired. Tonight we eat what we have.",
+      "trapper_failed":  "Snares all sprung clean. The Trapper checked every line twice, but the woods were quiet.",
+      "carpenter_failed":"The Carpenter laid out tools and lashings, but the wagon's bones were too tired. The repair held only partly.",
+      "scout_thirst":    "The Scout rode out at first light and rode back at dusk. No spring. No creek. Tomorrow we ride further."
+    }
+  },
+  "push_on_tax": {
+    "philosophy": "Grueling pace for 3+ consecutive turns triggered a 30% exhaustion roll in v3.2. Steady pace had no consecutive-Push-On consequence at all. Kids who never stopped were not punished. v3.3 introduces a hidden counter that increments every Push On regardless of pace and resets on Hunt, Rest, or Forage. Narrative cues do the teaching — no on-screen meter.",
+    "counter_field": "consec_push_on",
+    "reset_actions": ["Hunt", "Rest", "Forage"],
+    "pace_increment": {
+      "Steady":    1,
+      "Strenuous": 2,
+      "Grueling":  3
+    },
+    "thresholds": [
+      {
+        "value": 5,
+        "trigger": "oxen_refuse",
+        "effect_summary": "Forced 1-day stop, +0 movement",
+        "effect_field":   "force_stop",
+        "narratives": [
+          "The lead ox planted his feet at dawn and would not move. We rested.",
+          "The off-side ox lay down in the trace before sunrise. The wagon master spoke to him quietly. We waited.",
+          "Both lead oxen turned away from the yoke. They had walked enough. The trail master called the day."
+        ]
+      },
+      {
+        "value": 8,
+        "trigger": "crew_exhaustion",
+        "effect_summary": "Random healthy member transitions to weakened (deterministic, no probability roll)",
+        "effect_field":   "weaken_random_healthy",
+        "narratives": [
+          "Sarah collapsed by the campfire. The trail demands rest.",
+          "The youngest in the train sat down on the wagon tongue at dusk and could not be roused. Fever rose with the moon.",
+          "Half the camp slept where they fell. One did not rise without help."
+        ]
+      },
+      {
+        "value": 12,
+        "trigger": "wagon_damage",
+        "effect_summary": "wagon_hp -= 10, triggers Broken Wheel event with -1 backwards space",
+        "effect_field":   "wagon_damage",
+        "wagon_hp_loss":  10,
+        "backwards_spaces": 1,
+        "narratives": [
+          "The wagon groans under endless miles. The rear axle cracks.",
+          "A spoke split as we pulled out of camp. The wheel went over and we lost half a day backing up.",
+          "The kingpin bent. We had to drop the load and walk the wagon backwards to a level patch."
+        ]
+      },
+      {
+        "value": 18,
+        "trigger": "major_breakdown",
+        "effect_summary": "wagon_hp -= 18, all members morale -2, forced 2-day stop",
+        "effect_field":   "major_breakdown",
+        "wagon_hp_loss":  18,
+        "morale_loss":    2,
+        "force_stop_days": 2,
+        "narratives": [
+          "The wagon, the team, the trail itself rebels. We are stopped.",
+          "Wagon, team, road — none of it would carry us another mile. Two days passed before we moved.",
+          "The wheels would not turn. The oxen would not pull. The morning passed and the morning after that. We slept in the dust."
+        ]
+      }
+    ],
+    "visibility": "Hidden meter — no on-screen indicator. Narrative cues do the teaching. Kids should feel the strain, not stare at a meter."
+  },
+  "bypass_penalties": {
+    "philosophy": "There is no mechanical incentive to stop at a fort or river crossing if the player is in a hurry. Bypassing is invisible. Per Nicholas: no mandatory stops — strategy must be preserved. Players choose to stop because logic makes it rational.",
+    "fort_bypass": [
+      {
+        "condition": "any team member at health < 7 (or in weakened/sick/injured/dying state)",
+        "effect_field": "degrade_probability_boost",
+        "magnitude": 0.10,
+        "duration_turns": 3,
+        "narrative": "We saw the fort gates and pressed on. Sarah's cough deepened that night. We should have rested."
+      },
+      {
+        "condition": "food below 7 days' worth of consumption",
+        "effect_field": "morale_loss_and_journal",
+        "morale_loss": 1,
+        "journal_tag": "Fort Regret",
+        "narrative": "We needed to resupply. We pushed on instead."
+      },
+      {
+        "condition": "wagon_hp < 70",
+        "effect_field": "next_damage_multiplier",
+        "multiplier": 1.5,
+        "narrative": "The wagon was tired. We should have stopped to rest it."
+      },
+      {
+        "condition": "money < $5",
+        "effect_field": "no_penalty",
+        "narrative": "(pioneers without money skipped forts; this is honest)"
+      }
+    ],
+    "river_bypass": {
+      "trigger": "Player chooses 'ford without choosing method' option",
+      "effect": "auto-rolls fording outcome at +0.10 drowning probability",
+      "narrative": "We did not pick a place to cross. We took the bank we found."
+    },
+    "landmark_bypass": {
+      "trigger": "Wagon passes a landmark space without landing on it",
+      "effect": "Loses that landmark's DYK card AND -1 morale",
+      "narrative": "The landmark fell behind us before we even knew we were past it."
+    }
+  },
+  "personality_biases": {
+    "philosophy": "Lightweight bridge toward agent-based architecture without rebuilding the engine. Each member gets 5 hidden traits at character creation. Traits modify that member's behavior in stochastic rolls. Players see traits as flavor descriptors on the character card.",
+    "traits": {
+      "boldness": { "range": [1, 10], "effect": "Modifies choice-card outcome probabilities. Bold members succeed more on risky choices, less on safe ones." },
+      "frailty":  { "range": [1, 10], "effect": "Multiplies that member's state-transition probabilities for degrade rules. Frail member catches cholera more easily." },
+      "faith":    { "range": [1, 10], "effect": "Slows that member's morale decay. In dying-intervention, +0.05 recovery boost per Faith point above 5." },
+      "steady":   { "range": [1, 10], "effect": "Modifies the success rate of that member's profession protection. Steady Hunter feeds the team more reliably." },
+      "lucky":    { "range": [1, 10], "effect": "Small +/-0.02 bias on every stochastic roll involving that specific member." }
+    },
+    "generation": "Each trait rolls 1d6+1d6 (range 2-12, mean 7), capped 1-10",
+    "profession_biases": {
+      "Hunter":       { "steady": 1 },
+      "Doctor":       { "steady": 1, "faith": 1 },
+      "Cowboy":       { "boldness": 1, "steady": 1 },
+      "Priest":       { "faith": 2 },
+      "Frontiersman": { "boldness": 1, "lucky": 1 },
+      "Banker":       {},
+      "Musician":     { "faith": 1, "boldness": -1 },
+      "Artist":       { "faith": 1 }
+    },
+    "child_bias": { "lucky": 1, "steady": -1, "frailty": -2 },
+    "display_descriptors": {
+      "boldness": { "high_at": 8, "high_label": "Bold",     "low_at": 3, "low_label": "Cautious"     },
+      "frailty":  { "high_at": 8, "high_label": "Frail",    "low_at": 3, "low_label": "Hardy"        },
+      "faith":    { "high_at": 8, "high_label": "Faithful", "low_at": 3, "low_label": "Doubtful"     },
+      "steady":   { "high_at": 8, "high_label": "Steady",   "low_at": 3, "low_label": "Restless"     },
+      "lucky":    { "high_at": 8, "high_label": "Lucky",    "low_at": 3, "low_label": "Star-crossed" }
+    },
+    "frailty_state_multiplier": "1 + (frailty - 5) * 0.06; range ~0.76 (frailty 1) to ~1.30 (frailty 10) on degrade-rule probabilities",
+    "steady_protection_multiplier": "1 + (steady - 5) * 0.04; range ~0.84 to ~1.20 on profession protection rolls",
+    "lucky_bias": "+(lucky - 5) * 0.004; range -0.016 to +0.020 added to any stochastic roll involving this member",
+    "v32_compat_default": 5
   }
 }
