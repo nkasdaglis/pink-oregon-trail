@@ -17,9 +17,12 @@
   // CONSTANTS / PROJECTION
   // =====================================================================
   // Equirectangular projection — accurate enough at this scale.
-  // Keep these in sync with build_v33_physical_board.js if you ever
-  // change them (only one trail north-south extent should be canonical).
-  var LAT_N = 49.5, LAT_S = 32.0;
+  // v3.4.1 round 11 — latitude window tightened from 32-49.5 to 37-47.5
+  // so the trail (which only spans ~39°N to ~46°N) dominates the canvas
+  // instead of leaving 40% of the bottom empty. Features outside this
+  // window (deep-south California, far-north Canadian territories) are
+  // clamped inward in their data definitions below.
+  var LAT_N = 47.5, LAT_S = 37.0;
   var LON_W_EAST = 92.5, LON_W_WEST = 125.5; // degrees-west (positive)
 
   var PALETTE = {
@@ -185,17 +188,22 @@
                           'Fort Hall', 'Fort Boise', 'Fort Bridger', 'Oregon City'];
 
   // Geography — same data as build_v33_physical_board.js.
+  // v3.4.1 round 11 — state polygons clamped to [37, 47.5] latitude. The
+  // Pacific Northwest territories that extended to 49°N are cut off at
+  // 47.5; far-southern California / Missouri edges that ran to 35-36°N
+  // clamp up to 37. Visual identity preserved; the trail just owns more
+  // of the canvas now.
   var STATES = [
-    { name: 'Oregon Country',    poly: [[49.0,124.5],[49.0,117.0],[42.0,117.0],[42.0,124.5]] },
-    { name: 'Idaho Territory',   poly: [[49.0,117.0],[49.0,111.0],[42.0,111.0],[42.0,117.0]] },
+    { name: 'Oregon Country',    poly: [[47.5,124.5],[47.5,117.0],[42.0,117.0],[42.0,124.5]] },
+    { name: 'Idaho Territory',   poly: [[47.5,117.0],[47.5,111.0],[42.0,111.0],[42.0,117.0]] },
     { name: 'Wyoming',           poly: [[45.0,111.0],[45.0,104.0],[41.0,104.0],[41.0,111.0]] },
     { name: 'Utah Territory',    poly: [[42.0,114.0],[42.0,109.0],[37.0,109.0],[37.0,114.0]] },
     { name: 'Nebraska',          poly: [[43.0,104.0],[43.0,95.5],[40.0,95.5],[40.0,102.0],[41.0,103.0]] },
     { name: 'Kansas',            poly: [[40.0,102.0],[40.0,95.5],[37.0,95.5],[37.0,102.0]] },
-    { name: 'Missouri',          poly: [[40.6,95.5],[40.6,89.5],[36.0,89.5],[36.0,94.5]] },
-    { name: 'California',        poly: [[42.0,124.0],[42.0,114.5],[35.0,114.5],[35.0,121.0]] },
+    { name: 'Missouri',          poly: [[40.6,95.5],[40.6,89.5],[37.0,89.5],[37.0,94.5]] },
+    { name: 'California',        poly: [[42.0,124.0],[42.0,114.5],[37.0,114.5],[37.0,121.0]] },
     { name: 'Colorado',          poly: [[41.0,109.0],[41.0,102.0],[37.0,102.0],[37.0,109.0]] },
-    { name: 'Washington Terr.',  poly: [[49.5,124.5],[49.5,117.0],[46.0,117.0],[46.0,124.5]] }
+    { name: 'Washington Terr.',  poly: [[47.5,124.5],[47.5,117.0],[46.0,117.0],[46.0,124.5]] }
   ];
 
   var RIVERS = [
@@ -222,7 +230,7 @@
     { name: 'Sawtooth Range',   ridge: [[44.5,115.0],[44.0,115.2],[43.6,115.0]], h: 16 },
     { name: 'Blue Mountains',   ridge: [[45.5,118.5],[45.0,118.2],[44.7,118.0]], h: 16 },
     { name: 'Cascade Range',    ridge: [[48.0,121.0],[47.5,121.5],[46.85,121.75],[46.2,121.5],[45.4,121.7],[44.3,122.0],[43.0,122.2],[42.0,122.3]], h: 22 },
-    { name: 'Sierra Nevada',    ridge: [[40.5,121.0],[39.5,120.5],[38.5,120.0],[37.5,119.0],[36.5,118.5]], h: 22 }
+    { name: 'Sierra Nevada',    ridge: [[40.5,121.0],[39.5,120.5],[38.5,120.0],[37.5,119.0],[37.0,118.5]], h: 22 }
   ];
 
   var PEAKS = [
@@ -243,8 +251,8 @@
     { name: 'COLUMBIA PLATEAU',      center: [46.0, 119.5], font: 18 },
     { name: 'WILLAMETTE VALLEY',     center: [44.5, 123.0], font: 12 },
     { name: 'SNAKE RIVER PLAIN',     center: [42.7, 114.5], font: 14 },
-    { name: 'TERRA INCOGNITA',       center: [37.0, 107.0], font: 18, italic: true },
-    { name: 'TERRITORIES OF THE PAIUTE', center: [38.0, 118.5], font: 12, italic: true },
+    { name: 'TERRA INCOGNITA',       center: [37.6, 107.0], font: 18, italic: true },
+    { name: 'TERRITORIES OF THE PAIUTE', center: [38.2, 118.5], font: 12, italic: true },
     { name: 'LAND OF THE LAKOTA',    center: [44.5, 102.5], font: 14, italic: true },
     { name: 'LANDS OF THE NEZ PERCE',center: [45.5, 117.0], font: 12, italic: true },
     { name: 'CHEYENNE COUNTRY',      center: [40.0, 103.5], font: 12, italic: true }
@@ -497,7 +505,9 @@
       var style = TYPE_STYLE[sp.type] || TYPE_STYLE.travel;
       // Roundel core (drawn after piece zones so it sits on top)
       var rg = '<g class="mm-roundel" data-stop-n="' + sp.n + '" data-stop-name="' + escapeXml(sp.name) + '" data-stop-type="' + sp.type + '">';
-      rg += '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (roundelR + 3) + '" fill="' + PALETTE.cream + '" stroke="' + PALETTE.ink_dark + '" stroke-width="' + (1.2 * W/3600) + '" opacity="0.95"/>';
+      // v3.4.1 round 11 — cream halo behind the roundel removed. The
+      // type-color fill provides plenty of contrast against the parchment
+      // and the halo created a peppered "white box" look across the map.
       rg += '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + roundelR + '" fill="' + style.fill + '" stroke="' + style.ring + '" stroke-width="' + (2 * W/3600) + '"/>';
       rg += '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (roundelR - 4) + '" fill="none" stroke="' + style.accent + '" stroke-width="' + (1 * W/3600) + '"/>';
       // Number on Short-trail stops only
@@ -532,7 +542,9 @@
         }
         if (chosen) {
           pieceZonesSvg += '<g class="mm-piece-zone" data-stop-name="' + escapeXml(sp.name) + '">';
-          pieceZonesSvg += '<rect x="' + chosen.x1.toFixed(1) + '" y="' + chosen.y1.toFixed(1) + '" width="' + pieceZoneSize + '" height="' + pieceZoneSize + '" fill="' + PALETTE.cream + '" stroke="' + PALETTE.ink_dark + '" stroke-width="' + (1.6 * W/3600) + '" stroke-dasharray="6 4" opacity="0.85" rx="6"/>';
+          // v3.4.1 round 11 — fill="none" so the dotted outline floats
+          // over the parchment instead of stamping a cream box on the map.
+          pieceZonesSvg += '<rect x="' + chosen.x1.toFixed(1) + '" y="' + chosen.y1.toFixed(1) + '" width="' + pieceZoneSize + '" height="' + pieceZoneSize + '" fill="none" stroke="' + PALETTE.ink_dark + '" stroke-width="' + (1.6 * W/3600) + '" stroke-dasharray="6 4" rx="6"/>';
           pieceZonesSvg += '<text x="' + ((chosen.x1 + chosen.x2)/2).toFixed(1) + '" y="' + (chosen.y1 + 18).toFixed(1) + '" font-family="Georgia, serif" font-size="' + pieceZoneFont + '" font-style="italic" fill="' + PALETTE.ink + '" text-anchor="middle">Piece Zone</text>';
           pieceZonesSvg += '</g>';
           occupied.push({ x1: chosen.x1, y1: chosen.y1, x2: chosen.x2, y2: chosen.y2, kind: 'pieceZone' });
@@ -579,7 +591,10 @@
       if (labelChosen.leader) {
         lg += '<line x1="' + p.x.toFixed(1) + '" y1="' + p.y.toFixed(1) + '" x2="' + labelChosen.cx.toFixed(1) + '" y2="' + labelChosen.cy.toFixed(1) + '" stroke="' + PALETTE.ink + '" stroke-width="' + (0.6 * W/3600) + '" opacity="0.55"/>';
       }
-      lg += '<rect x="' + labelChosen.x1.toFixed(1) + '" y="' + labelChosen.y1.toFixed(1) + '" width="' + labelW.toFixed(1) + '" height="' + labelH.toFixed(1) + '" fill="' + PALETTE.cartouche_field + '" stroke="' + PALETTE.ink_light + '" stroke-width="0.6" opacity="0.92" rx="3"/>';
+      // v3.4.1 round 11 — opacity 0.92 -> 0.55 so the parchment shows
+      // through and labels feel integrated with the map background
+      // instead of pasted on top.
+      lg += '<rect x="' + labelChosen.x1.toFixed(1) + '" y="' + labelChosen.y1.toFixed(1) + '" width="' + labelW.toFixed(1) + '" height="' + labelH.toFixed(1) + '" fill="' + PALETTE.cartouche_field + '" stroke="' + PALETTE.ink_light + '" stroke-width="0.6" opacity="0.55" rx="3"/>';
       lg += '<text class="mm-name" x="' + labelChosen.cx.toFixed(1) + '" y="' + (labelChosen.cy + nameFont/3).toFixed(1) + '" font-family="Georgia, serif" font-size="' + nameFont + '" font-weight="600" fill="' + PALETTE.ink_dark + '" text-anchor="middle">' + escapeXml(sp.name) + '</text>';
       lg += '</g>';
       labelsSvg += lg;

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Make Your Own Oregon Trail Map — Pink Oregon Trail</title>
+<style>
+  @page { size: letter; margin: 0.6in; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #FBF6F0; color: #3D2817;
+    font-family: Georgia, "Times New Roman", serif;
+    line-height: 1.5;
+  }
+  .page {
+    max-width: 7.4in;
+    margin: 0 auto;
+    padding: 24px 16px 80px;
+  }
+  h1 {
+    font-size: 30px;
+    color: #B85770;
+    text-align: center;
+    margin: 6px 0 4px;
+    letter-spacing: 1px;
+  }
+  .subtitle {
+    text-align: center;
+    font-style: italic;
+    color: #5C4A36;
+    margin: 0 0 24px;
+    font-size: 14px;
+  }
+  h2 {
+    font-size: 20px;
+    color: #8E3F58;
+    border-bottom: 2px solid #D4AF37;
+    padding-bottom: 4px;
+    margin-top: 32px;
+    margin-bottom: 10px;
+  }
+  h3 {
+    font-size: 16px;
+    color: #B85770;
+    margin: 18px 0 6px;
+  }
+  p, li { font-size: 14px; }
+  ol, ul { padding-left: 22px; }
+  ol li, ul li { margin-bottom: 6px; }
+  .step {
+    background: #F5EBC9;
+    border-left: 4px solid #B85770;
+    padding: 12px 16px;
+    margin: 14px 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .step .step-num {
+    display: inline-block;
+    background: #B85770;
+    color: #FFF;
+    font-weight: 700;
+    border-radius: 50%;
+    width: 24px; height: 24px;
+    text-align: center;
+    line-height: 24px;
+    font-size: 13px;
+    margin-right: 8px;
+  }
+  .step h3 { display: inline; margin: 0; }
+  .tip {
+    background: #FFF;
+    border: 1px dashed #A88B5B;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin: 10px 0;
+    font-size: 13px;
+    font-style: italic;
+    color: #5C4A36;
+  }
+  .tip strong { font-style: normal; color: #B85770; }
+  table.supplies {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 13px;
+  }
+  table.supplies td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #E5D2A8;
+  }
+  table.supplies td:first-child {
+    font-weight: 700;
+    color: #8E3F58;
+    width: 38%;
+  }
+  table.legend {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0 14px;
+    font-size: 13px;
+  }
+  table.legend th {
+    text-align: left;
+    background: #E8C28A;
+    color: #3D2817;
+    padding: 6px 10px;
+    border: 1px solid #A88B5B;
+  }
+  table.legend td {
+    padding: 6px 10px;
+    border: 1px solid #E5D2A8;
+    vertical-align: middle;
+  }
+  table.legend .swatch {
+    display: inline-block;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid #3D2817;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  .stops-list {
+    columns: 2;
+    column-gap: 24px;
+    font-size: 13px;
+    margin: 8px 0 16px;
+  }
+  .stops-list li { break-inside: avoid; }
+  .checklist li {
+    list-style: none;
+    margin-left: -18px;
+    padding-left: 22px;
+    position: relative;
+  }
+  .checklist li::before {
+    content: "☐";
+    position: absolute;
+    left: 0;
+    font-size: 16px;
+    color: #B85770;
+  }
+  .grid-help {
+    background: #FBF1D9;
+    border: 1.5px solid #5C4A36;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin: 12px 0;
+  }
+  .header-banner {
+    text-align: center;
+    background: #F0E1B8;
+    border: 1.5px solid #5C4A36;
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 18px;
+  }
+  .header-banner .stamp {
+    color: #8E3F58;
+    font-style: italic;
+    font-size: 13px;
+  }
+  .footer-note {
+    text-align: center;
+    font-style: italic;
+    color: #5C4A36;
+    font-size: 12px;
+    margin-top: 32px;
+    padding-top: 14px;
+    border-top: 1px solid #A88B5B;
+  }
+  /* Print preview hint — only on screen */
+  .screen-hint {
+    background: #B85770; color: #FFF;
+    padding: 8px 14px; border-radius: 6px;
+    text-align: center; font-size: 13px;
+    margin-bottom: 14px;
+  }
+  @media print { .screen-hint { display: none; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="screen-hint">
+  Tip: press <strong>Ctrl + P</strong> to print this whole guide on letter paper. It's eight pages with a checklist on the last one.
+</div>
+
+<div class="header-banner">
+  <h1>Make Your Own Oregon Trail Map</h1>
+  <div class="stamp">A Pink Oregon Trail project for sixth-grade explorers</div>
+</div>
+
+<p>You are about to draw the same trail two thousand pioneers walked in 1848. By the time you are done, you will have a real wall-sized map you can play the game on, hang in your room, or take to school. You don't need to be good at drawing. You just need to be patient. The pioneers were patient too.</p>
+
+<h2>What you'll need (the outfitting list)</h2>
+<table class="supplies">
+  <tr><td>Poster board</td><td>One sheet, 22 × 28 inches works great. Bigger is fine. Tan or cream-colored if you can find it. Plain white works too &mdash; you'll paint over the white.</td></tr>
+  <tr><td>Pencil</td><td>Soft (No. 2). For the planning lines you'll erase later.</td></tr>
+  <tr><td>Eraser</td><td>The kneaded kind doesn't tear paper.</td></tr>
+  <tr><td>Ruler or yardstick</td><td>For straight measuring lines. A piece of string also works for curves.</td></tr>
+  <tr><td>Watercolor or tempera paint</td><td>You'll need brown, dark blue, light blue, green, tan/yellow, and a tiny bit of pink.</td></tr>
+  <tr><td>A round paintbrush</td><td>Medium size. One brush is fine if you wash it between colors.</td></tr>
+  <tr><td>Crayons or colored pencils</td><td>For the small details after the paint dries: stop names, labels, and the compass.</td></tr>
+  <tr><td>A black fine-tip marker</td><td>For writing the place names so they read crisp.</td></tr>
+  <tr><td>A teacup or small jar</td><td>To trace circles for the trail stops. The rim should be roughly an inch across.</td></tr>
+</table>
+
+<h2>The plan, before you start</h2>
+<p>Before you put any pencil to the poster, look at the printed Pink Oregon Trail poster (the 36 × 24 one) for one full minute. Notice three things:</p>
+<ol>
+  <li><strong>The trail itself is a pink dashed line</strong> that curves from the right side (Independence, Missouri) to the left (Oregon City). It is not a straight line.</li>
+  <li><strong>Mountains are little triangles with white tops.</strong> Rivers are squiggly blue lines. Trees and prairie are color washes, not detail.</li>
+  <li><strong>The biggest stops &mdash; forts, the start, the finish &mdash; are bigger circles with names.</strong> Other stops are smaller. The map breathes; it doesn't try to label everything.</li>
+</ol>
+
+<h2>Step-by-step</h2>
+
+<div class="step"><span class="step-num">1</span><h3>Lay down a grid in pencil.</h3>
+<p>Lightly draw three horizontal pencil lines across the poster, and four vertical pencil lines top to bottom. This makes a 4 by 4 grid. The lines are just so you know where things go &mdash; you will erase them at the end.</p>
+<div class="grid-help"><strong>Reading the grid:</strong> Independence (the start) goes in the top-right square. Oregon City (the finish) goes in the top-left square. The trail runs diagonally across the upper half of the poster.</div>
+</div>
+
+<div class="step"><span class="step-num">2</span><h3>Wash the background with tan paint.</h3>
+<p>Mix a little brown with lots of water and a small drop of yellow. The wash should be very thin &mdash; you should still see your pencil lines through it after it dries. Brush it across the whole poster in long horizontal strokes. Let it dry completely. <strong>Old pioneers' maps had this color &mdash; it's called <em>parchment</em>.</strong></p>
+</div>
+
+<div class="step"><span class="step-num">3</span><h3>Paint in the regions, lightly.</h3>
+<p>Once the parchment is dry, mix three more wash colors:</p>
+<ul>
+  <li><strong>Pale green</strong> for the Great Plains (the right third of your map &mdash; lots of grass)</li>
+  <li><strong>Pale orange-tan</strong> for the Great Basin desert (the middle, where the trail goes through what is now Wyoming, Utah, Idaho)</li>
+  <li><strong>Pale blue-green</strong> for the Pacific Northwest forests (the left side, where Oregon Country starts)</li>
+</ul>
+<p>Brush each color lightly over its area. The colors should be soft &mdash; the kind of color you'd see if you held a piece of stained glass up to a window. Let the whole thing dry again.</p>
+</div>
+
+<div class="step"><span class="step-num">4</span><h3>Draw the rivers in dark blue.</h3>
+<p>The big rivers your wagon will cross are:</p>
+<ul>
+  <li><strong>Missouri River</strong> &mdash; runs along the right edge of the map, top to bottom</li>
+  <li><strong>Platte River</strong> &mdash; goes across the middle, splitting into North and South Platte</li>
+  <li><strong>Snake River</strong> &mdash; squiggles across the middle-left, west of the Rockies</li>
+  <li><strong>Columbia River</strong> &mdash; runs east-to-west across the top of the left third, ending at the Pacific Ocean</li>
+</ul>
+<p>Use a thin brush. Make the rivers wavy, not straight. Real rivers wander.</p>
+</div>
+
+<div class="step"><span class="step-num">5</span><h3>Paint the mountain ranges as little brown triangles with white tops.</h3>
+<p>The pioneers had to cross or go around three big ranges:</p>
+<ul>
+  <li><strong>The Rocky Mountains</strong> &mdash; a band of triangles in the middle of the map. Use brown for the body and put a tiny dab of white on the very top of each one for snow.</li>
+  <li><strong>The Blue Mountains</strong> &mdash; a smaller band in the upper-left section, in what is now eastern Oregon.</li>
+  <li><strong>The Cascade Range</strong> &mdash; near the Pacific coast, on the far left. Mt. Hood and Mt. Rainier are the famous ones &mdash; make those triangles taller.</li>
+</ul>
+<div class="tip"><strong>Don't try to draw real mountains.</strong> Old maps used a row of overlapping triangles. It looks more like a crown than a photograph. That's the right look.</div>
+</div>
+
+<div class="step"><span class="step-num">6</span><h3>Trace and number the trail stops.</h3>
+<p>This is the most important step. Use the teacup to trace 25 small circles for the trail stops. Use the table on the next page to know <em>where</em> each circle goes (which grid square) and <em>what color</em> to paint it.</p>
+<p>Number each stop from 1 to 25 with a black marker. Write the number small, inside the circle.</p>
+</div>
+
+<div class="step"><span class="step-num">7</span><h3>Draw the pink trail, dashed.</h3>
+<p>Connect the 25 circles with a curving pink line. The line should be dashed &mdash; not one long line, but short pink lines about half an inch long with a gap between them. Make the line curve a little; the pioneers didn't walk in a straight line.</p>
+<p>This is why the game is called <strong>Pink</strong> Oregon Trail. The trail is pink because the wildflowers along the prairie were sometimes pink &mdash; and because Gabby asked for a pink trail.</p>
+</div>
+
+<div class="step"><span class="step-num">8</span><h3>Add the seven piece zones.</h3>
+<p>Next to each fort, plus next to Independence and Oregon City, draw a small dotted square. These are <em>piece zones</em> &mdash; this is where you park your wagon piece when you stop. They should be about two inches across. Use a dotted line so they don't fight with the rest of the map.</p>
+</div>
+
+<div class="step"><span class="step-num">9</span><h3>Letter the names.</h3>
+<p>With your fine-tip black marker, write the name of every <strong>fort</strong>, the start, and the finish next to its circle. Don't write the names of the smaller stops &mdash; they will crowd the map. The number on the circle is enough.</p>
+<div class="tip"><strong>Why not label every stop?</strong> Old maps left small places to be discovered. Plus, when you play the game, the screen will tell you the name of every spot you land on. The map just needs to show you where you are.</div>
+</div>
+
+<div class="step"><span class="step-num">10</span><h3>Add a compass rose.</h3>
+<p>In one of the empty corners (bottom-right is good), draw a circle about three inches across. Inside, draw a four-pointed star with N at the top, S at the bottom, E to the right, W to the left. Make N a little fancier &mdash; a tall pointed arrow. This is your compass rose. Every old map had one.</p>
+</div>
+
+<div class="step"><span class="step-num">11</span><h3>Add a title cartouche.</h3>
+<p>In the bottom-left or bottom-center, draw a simple decorative box (rectangle with rounded corners, or a curling banner). Inside, write in your fanciest letters:</p>
+<p style="text-align:center; font-style: italic; font-size: 16px; color: #8E3F58;">A MAP of the OREGON TRAIL<br>From Independence in Missouri to the Willamette Valley<br>Drawn by [your name], 1848</p>
+<p>Old maps always had this. Pioneers knew their maps were drawings &mdash; the cartouche signed and dated the work.</p>
+</div>
+
+<div class="step"><span class="step-num">12</span><h3>Erase the pencil grid lines.</h3>
+<p>Now that everything is in place, gently erase the four vertical and three horizontal pencil lines from step 1. Be careful not to smudge your paint. If a paint area is still slightly wet, leave that area for last.</p>
+</div>
+
+<div class="step"><span class="step-num">13</span><h3>Sign your work and date it.</h3>
+<p>In tiny letters in a corner: your name, the date you finished, and "1848." That last part is a tradition &mdash; mapmakers always wrote the year of the map's content, not the year they drew it.</p>
+</div>
+
+<h2>The 25 stops &mdash; what to draw and where</h2>
+<p>Each stop has a color (so you can paint the inside of the circle). The grid square tells you which area of the poster the stop belongs in if you imagine the poster split into a 4 wide by 4 tall grid, numbered like reading a book (top-left is 1, top-right is 4, bottom-right is 16). Most stops are in row 1 or row 2.</p>
+
+<table class="legend">
+  <tr><th>Type</th><th>Circle Color</th><th>Symbol</th><th>What it is</th></tr>
+  <tr><td>Start</td><td><span class="swatch" style="background:#C8DCC8;"></span> Pale green</td><td>◉</td><td>Independence, Missouri. The start.</td></tr>
+  <tr><td>Fort</td><td><span class="swatch" style="background:#E8C28A;"></span> Tan</td><td>⌂</td><td>A military or trading post. You can buy supplies here.</td></tr>
+  <tr><td>River</td><td><span class="swatch" style="background:#C8DCE8;"></span> Pale blue</td><td>≈</td><td>A river crossing. Risky.</td></tr>
+  <tr><td>Landmark</td><td><span class="swatch" style="background:#E5C8D2;"></span> Pale pink</td><td>▲</td><td>A famous spot &mdash; a rock, a spring, a mission.</td></tr>
+  <tr><td>Travel</td><td><span class="swatch" style="background:#FBF6F0;"></span> Cream</td><td>•</td><td>A stretch of trail with no particular landmark.</td></tr>
+  <tr><td>Finish</td><td><span class="swatch" style="background:#F5E5A0;"></span> Pale yellow</td><td>★</td><td>Oregon City. The end of the trail.</td></tr>
+</table>
+
+<ol class="stops-list">
+  <li><strong>Independence, Missouri</strong> &mdash; start, pale green. Top-right corner.</li>
+  <li>Kansas Prairie &mdash; cream</li>
+  <li>Kansas River &mdash; pale blue</li>
+  <li>Big Blue River &mdash; pale blue</li>
+  <li><strong>Fort Kearney</strong> &mdash; tan, give it a piece zone</li>
+  <li>Platte River Valley &mdash; cream</li>
+  <li>The Great Plains &mdash; cream</li>
+  <li>Chimney Rock &mdash; pale pink</li>
+  <li>Scotts Bluff &mdash; pale pink</li>
+  <li><strong>Fort Laramie</strong> &mdash; tan, give it a piece zone</li>
+  <li>Mountain Foothills &mdash; cream</li>
+  <li>Independence Rock &mdash; pale pink</li>
+  <li>Devil's Gate &mdash; pale pink</li>
+  <li>South Pass &mdash; pale pink</li>
+  <li>Green River &mdash; pale blue</li>
+  <li>Soda Springs &mdash; pale pink</li>
+  <li><strong>Fort Hall</strong> &mdash; tan, give it a piece zone</li>
+  <li>Snake River Crossing &mdash; pale blue</li>
+  <li>Snake River Plain &mdash; cream</li>
+  <li><strong>Fort Boise</strong> &mdash; tan, give it a piece zone</li>
+  <li>Blue Mountains &mdash; cream</li>
+  <li>Whitman Mission &mdash; pale pink</li>
+  <li>The Dalles &mdash; pale pink</li>
+  <li>Columbia River &mdash; pale blue</li>
+  <li><strong>Oregon City</strong> &mdash; finish, pale yellow. Top-left, give it a piece zone.</li>
+</ol>
+
+<h2>Tips from the trail</h2>
+<div class="tip"><strong>Mistakes are fine.</strong> If a circle is too big, paint over it tan and try again. If a river ends up in the wrong place, just turn it into a creek. Pioneers' real maps had mistakes too.</div>
+<div class="tip"><strong>Don't rush the drying.</strong> Watercolor that's still wet will smear when you draw on top. If you only have one afternoon, do steps 1&ndash;5 today and 6&ndash;13 tomorrow.</div>
+<div class="tip"><strong>Show off the trail itself.</strong> The pink trail line is the soul of the map. Give it room. Don't crowd it with too many labels or extra drawings.</div>
+<div class="tip"><strong>Pretend you are a pioneer mapmaker.</strong> You are drawing this in 1848 by candlelight after a long day on the wagon. You wouldn't make every line perfect. Loose lines feel right.</div>
+
+<h2>Before you start: the checklist</h2>
+<ul class="checklist">
+  <li>Do I have all my paint colors? (brown, two blues, green, tan, pink)</li>
+  <li>Do I have a teacup or jar with about a one-inch rim?</li>
+  <li>Do I have a black fine-tip marker?</li>
+  <li>Do I have my poster board and a flat workspace?</li>
+  <li>Have I looked at the printed Pink Oregon Trail poster for one minute?</li>
+  <li>Do I know where I will hang the finished map?</li>
+</ul>
+
+<div class="footer-note">
+  Pink Oregon Trail &middot; Make Your Own Map &middot; Drawn by hand, 1848 (or whenever you finish it).
+</div>
+
+</div>
+</body>
+</html>
