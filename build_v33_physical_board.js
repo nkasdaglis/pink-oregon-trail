@@ -31,9 +31,13 @@ if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
 const DPI = 96;
 const TILE_W = 11 * DPI;   // 1056
 const TILE_H = 8.5 * DPI;  // 816
-const COLS = 3, ROWS = 2;
+// v3.3.1 round 3 — bumped from 6-tile (3x2 = 33"x17", ~2.75x1.4 ft) to
+// 9-tile (3x3 = 33"x25.5", ~2.75x2.125 ft). Closest practical match to
+// the user's 3x2 ft target using standard letter paper. Roundels also
+// enlarged so 4 game pieces fit comfortably (1.6" diameter vs 1.17").
+const COLS = 3, ROWS = 3;
 const BOARD_W = TILE_W * COLS;   // 3168
-const BOARD_H = TILE_H * ROWS;   // 1632
+const BOARD_H = TILE_H * ROWS;   // 2448
 
 // 1840s cartographic palette
 const C = {
@@ -392,7 +396,7 @@ function buildExtendedMarkers() {
 
 function buildSpaces() {
   // Primary roundels — 80px radius (1.6 inch diameter) so 4 game pieces fit
-  const RAD = 56;  // 1.17 inch diameter — actually 1.16 inches, comfortable for 3-4 small pawns
+  const RAD = 80;  // 1.67 inch diameter — fits 4 game pieces comfortably (v3.3.1 round 3)
   let s = '';
   SHORT_TRAIL.forEach(sp => {
     const p = project(sp.lat, sp.lon);
@@ -573,7 +577,7 @@ function buildTileSvg(col, row, masterContent) {
     alignMarks += `<line x1="${cx}" y1="${cy - tickSize}" x2="${cx}" y2="${cy + tickSize}" stroke="${C.ink_dark}" stroke-width="0.5" opacity="0.4"/>`;
   });
   // Tile letter badge — discreet, top-right corner of the tile (within visible area)
-  const tileLetters = [['A','B','C'],['D','E','F']];
+  const tileLetters = [['A','B','C'],['D','E','F'],['G','H','I']];
   const letter = tileLetters[row][col];
   const badgeX = vbX + TILE_W - 36, badgeY = vbY + 36;
   alignMarks += `<g opacity="0.55"><circle cx="${badgeX}" cy="${badgeY}" r="14" fill="${C.cream}" stroke="${C.ink_dark}" stroke-width="0.8"/><text x="${badgeX}" y="${badgeY + 5}" font-family="Georgia, serif" font-size="14" font-weight="bold" fill="${C.ink_dark}" text-anchor="middle">${letter}</text></g>`;
@@ -584,7 +588,7 @@ ${alignMarks}
 }
 
 function buildTileHtml(col, row, masterContent) {
-  const tileLetters = [['A','B','C'],['D','E','F']];
+  const tileLetters = [['A','B','C'],['D','E','F'],['G','H','I']];
   const letter = tileLetters[row][col];
   const positionDesc = ['top','bottom'][row] + '-' + ['left','center','right'][col];
   const svg = buildTileSvg(col, row, masterContent);
@@ -612,9 +616,12 @@ svg { width: 11in; height: 8.5in; display: block; }
   A: 'Tile B (right) and Tile D (below)',
   B: 'Tile A (left), Tile C (right), Tile E (below)',
   C: 'Tile B (left) and Tile F (below)',
-  D: 'Tile A (above) and Tile E (right)',
-  E: 'Tile B (above), Tile D (left), Tile F (right)',
-  F: 'Tile C (above) and Tile E (left)'
+  D: 'Tile A (above), Tile E (right), Tile G (below)',
+  E: 'Tile B (above), Tile D (left), Tile F (right), Tile H (below)',
+  F: 'Tile C (above), Tile E (left), Tile I (below)',
+  G: 'Tile D (above) and Tile H (right)',
+  H: 'Tile E (above), Tile G (left), Tile I (right)',
+  I: 'Tile F (above) and Tile H (left)'
 }[letter]}.</div>
 ${svg}
 </body></html>`;
@@ -629,13 +636,13 @@ console.log(`Board: ${BOARD_W} × ${BOARD_H} px = ${(BOARD_W/DPI).toFixed(1)}" �
 console.log(`Per tile: ${TILE_W} × ${TILE_H} px = ${(TILE_W/DPI).toFixed(1)}" × ${(TILE_H/DPI).toFixed(1)}" letter-landscape`);
 console.log('');
 
-console.log('Building master map composite (this is the same content rendered 6 times, viewBoxed differently per tile)...');
+console.log(`Building master map composite (the same content rendered ${COLS*ROWS} times, viewBoxed differently per tile)...`);
 const masterContent = buildMasterMap();
 console.log(`Master content: ${(masterContent.length / 1024).toFixed(1)} KB SVG fragment`);
 console.log('');
 
-const tileLetters = [['A','B','C'],['D','E','F']];
-let totalBytes = 0;
+const tileLetters = [['A','B','C'],['D','E','F'],['G','H','I']];
+let totalBytes = 0, fileCount = 0;
 for (let row = 0; row < ROWS; row++) {
   for (let col = 0; col < COLS; col++) {
     const letter = tileLetters[row][col];
@@ -644,16 +651,18 @@ for (let row = 0; row < ROWS; row++) {
     fs.writeFileSync(path.join(OUT_DIR, filename), html, 'utf8');
     const size = Buffer.byteLength(html, 'utf8');
     totalBytes += size;
+    fileCount++;
     console.log(`  wrote ${filename.padEnd(40)} ${(size / 1024).toFixed(1).padStart(7)} KB`);
   }
 }
 
 console.log('');
-console.log(`=== Done. 6 files, ${(totalBytes / 1024).toFixed(1)} KB total. ===`);
+console.log(`=== Done. ${fileCount} files, ${(totalBytes / 1024).toFixed(1)} KB total. ===`);
 console.log('');
-console.log('Layout (3 cols × 2 rows, letter-landscape, 33" × 17" total):');
-console.log('  +----A (Pacific NW)----+----B (Idaho/Wyoming)----+----C (Northern Plains)----+');
-console.log('  +----D (Calif/Basin)---+----E (Wyoming/Utah)-----+----F (Kansas/Missouri)----+');
+console.log(`Layout (${COLS} cols × ${ROWS} rows, letter-landscape, ${(BOARD_W/DPI).toFixed(1)}" × ${(BOARD_H/DPI).toFixed(1)}" total — ~${(BOARD_W/DPI/12).toFixed(2)} ft × ${(BOARD_H/DPI/12).toFixed(2)} ft):`);
+console.log('  Top row (sky):    A (Pacific NW)  | B (Idaho/Snake)   | C (Northern Plains)');
+console.log('  Middle row:       D (Calif/Basin) | E (Wyoming/Utah)  | F (Kansas/Missouri)');
+console.log('  Bottom row:       G (S Cal/Mexico)| H (Colorado)      | I (Arkansas/Texas)');
 console.log('');
-console.log('Print all 6 at 100% (no scaling, no margins) on letter sheets in landscape.');
+console.log(`Print all ${fileCount} at 100% (no scaling, no margins) on letter sheets in landscape.`);
 console.log('Trim to edge if needed; tape together by tile letter on the assembly note.');
