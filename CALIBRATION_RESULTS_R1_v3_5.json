@@ -1,0 +1,1507 @@
+[
+  {
+    "difficulty": "easy",
+    "trail": "short",
+    "archetype": "no-skill",
+    "team": [
+      "Musician",
+      "Artist",
+      "Influencer",
+      "Seamstress",
+      "Fashion Designer",
+      "Magician",
+      "Actor"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648430,
+      "finish_rate": 0.9236,
+      "elimination_rate": 0.0764,
+      "avg_members_lost": 1.097,
+      "member_loss_distribution": {
+        "0": 0.3906,
+        "1": 0.3274,
+        "2": 0.156,
+        "3": 0.0758,
+        "4": 0.0272,
+        "5": 0.0166,
+        "6": 0.0064
+      },
+      "avg_end_money": 18.67,
+      "median_end_money": 10.13163725425023,
+      "p25_end_money": 2.780279913801932,
+      "p75_end_money": 28.503198908651257,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.0714,
+      "avg_journey_days": 19.6,
+      "event_frequencies": {},
+      "death_causes": {
+        "drowned at ford": 844,
+        "lightning": 214,
+        "drowned at ferry": 232,
+        "tornado": 427,
+        "cholera": 1756,
+        "dehydration": 1008,
+        "powder explosion": 242,
+        "starvation": 378,
+        "severe illness": 236,
+        "lost on the trail": 118,
+        "sickness_minor_aggravated": 21,
+        "cholera_aggravated": 4,
+        "sickness_severe_aggravated": 5
+      }
+    }
+  },
+  {
+    "difficulty": "easy",
+    "trail": "short",
+    "archetype": "survival",
+    "team": [
+      "Hunter",
+      "Doctor",
+      "Cook",
+      "Carpenter",
+      "Guide",
+      "Scout",
+      "Banker"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648431,
+      "finish_rate": 0.9934,
+      "elimination_rate": 0.0066,
+      "avg_members_lost": 0.402,
+      "member_loss_distribution": {
+        "0": 0.6798,
+        "1": 0.2534,
+        "2": 0.0554,
+        "3": 0.0088,
+        "4": 0.0018,
+        "5": 0.0006,
+        "6": 0.0002
+      },
+      "avg_end_money": 108.85,
+      "median_end_money": 111.52,
+      "p25_end_money": 104.04356273514685,
+      "p75_end_money": 115.6,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0,
+      "avg_journey_days": 20,
+      "event_frequencies": {},
+      "death_causes": {
+        "dehydration": 1502,
+        "tornado": 223,
+        "cholera": 101,
+        "powder explosion": 101,
+        "lightning": 79,
+        "lost on the trail": 3,
+        "drowned at ferry": 1
+      }
+    }
+  },
+  {
+    "difficulty": "easy",
+    "trail": "short",
+    "archetype": "mixed",
+    "team": [
+      "Hunter",
+      "Doctor",
+      "Carpenter",
+      "Cook",
+      "Musician",
+      "Banker",
+      "Priest"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648432,
+      "finish_rate": 0.9704,
+      "elimination_rate": 0.0296,
+      "avg_members_lost": 0.775,
+      "member_loss_distribution": {
+        "0": 0.4608,
+        "1": 0.359,
+        "2": 0.1352,
+        "3": 0.0366,
+        "4": 0.0066,
+        "5": 0.001,
+        "6": 0.0008
+      },
+      "avg_end_money": 103.76,
+      "median_end_money": 106.37985958122648,
+      "p25_end_money": 96.5367972687632,
+      "p75_end_money": 113.8,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0,
+      "avg_journey_days": 19.8,
+      "event_frequencies": {},
+      "death_causes": {
+        "dehydration": 2919,
+        "lost on the trail": 102,
+        "tornado": 316,
+        "powder explosion": 194,
+        "cholera": 184,
+        "lightning": 155,
+        "drowned at ferry": 7
+      }
+    }
+  },
+  {
+    "difficulty": "easy",
+    "trail": "short",
+    "archetype": "trade",
+    "team": [
+      "Merchant",
+      "Banker",
+      "Politician",
+      "Hunter",
+      "Doctor",
+      "Cook",
+      "Influencer"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648433,
+      "finish_rate": 0.9654,
+      "elimination_rate": 0.0346,
+      "avg_members_lost": 0.829,
+      "member_loss_distribution": {
+        "0": 0.4418,
+        "1": 0.364,
+        "2": 0.1362,
+        "3": 0.0424,
+        "4": 0.0126,
+        "5": 0.0028,
+        "6": 0.0002
+      },
+      "avg_end_money": 100.43,
+      "median_end_money": 102.4006218014583,
+      "p25_end_money": 90.48,
+      "p75_end_money": 113.20400000000001,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0,
+      "avg_journey_days": 19.8,
+      "event_frequencies": {},
+      "death_causes": {
+        "tornado": 313,
+        "dehydration": 3053,
+        "cholera": 196,
+        "drowned at ferry": 148,
+        "lightning": 148,
+        "lost on the trail": 100,
+        "powder explosion": 188
+      }
+    }
+  },
+  {
+    "difficulty": "easy",
+    "trail": "short",
+    "archetype": "random7",
+    "team": [
+      "Cowboy",
+      "Fashion Designer",
+      "Cook",
+      "Trapper",
+      "Surveyor",
+      "Scout",
+      "Influencer"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648434,
+      "finish_rate": 0.9602,
+      "elimination_rate": 0.0398,
+      "avg_members_lost": 0.606,
+      "member_loss_distribution": {
+        "0": 0.639,
+        "1": 0.2166,
+        "2": 0.08,
+        "3": 0.0384,
+        "4": 0.0182,
+        "5": 0.0052,
+        "6": 0.0024,
+        "7": 0.0002
+      },
+      "avg_end_money": 45.95,
+      "median_end_money": 45.55727060869549,
+      "p25_end_money": 28.094684306192967,
+      "p75_end_money": 63.48980474761562,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.0018,
+      "avg_journey_days": 19.8,
+      "event_frequencies": {},
+      "death_causes": {
+        "powder explosion": 179,
+        "lightning": 185,
+        "tornado": 369,
+        "cholera": 1619,
+        "drowned at ferry": 179,
+        "severe illness": 208,
+        "dehydration": 283,
+        "lost on the trail": 6,
+        "starvation": 4
+      }
+    }
+  },
+  {
+    "difficulty": "easy",
+    "trail": "extended",
+    "archetype": "no-skill",
+    "team": [
+      "Musician",
+      "Artist",
+      "Influencer",
+      "Seamstress",
+      "Fashion Designer",
+      "Magician",
+      "Actor"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648435,
+      "finish_rate": 0.8932,
+      "elimination_rate": 0.1068,
+      "avg_members_lost": 3.074,
+      "member_loss_distribution": {
+        "0": 0.0404,
+        "1": 0.1318,
+        "2": 0.2138,
+        "3": 0.2316,
+        "4": 0.1826,
+        "5": 0.1106,
+        "6": 0.0882,
+        "7": 0.001
+      },
+      "avg_end_money": 2.49,
+      "median_end_money": 0.37101219008536557,
+      "p25_end_money": 0.08967357302893869,
+      "p75_end_money": 1.0840773788031646,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.6858,
+      "avg_journey_days": 39.2,
+      "event_frequencies": {},
+      "death_causes": {
+        "powder explosion": 230,
+        "dehydration": 5262,
+        "drowned at ford": 1683,
+        "starvation": 5026,
+        "severe illness": 252,
+        "cholera": 1789,
+        "tornado": 528,
+        "lost on the trail": 141,
+        "drowned at ferry": 242,
+        "lightning": 212,
+        "cholera_aggravated": 1,
+        "sickness_minor_aggravated": 2,
+        "sickness_severe_aggravated": 1
+      }
+    }
+  },
+  {
+    "difficulty": "easy",
+    "trail": "extended",
+    "archetype": "survival",
+    "team": [
+      "Hunter",
+      "Doctor",
+      "Cook",
+      "Carpenter",
+      "Guide",
+      "Scout",
+      "Banker"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648436,
+      "finish_rate": 0.9974,
+      "elimination_rate": 0.0026,
+      "avg_members_lost": 1.988,
+      "member_loss_distribution": {
+        "0": 0.13,
+        "1": 0.276,
+        "2": 0.2694,
+        "3": 0.1878,
+        "4": 0.0882,
+        "5": 0.0342,
+        "6": 0.0144
+      },
+      "avg_end_money": 89.21,
+      "median_end_money": 91.01401847794652,
+      "p25_end_money": 81.48427455827594,
+      "p75_end_money": 98.37000000000002,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0,
+      "avg_journey_days": 40,
+      "event_frequencies": {},
+      "death_causes": {
+        "dehydration": 9308,
+        "lightning": 108,
+        "powder explosion": 117,
+        "cholera": 166,
+        "tornado": 219,
+        "drowned at ferry": 16,
+        "lost on the trail": 7,
+        "severe illness": 1
+      }
+    }
+  },
+  {
+    "difficulty": "easy",
+    "trail": "extended",
+    "archetype": "mixed",
+    "team": [
+      "Hunter",
+      "Doctor",
+      "Carpenter",
+      "Cook",
+      "Musician",
+      "Banker",
+      "Priest"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648437,
+      "finish_rate": 0.988,
+      "elimination_rate": 0.012,
+      "avg_members_lost": 2.481,
+      "member_loss_distribution": {
+        "0": 0.076,
+        "1": 0.212,
+        "2": 0.2522,
+        "3": 0.2188,
+        "4": 0.136,
+        "5": 0.0662,
+        "6": 0.0382,
+        "7": 0.0006
+      },
+      "avg_end_money": 82.79,
+      "median_end_money": 85.17,
+      "p25_end_money": 72.98931262930854,
+      "p75_end_money": 94.32999999999998,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0,
+      "avg_journey_days": 39.8,
+      "event_frequencies": {},
+      "death_causes": {
+        "dehydration": 11343,
+        "tornado": 371,
+        "cholera": 255,
+        "lightning": 134,
+        "powder explosion": 168,
+        "severe illness": 4,
+        "lost on the trail": 103,
+        "drowned at ferry": 28
+      }
+    }
+  },
+  {
+    "difficulty": "easy",
+    "trail": "extended",
+    "archetype": "trade",
+    "team": [
+      "Merchant",
+      "Banker",
+      "Politician",
+      "Hunter",
+      "Doctor",
+      "Cook",
+      "Influencer"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648438,
+      "finish_rate": 0.9854,
+      "elimination_rate": 0.0146,
+      "avg_members_lost": 2.517,
+      "member_loss_distribution": {
+        "0": 0.0728,
+        "1": 0.1948,
+        "2": 0.2644,
+        "3": 0.2246,
+        "4": 0.137,
+        "5": 0.0666,
+        "6": 0.0398
+      },
+      "avg_end_money": 85.18,
+      "median_end_money": 86.84450000000001,
+      "p25_end_money": 71.75000000000001,
+      "p75_end_money": 100.1114348256439,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0,
+      "avg_journey_days": 39.8,
+      "event_frequencies": {},
+      "death_causes": {
+        "dehydration": 11326,
+        "tornado": 349,
+        "powder explosion": 161,
+        "lightning": 171,
+        "cholera": 287,
+        "drowned at ferry": 195,
+        "lost on the trail": 93,
+        "severe illness": 4
+      }
+    }
+  },
+  {
+    "difficulty": "easy",
+    "trail": "extended",
+    "archetype": "random7",
+    "team": [
+      "Actor",
+      "Merchant",
+      "Politician",
+      "Carpenter",
+      "Artist",
+      "Hunter",
+      "Trapper"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648439,
+      "finish_rate": 0.9842,
+      "elimination_rate": 0.0158,
+      "avg_members_lost": 2.71,
+      "member_loss_distribution": {
+        "0": 0.0658,
+        "1": 0.1786,
+        "2": 0.24,
+        "3": 0.224,
+        "4": 0.1454,
+        "5": 0.08,
+        "6": 0.0654,
+        "7": 0.0008
+      },
+      "avg_end_money": 113.49,
+      "median_end_money": 113.19796020169555,
+      "p25_end_money": 94.91,
+      "p75_end_money": 131.49649999999997,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0,
+      "avg_journey_days": 39.7,
+      "event_frequencies": {},
+      "death_causes": {
+        "dehydration": 11431,
+        "cholera": 1183,
+        "severe illness": 161,
+        "lost on the trail": 103,
+        "tornado": 299,
+        "drowned at ferry": 30,
+        "lightning": 162,
+        "powder explosion": 173,
+        "starvation": 9
+      }
+    }
+  },
+  {
+    "difficulty": "medium",
+    "trail": "short",
+    "archetype": "no-skill",
+    "team": [
+      "Musician",
+      "Artist",
+      "Influencer",
+      "Seamstress",
+      "Fashion Designer",
+      "Magician",
+      "Actor"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648440,
+      "finish_rate": 0.56,
+      "elimination_rate": 0.44,
+      "avg_members_lost": 2.004,
+      "member_loss_distribution": {
+        "0": 0.2044,
+        "1": 0.2698,
+        "2": 0.201,
+        "3": 0.1308,
+        "4": 0.088,
+        "5": 0.0502,
+        "6": 0.0542,
+        "7": 0.0016
+      },
+      "avg_end_money": 9.38,
+      "median_end_money": 1.1507222792305987,
+      "p25_end_money": 0.46019969571182395,
+      "p75_end_money": 3.982965533193209,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.5654,
+      "avg_journey_days": 17.6,
+      "event_frequencies": {},
+      "death_causes": {
+        "severe illness": 2165,
+        "starvation": 1427,
+        "drowned at ford": 829,
+        "dehydration": 1346,
+        "cholera": 2928,
+        "tornado": 446,
+        "lightning": 229,
+        "lost on the trail": 142,
+        "sickness_severe_aggravated": 3,
+        "powder explosion": 269,
+        "drowned at ferry": 227,
+        "sickness_minor_aggravated": 5,
+        "cholera_aggravated": 2
+      }
+    }
+  },
+  {
+    "difficulty": "medium",
+    "trail": "short",
+    "archetype": "survival",
+    "team": [
+      "Hunter",
+      "Doctor",
+      "Cook",
+      "Carpenter",
+      "Guide",
+      "Scout",
+      "Banker"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648441,
+      "finish_rate": 0.9766,
+      "elimination_rate": 0.0234,
+      "avg_members_lost": 0.511,
+      "member_loss_distribution": {
+        "0": 0.614,
+        "1": 0.2916,
+        "2": 0.0712,
+        "3": 0.018,
+        "4": 0.0034,
+        "5": 0.0018
+      },
+      "avg_end_money": 74.69,
+      "median_end_money": 76.72,
+      "p25_end_money": 68.1986753367074,
+      "p75_end_money": 82.80000000000001,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0,
+      "avg_journey_days": 19.8,
+      "event_frequencies": {},
+      "death_causes": {
+        "dehydration": 1779,
+        "cholera": 233,
+        "powder explosion": 145,
+        "tornado": 263,
+        "lightning": 110,
+        "severe illness": 11,
+        "drowned at ferry": 10,
+        "lost on the trail": 2
+      }
+    }
+  },
+  {
+    "difficulty": "medium",
+    "trail": "short",
+    "archetype": "mixed",
+    "team": [
+      "Hunter",
+      "Doctor",
+      "Carpenter",
+      "Cook",
+      "Musician",
+      "Banker",
+      "Priest"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648442,
+      "finish_rate": 0.9064,
+      "elimination_rate": 0.0936,
+      "avg_members_lost": 0.965,
+      "member_loss_distribution": {
+        "0": 0.3956,
+        "1": 0.3606,
+        "2": 0.1604,
+        "3": 0.0596,
+        "4": 0.0168,
+        "5": 0.004,
+        "6": 0.003
+      },
+      "avg_end_money": 68.97,
+      "median_end_money": 71.02415075026454,
+      "p25_end_money": 59.37985877700149,
+      "p75_end_money": 80.80000000000001,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.0014,
+      "avg_journey_days": 19.3,
+      "event_frequencies": {},
+      "death_causes": {
+        "lightning": 210,
+        "tornado": 402,
+        "dehydration": 3399,
+        "severe illness": 41,
+        "cholera": 414,
+        "powder explosion": 204,
+        "lost on the trail": 142,
+        "drowned at ferry": 15
+      }
+    }
+  },
+  {
+    "difficulty": "medium",
+    "trail": "short",
+    "archetype": "trade",
+    "team": [
+      "Merchant",
+      "Banker",
+      "Politician",
+      "Hunter",
+      "Doctor",
+      "Cook",
+      "Influencer"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648443,
+      "finish_rate": 0.8652,
+      "elimination_rate": 0.1348,
+      "avg_members_lost": 0.975,
+      "member_loss_distribution": {
+        "0": 0.3956,
+        "1": 0.3568,
+        "2": 0.1656,
+        "3": 0.0546,
+        "4": 0.018,
+        "5": 0.0054,
+        "6": 0.004
+      },
+      "avg_end_money": 60.15,
+      "median_end_money": 62.175922299124295,
+      "p25_end_money": 48.45600000000001,
+      "p75_end_money": 73.59453690689429,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.0018,
+      "avg_journey_days": 19,
+      "event_frequencies": {},
+      "death_causes": {
+        "dehydration": 3331,
+        "tornado": 383,
+        "cholera": 408,
+        "severe illness": 45,
+        "lost on the trail": 120,
+        "lightning": 183,
+        "powder explosion": 202,
+        "drowned at ferry": 200,
+        "starvation": 2
+      }
+    }
+  },
+  {
+    "difficulty": "medium",
+    "trail": "short",
+    "archetype": "random7",
+    "team": [
+      "Cook",
+      "Food Critic",
+      "Surveyor",
+      "Artist",
+      "Scout",
+      "Merchant",
+      "Musician"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648444,
+      "finish_rate": 0.7314,
+      "elimination_rate": 0.2686,
+      "avg_members_lost": 1.379,
+      "member_loss_distribution": {
+        "0": 0.3718,
+        "1": 0.2934,
+        "2": 0.1394,
+        "3": 0.077,
+        "4": 0.0502,
+        "5": 0.0348,
+        "6": 0.033,
+        "7": 0.0004
+      },
+      "avg_end_money": 10.31,
+      "median_end_money": 1.7736909007531416,
+      "p25_end_money": 0.7144782038389208,
+      "p75_end_money": 7.233882323363456,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.1224,
+      "avg_journey_days": 18.4,
+      "event_frequencies": {},
+      "death_causes": {
+        "severe illness": 1962,
+        "cholera": 2940,
+        "tornado": 430,
+        "dehydration": 715,
+        "starvation": 149,
+        "drowned at ferry": 231,
+        "lightning": 191,
+        "powder explosion": 236,
+        "drowned at ford": 22,
+        "lost on the trail": 18
+      }
+    }
+  },
+  {
+    "difficulty": "medium",
+    "trail": "extended",
+    "archetype": "no-skill",
+    "team": [
+      "Musician",
+      "Artist",
+      "Influencer",
+      "Seamstress",
+      "Fashion Designer",
+      "Magician",
+      "Actor"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648445,
+      "finish_rate": 0.1412,
+      "elimination_rate": 0.8588,
+      "avg_members_lost": 3.312,
+      "member_loss_distribution": {
+        "0": 0.1504,
+        "1": 0.1338,
+        "2": 0.1252,
+        "3": 0.1096,
+        "4": 0.1006,
+        "5": 0.0928,
+        "6": 0.281,
+        "7": 0.0066
+      },
+      "avg_end_money": 10.84,
+      "median_end_money": 0.7444041421306777,
+      "p25_end_money": 0.10409421334995425,
+      "p75_end_money": 3.674022224624874,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.5988,
+      "avg_journey_days": 25.6,
+      "event_frequencies": {},
+      "death_causes": {
+        "cholera": 3495,
+        "severe illness": 2399,
+        "powder explosion": 298,
+        "starvation": 4108,
+        "drowned at ferry": 288,
+        "dehydration": 4123,
+        "drowned at ford": 954,
+        "tornado": 471,
+        "lightning": 257,
+        "lost on the trail": 164,
+        "sickness_minor_aggravated": 1
+      }
+    }
+  },
+  {
+    "difficulty": "medium",
+    "trail": "extended",
+    "archetype": "survival",
+    "team": [
+      "Hunter",
+      "Doctor",
+      "Cook",
+      "Carpenter",
+      "Guide",
+      "Scout",
+      "Banker"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648446,
+      "finish_rate": 0.9222,
+      "elimination_rate": 0.0778,
+      "avg_members_lost": 2.281,
+      "member_loss_distribution": {
+        "0": 0.1084,
+        "1": 0.2392,
+        "2": 0.2566,
+        "3": 0.1928,
+        "4": 0.1072,
+        "5": 0.0546,
+        "6": 0.0404,
+        "7": 0.0008
+      },
+      "avg_end_money": 44.55,
+      "median_end_money": 45.65908924061179,
+      "p25_end_money": 30.976492514015042,
+      "p75_end_money": 58.69000000000001,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.0004,
+      "avg_journey_days": 38.5,
+      "event_frequencies": {},
+      "death_causes": {
+        "dehydration": 9689,
+        "powder explosion": 233,
+        "lightning": 224,
+        "tornado": 467,
+        "cholera": 599,
+        "severe illness": 118,
+        "drowned at ferry": 40,
+        "lost on the trail": 24,
+        "starvation": 9
+      }
+    }
+  },
+  {
+    "difficulty": "medium",
+    "trail": "extended",
+    "archetype": "mixed",
+    "team": [
+      "Hunter",
+      "Doctor",
+      "Carpenter",
+      "Cook",
+      "Musician",
+      "Banker",
+      "Priest"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648447,
+      "finish_rate": 0.7576,
+      "elimination_rate": 0.2424,
+      "avg_members_lost": 2.768,
+      "member_loss_distribution": {
+        "0": 0.1008,
+        "1": 0.1696,
+        "2": 0.2082,
+        "3": 0.19,
+        "4": 0.1462,
+        "5": 0.0868,
+        "6": 0.0956,
+        "7": 0.0028
+      },
+      "avg_end_money": 39.86,
+      "median_end_money": 38.08718031924147,
+      "p25_end_money": 18.560000000000002,
+      "p75_end_money": 59.723607942714395,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.0006,
+      "avg_journey_days": 35,
+      "event_frequencies": {},
+      "death_causes": {
+        "powder explosion": 310,
+        "dehydration": 11228,
+        "tornado": 640,
+        "drowned at ferry": 53,
+        "cholera": 835,
+        "lightning": 289,
+        "lost on the trail": 205,
+        "severe illness": 249,
+        "starvation": 29,
+        "drowned at ford": 2
+      }
+    }
+  },
+  {
+    "difficulty": "medium",
+    "trail": "extended",
+    "archetype": "trade",
+    "team": [
+      "Merchant",
+      "Banker",
+      "Politician",
+      "Hunter",
+      "Doctor",
+      "Cook",
+      "Influencer"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648448,
+      "finish_rate": 0.6944,
+      "elimination_rate": 0.3056,
+      "avg_members_lost": 2.744,
+      "member_loss_distribution": {
+        "0": 0.1006,
+        "1": 0.1788,
+        "2": 0.2054,
+        "3": 0.196,
+        "4": 0.1284,
+        "5": 0.0926,
+        "6": 0.0976,
+        "7": 0.0006
+      },
+      "avg_end_money": 33.67,
+      "median_end_money": 29.7501872624457,
+      "p25_end_money": 8.04264455836378,
+      "p75_end_money": 54.74078322461621,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.0018,
+      "avg_journey_days": 33.9,
+      "event_frequencies": {},
+      "death_causes": {
+        "dehydration": 11024,
+        "drowned at ferry": 290,
+        "lightning": 289,
+        "tornado": 591,
+        "powder explosion": 304,
+        "cholera": 778,
+        "severe illness": 225,
+        "lost on the trail": 177,
+        "drowned at ford": 5,
+        "starvation": 37
+      }
+    }
+  },
+  {
+    "difficulty": "medium",
+    "trail": "extended",
+    "archetype": "random7",
+    "team": [
+      "Guide",
+      "Cowboy",
+      "Fashion Designer",
+      "Doctor",
+      "Priest",
+      "Language Teacher",
+      "Musician"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648449,
+      "finish_rate": 0.5482,
+      "elimination_rate": 0.4518,
+      "avg_members_lost": 4.042,
+      "member_loss_distribution": {
+        "0": 0.062,
+        "1": 0.0754,
+        "2": 0.1012,
+        "3": 0.1238,
+        "4": 0.1488,
+        "5": 0.1392,
+        "6": 0.3456,
+        "7": 0.004
+      },
+      "avg_end_money": 2.88,
+      "median_end_money": 0.08049933678754577,
+      "p25_end_money": 0.004888879835508757,
+      "p75_end_money": 0.4696477924660543,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.744,
+      "avg_journey_days": 35.3,
+      "event_frequencies": {},
+      "death_causes": {
+        "cholera": 720,
+        "starvation": 8645,
+        "dehydration": 8907,
+        "tornado": 489,
+        "drowned at ford": 249,
+        "drowned at ferry": 277,
+        "lost on the trail": 171,
+        "lightning": 278,
+        "powder explosion": 288,
+        "severe illness": 186
+      }
+    }
+  },
+  {
+    "difficulty": "hard",
+    "trail": "short",
+    "archetype": "no-skill",
+    "team": [
+      "Musician",
+      "Artist",
+      "Influencer",
+      "Seamstress",
+      "Fashion Designer",
+      "Magician",
+      "Actor"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648450,
+      "finish_rate": 0.358,
+      "elimination_rate": 0.642,
+      "avg_members_lost": 2.856,
+      "member_loss_distribution": {
+        "0": 0.1564,
+        "1": 0.1736,
+        "2": 0.1726,
+        "3": 0.1304,
+        "4": 0.0972,
+        "5": 0.065,
+        "6": 0.201,
+        "7": 0.0038
+      },
+      "avg_end_money": 5.29,
+      "median_end_money": 0.4776281201921403,
+      "p25_end_money": 0.14553,
+      "p75_end_money": 1.6680000000000008,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.6974,
+      "avg_journey_days": 16.2,
+      "event_frequencies": {},
+      "death_causes": {
+        "cholera": 4872,
+        "starvation": 2622,
+        "severe illness": 2595,
+        "dehydration": 2429,
+        "tornado": 365,
+        "drowned at ford": 621,
+        "powder explosion": 216,
+        "lost on the trail": 129,
+        "drowned at ferry": 235,
+        "lightning": 194,
+        "sickness_minor_aggravated": 2,
+        "sickness_severe_aggravated": 1,
+        "cholera_aggravated": 1
+      }
+    }
+  },
+  {
+    "difficulty": "hard",
+    "trail": "short",
+    "archetype": "survival",
+    "team": [
+      "Hunter",
+      "Doctor",
+      "Cook",
+      "Carpenter",
+      "Guide",
+      "Scout",
+      "Banker"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648451,
+      "finish_rate": 0.9806,
+      "elimination_rate": 0.0194,
+      "avg_members_lost": 0.601,
+      "member_loss_distribution": {
+        "0": 0.5856,
+        "1": 0.2894,
+        "2": 0.0866,
+        "3": 0.0258,
+        "4": 0.006,
+        "5": 0.0024,
+        "6": 0.004,
+        "7": 0.0002
+      },
+      "avg_end_money": 48.32,
+      "median_end_money": 49.88236000088641,
+      "p25_end_money": 40.24257090979265,
+      "p75_end_money": 58.27999999999999,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.0002,
+      "avg_journey_days": 19.8,
+      "event_frequencies": {},
+      "death_causes": {
+        "dehydration": 1913,
+        "tornado": 240,
+        "starvation": 2,
+        "cholera": 491,
+        "lightning": 117,
+        "severe illness": 99,
+        "lost on the trail": 7,
+        "powder explosion": 131,
+        "drowned at ferry": 7
+      }
+    }
+  },
+  {
+    "difficulty": "hard",
+    "trail": "short",
+    "archetype": "mixed",
+    "team": [
+      "Hunter",
+      "Doctor",
+      "Carpenter",
+      "Cook",
+      "Musician",
+      "Banker",
+      "Priest"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648452,
+      "finish_rate": 0.9228,
+      "elimination_rate": 0.0772,
+      "avg_members_lost": 1.192,
+      "member_loss_distribution": {
+        "0": 0.3382,
+        "1": 0.3456,
+        "2": 0.1878,
+        "3": 0.0788,
+        "4": 0.027,
+        "5": 0.009,
+        "6": 0.0136
+      },
+      "avg_end_money": 40.61,
+      "median_end_money": 41.57500767099467,
+      "p25_end_money": 29.658448364920908,
+      "p75_end_money": 52.4712,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.0048,
+      "avg_journey_days": 19.2,
+      "event_frequencies": {},
+      "death_causes": {
+        "tornado": 393,
+        "powder explosion": 221,
+        "dehydration": 3848,
+        "severe illness": 292,
+        "lightning": 202,
+        "lost on the trail": 121,
+        "cholera": 858,
+        "drowned at ferry": 18,
+        "starvation": 8
+      }
+    }
+  },
+  {
+    "difficulty": "hard",
+    "trail": "short",
+    "archetype": "trade",
+    "team": [
+      "Merchant",
+      "Banker",
+      "Politician",
+      "Hunter",
+      "Doctor",
+      "Cook",
+      "Influencer"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648453,
+      "finish_rate": 0.8662,
+      "elimination_rate": 0.1338,
+      "avg_members_lost": 1.199,
+      "member_loss_distribution": {
+        "0": 0.332,
+        "1": 0.3564,
+        "2": 0.1868,
+        "3": 0.073,
+        "4": 0.0254,
+        "5": 0.0096,
+        "6": 0.0168
+      },
+      "avg_end_money": 29.41,
+      "median_end_money": 28.366550587045097,
+      "p25_end_money": 15.032217007113196,
+      "p75_end_money": 42.116,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.0056,
+      "avg_journey_days": 18.9,
+      "event_frequencies": {},
+      "death_causes": {
+        "dehydration": 3620,
+        "tornado": 436,
+        "cholera": 916,
+        "lightning": 209,
+        "lost on the trail": 118,
+        "severe illness": 297,
+        "drowned at ferry": 192,
+        "starvation": 13,
+        "powder explosion": 196
+      }
+    }
+  },
+  {
+    "difficulty": "hard",
+    "trail": "short",
+    "archetype": "random7",
+    "team": [
+      "Cowboy",
+      "Blacksmith",
+      "Trapper",
+      "Actor",
+      "Merchant",
+      "Scout",
+      "Banker"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648454,
+      "finish_rate": 0.8622,
+      "elimination_rate": 0.1378,
+      "avg_members_lost": 2.248,
+      "member_loss_distribution": {
+        "0": 0.2212,
+        "1": 0.2742,
+        "2": 0.1704,
+        "3": 0.085,
+        "4": 0.0394,
+        "5": 0.0408,
+        "6": 0.1668,
+        "7": 0.0022
+      },
+      "avg_end_money": 5.16,
+      "median_end_money": 1.9126853438573908,
+      "p25_end_money": 0.7493784212498376,
+      "p75_end_money": 4.194599999999999,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.3554,
+      "avg_journey_days": 19.3,
+      "event_frequencies": {},
+      "death_causes": {
+        "severe illness": 2753,
+        "powder explosion": 233,
+        "starvation": 1002,
+        "dehydration": 1070,
+        "cholera": 5308,
+        "tornado": 406,
+        "drowned at ferry": 214,
+        "lightning": 192,
+        "drowned at ford": 48,
+        "lost on the trail": 13
+      }
+    }
+  },
+  {
+    "difficulty": "hard",
+    "trail": "extended",
+    "archetype": "no-skill",
+    "team": [
+      "Musician",
+      "Artist",
+      "Influencer",
+      "Seamstress",
+      "Fashion Designer",
+      "Magician",
+      "Actor"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648455,
+      "finish_rate": 0.0344,
+      "elimination_rate": 0.9656,
+      "avg_members_lost": 3.126,
+      "member_loss_distribution": {
+        "0": 0.1838,
+        "1": 0.16,
+        "2": 0.1174,
+        "3": 0.0926,
+        "4": 0.0812,
+        "5": 0.0686,
+        "6": 0.2892,
+        "7": 0.0072
+      },
+      "avg_end_money": 9.27,
+      "median_end_money": 0.8449287092578133,
+      "p25_end_money": 0.13776,
+      "p75_end_money": 3.5882665377762173,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.5808,
+      "avg_journey_days": 19.2,
+      "event_frequencies": {},
+      "death_causes": {
+        "starvation": 3157,
+        "dehydration": 3891,
+        "severe illness": 2500,
+        "drowned at ferry": 218,
+        "cholera": 4348,
+        "tornado": 388,
+        "lightning": 238,
+        "powder explosion": 206,
+        "drowned at ford": 547,
+        "lost on the trail": 137
+      }
+    }
+  },
+  {
+    "difficulty": "hard",
+    "trail": "extended",
+    "archetype": "survival",
+    "team": [
+      "Hunter",
+      "Doctor",
+      "Cook",
+      "Carpenter",
+      "Guide",
+      "Scout",
+      "Banker"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648456,
+      "finish_rate": 0.896,
+      "elimination_rate": 0.104,
+      "avg_members_lost": 2.565,
+      "member_loss_distribution": {
+        "0": 0.1082,
+        "1": 0.2004,
+        "2": 0.2302,
+        "3": 0.1886,
+        "4": 0.1196,
+        "5": 0.0594,
+        "6": 0.0926,
+        "7": 0.001
+      },
+      "avg_end_money": 20.16,
+      "median_end_money": 16.1363428288089,
+      "p25_end_money": 3.944139659561234,
+      "p75_end_money": 32.250066651212315,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.0008,
+      "avg_journey_days": 37.9,
+      "event_frequencies": {},
+      "death_causes": {
+        "dehydration": 9943,
+        "lightning": 226,
+        "powder explosion": 237,
+        "severe illness": 670,
+        "cholera": 1181,
+        "tornado": 453,
+        "drowned at ferry": 46,
+        "lost on the trail": 28,
+        "drowned at ford": 9,
+        "starvation": 30
+      }
+    }
+  },
+  {
+    "difficulty": "hard",
+    "trail": "extended",
+    "archetype": "mixed",
+    "team": [
+      "Hunter",
+      "Doctor",
+      "Carpenter",
+      "Cook",
+      "Musician",
+      "Banker",
+      "Priest"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648457,
+      "finish_rate": 0.6712,
+      "elimination_rate": 0.3288,
+      "avg_members_lost": 3.111,
+      "member_loss_distribution": {
+        "0": 0.102,
+        "1": 0.1418,
+        "2": 0.1756,
+        "3": 0.1644,
+        "4": 0.1414,
+        "5": 0.0936,
+        "6": 0.1772,
+        "7": 0.004
+      },
+      "avg_end_money": 21.02,
+      "median_end_money": 10.808666398558643,
+      "p25_end_money": 2.6771236518417822,
+      "p75_end_money": 36.96,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.0088,
+      "avg_journey_days": 33.2,
+      "event_frequencies": {},
+      "death_causes": {
+        "tornado": 574,
+        "dehydration": 11694,
+        "cholera": 1434,
+        "powder explosion": 318,
+        "severe illness": 926,
+        "drowned at ferry": 46,
+        "starvation": 105,
+        "lost on the trail": 180,
+        "lightning": 261,
+        "drowned at ford": 17
+      }
+    }
+  },
+  {
+    "difficulty": "hard",
+    "trail": "extended",
+    "archetype": "trade",
+    "team": [
+      "Merchant",
+      "Banker",
+      "Politician",
+      "Hunter",
+      "Doctor",
+      "Cook",
+      "Influencer"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648458,
+      "finish_rate": 0.5514,
+      "elimination_rate": 0.4486,
+      "avg_members_lost": 3.031,
+      "member_loss_distribution": {
+        "0": 0.113,
+        "1": 0.1458,
+        "2": 0.1702,
+        "3": 0.1642,
+        "4": 0.1502,
+        "5": 0.091,
+        "6": 0.1624,
+        "7": 0.0032
+      },
+      "avg_end_money": 17.39,
+      "median_end_money": 5.8173956247443,
+      "p25_end_money": 2.2796793937012794,
+      "p75_end_money": 29.17058638439765,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.0166,
+      "avg_journey_days": 31.4,
+      "event_frequencies": {},
+      "death_causes": {
+        "dehydration": 11110,
+        "drowned at ferry": 287,
+        "severe illness": 928,
+        "powder explosion": 287,
+        "tornado": 536,
+        "starvation": 128,
+        "lightning": 299,
+        "cholera": 1375,
+        "lost on the trail": 164,
+        "drowned at ford": 43
+      }
+    }
+  },
+  {
+    "difficulty": "hard",
+    "trail": "extended",
+    "archetype": "random7",
+    "team": [
+      "Seamstress",
+      "Guide",
+      "Carpenter",
+      "Actor",
+      "Banker",
+      "Blacksmith",
+      "Cook"
+    ],
+    "stats": {
+      "n": 5000,
+      "seed": 12648459,
+      "finish_rate": 0.6994,
+      "elimination_rate": 0.3006,
+      "avg_members_lost": 5.14,
+      "member_loss_distribution": {
+        "0": 0.0082,
+        "1": 0.0218,
+        "2": 0.0396,
+        "3": 0.0704,
+        "4": 0.1086,
+        "5": 0.13,
+        "6": 0.6066,
+        "7": 0.0148
+      },
+      "avg_end_money": 2.64,
+      "median_end_money": 0.08928813571306582,
+      "p25_end_money": 0.0034036199999999514,
+      "p75_end_money": 0.6190448765362808,
+      "pct_hit_zero_money_before_mid": 0,
+      "pct_ran_out_food": 0.6626,
+      "avg_journey_days": 37.1,
+      "event_frequencies": {},
+      "death_causes": {
+        "dehydration": 9148,
+        "starvation": 6241,
+        "severe illness": 3472,
+        "cholera": 5282,
+        "lost on the trail": 185,
+        "tornado": 543,
+        "lightning": 324,
+        "drowned at ferry": 63,
+        "drowned at ford": 178,
+        "powder explosion": 263
+      }
+    }
+  }
+]
