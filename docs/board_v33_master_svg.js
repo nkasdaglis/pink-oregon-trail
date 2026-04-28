@@ -193,7 +193,12 @@
   }
 
   function project(lat, lonW, W, H) {
-    var x = ((LON_W_EAST - lonW) / (LON_W_EAST - LON_W_WEST)) * W;
+    // v3.4.1 fix — mirror corrected. On a standard cartographic projection
+    // of North America, west sits on the LEFT and east on the RIGHT.
+    // Independence (lonW=94.4°, less west) must land on the right; Oregon
+    // City (lonW=122.6°, more west) on the left. The earlier formula
+    // produced the inverse, yielding a left-right mirrored poster.
+    var x = ((LON_W_WEST - lonW) / (LON_W_WEST - LON_W_EAST)) * W;
     var y = ((LAT_N - lat) / (LAT_N - LAT_S)) * H;
     return { x: x, y: y };
   }
@@ -357,7 +362,10 @@
     return s;
   }
 
-  function buildExtendedMarkers(W, H, mode) {
+  function buildExtendedMarkers(W, H, mode, trailLength) {
+    // Skip when not relevant. Short-only posters don't render Extended
+    // markers at all to keep the print clean.
+    if (trailLength === 'short') return '';
     if (mode === 'poster' || mode === 'screen-extended') {
       var s = '';
       var labelFont = (mode === 'poster') ? 11 : 8;
@@ -624,9 +632,10 @@
   function buildMasterBoardSVG(opts) {
     opts = opts || {};
     var mode = opts.mode || 'poster';
+    var trailLength = opts.trailLength || 'both'; // 'short' | 'extended' | 'both'
     var W = opts.viewBoxW || (mode === 'poster' ? 3600 : 800);
     var H = opts.viewBoxH || (mode === 'poster' ? 2400 : 500);
-    var meta = { mode: mode, W: W, H: H, forced_collisions: [] };
+    var meta = { mode: mode, trailLength: trailLength, W: W, H: H, forced_collisions: [] };
     var body = '';
     body += buildBackground(W, H);
     body += buildRegionTints(W, H);
@@ -636,7 +645,7 @@
     body += buildMountains(W, H, mode);
     body += buildNativeNations(W, H, mode);
     body += buildTrailPath(W, H);
-    body += buildExtendedMarkers(W, H, mode);
+    body += buildExtendedMarkers(W, H, mode, trailLength);
     var rl = buildRoundelsAndLabels(W, H, mode);
     body += rl.svg;
     body += buildCompassRose(W, H, mode);
@@ -644,7 +653,8 @@
     body += buildCartouche(W, H, mode);
     body += buildLegend(W, H, mode);
     if (mode === 'poster') {
-      body += '<text x="' + (W - 12) + '" y="' + (H - 8) + '" font-family="Georgia, serif" font-style="italic" font-size="9" fill="' + PALETTE.ink_light + '" text-anchor="end" opacity="0.7">Pink Oregon Trail v3.4 &mdash; print at 36" &times; 24" (no scaling, landscape)</text>';
+      var lengthTag = trailLength === 'short' ? 'Short Trail' : (trailLength === 'extended' ? 'Extended Trail' : 'Short + Extended');
+      body += '<text x="' + (W - 12) + '" y="' + (H - 8) + '" font-family="Georgia, serif" font-style="italic" font-size="9" fill="' + PALETTE.ink_light + '" text-anchor="end" opacity="0.7">Pink Oregon Trail v3.4.1 &mdash; ' + lengthTag + ' &mdash; print at 36" &times; 24" (no scaling, landscape)</text>';
     }
     return { svg: body, meta: meta };
   }

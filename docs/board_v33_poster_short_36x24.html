@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pink Oregon Trail — Short Trail Poster (36×24)</title>
+<style>
+  @page { size: 36in 24in; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #F0DBA8; }
+  body { width: 36in; height: 24in; overflow: hidden; }
+  .poster-canvas { width: 100%; height: 100%; display: block; background: #F0DBA8; }
+  .poster-canvas svg { width: 100%; height: 100%; display: block; }
+  .screen-hint {
+    position: fixed; top: 12px; right: 12px;
+    background: #FBF6F0; color: #3D2817;
+    border: 1.5px solid #5C4A36; border-radius: 6px;
+    padding: 10px 14px;
+    font-family: Georgia, serif; font-size: 13px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    max-width: 280px;
+    z-index: 1000;
+  }
+  .screen-hint strong { color: #B85770; }
+  @media print { .screen-hint { display: none !important; } }
+</style>
+</head>
+<body>
+<div class="screen-hint">
+  <strong>Short Trail poster.</strong> Ctrl+P → 36×24 in, Margins: None,
+  Background graphics: ON, Scale: 100%. The 25 numbered stops match the
+  Short-trail game length. For the longer version use
+  <a href="board_v33_poster_extended_36x24.html">board_v33_poster_extended_36x24.html</a>.
+</div>
+<div class="poster-canvas" id="poster"></div>
+
+<script src="board_v33_master_svg.js"></script>
+<script>
+(function () {
+  var host = document.getElementById('poster');
+  var result = window.PinkOregonTrailMap.buildMasterBoardSVG({
+    mode: 'poster',
+    trailLength: 'short',
+    viewBoxW: 3600,
+    viewBoxH: 2400
+  });
+  host.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3600 2400" preserveAspectRatio="xMidYMid meet">' + result.svg + '</svg>';
+  if (result.meta && result.meta.forced_collisions && result.meta.forced_collisions.length) {
+    console.log('[POSTER short] Forced label collisions:', result.meta.forced_collisions);
+  }
+})();
+</script>
+</body>
+</html>
