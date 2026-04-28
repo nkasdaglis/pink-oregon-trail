@@ -1724,23 +1724,118 @@ h2.section-h { font-size: 24px; color: var(--rose-dark); margin-bottom: 14px; bo
    Bottom bar hidden (children moved into drawers and interaction panel
    by _syncMobileLayout). v3.3.1 fix: panel is now an in-flow grid row
    so the scene canvas keeps a guaranteed visible area instead of being
-   crushed by a fixed bottom panel reserving 42vh of viewport. */
+   crushed by a fixed bottom panel reserving 42vh of viewport.
+   v3.3.1 round 2: #screen-game now scrolls vertically on mobile (was
+   `height: 100vh; overflow: hidden` which clipped the action panel
+   off the bottom whenever scene + panel + headers exceeded viewport). */
 :root[data-ui-density="mobile"] .bottom-bar { display: none; }
 :root[data-ui-density="mobile"] #screen-game {
   grid-template-rows: auto auto minmax(38vh, 1fr) auto;
-  padding-bottom: 36px;  /* clear the 32px drawer-tab strip at bottom: 0 */
+  padding-bottom: 40px;  /* clear the 32px drawer-tab strip + 8px breathing */
+  height: auto;
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 :root[data-ui-density="mobile"] .scene-canvas { min-height: 38vh; }
+:root[data-ui-density="mobile"] #screen-game.callout-open {
+  /* When a callout is showing, give the panel more room by shrinking
+     the scene minimum. The wagon is still visible above the callout. */
+  grid-template-rows: auto auto minmax(26vh, 1fr) auto;
+}
+:root[data-ui-density="mobile"] #screen-game.callout-open .scene-canvas { min-height: 26vh; }
 :root[data-ui-density="mobile"] .mobile-interaction-panel {
   position: static;
   z-index: 1;
-  max-height: 55vh;
-  overflow-y: auto;
+  max-height: none;
+  overflow: visible;
 }
 :root[data-ui-density="mobile"] .mobile-interaction-panel.has-callout {
   border-top-width: 3px;
   border-top-color: var(--rose-dark);
 }
+/* v3.3.1 round 2 — compact mobile resource bar (collapsed default).
+   The ribbon goes from a flex-wrapping multi-row band (~80-110px) to a
+   single thin scrollable row (~30px). Tap to expand to a fuller view
+   showing labels + larger numbers (~58px). The pace-ration-strip is
+   merged inline with the ribbon's right side at mobile so we save a
+   whole row. */
+:root[data-ui-density="mobile"] .resource-ribbon {
+  padding: 3px 6px;
+  gap: 4px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  font-size: 11px;
+  cursor: pointer;
+}
+:root[data-ui-density="mobile"] .resource-ribbon::-webkit-scrollbar { height: 0; display: none; }
+:root[data-ui-density="mobile"] .resource-ribbon::after {
+  content: "▾";
+  position: absolute;
+  right: 6px;
+  color: rgba(255,255,255,0.7);
+  font-size: 10px;
+  pointer-events: none;
+}
+:root[data-ui-density="mobile"] .resource-ribbon { position: relative; padding-right: 22px; }
+:root[data-ui-density="mobile"] .resource-ribbon.expanded::after { content: "▴"; }
+:root[data-ui-density="mobile"] .resource-ribbon .calendar {
+  padding: 2px 6px;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+:root[data-ui-density="mobile"] .resource-ribbon .resources {
+  gap: 3px;
+  flex-wrap: nowrap;
+  overflow: visible;
+}
+:root[data-ui-density="mobile"] .res-item {
+  padding: 2px 4px;
+  min-width: 0;
+  gap: 3px;
+  font-size: 11px;
+}
+:root[data-ui-density="mobile"] .res-item .label { display: none; }
+:root[data-ui-density="mobile"] .res-item .val { font-size: 12px; line-height: 1.1; }
+:root[data-ui-density="mobile"] .res-item .icon { width: 11px; height: 11px; }
+/* Expanded mobile ribbon — restores labels and bigger numbers when
+   user taps the ribbon. Wraps to two rows when expanded for clarity. */
+:root[data-ui-density="mobile"] .resource-ribbon.expanded {
+  flex-wrap: wrap;
+  padding: 6px 22px 6px 8px;
+  font-size: 12px;
+}
+:root[data-ui-density="mobile"] .resource-ribbon.expanded .res-item {
+  padding: 4px 7px;
+  gap: 4px;
+}
+:root[data-ui-density="mobile"] .resource-ribbon.expanded .res-item .label {
+  display: inline;
+  font-size: 9px;
+  opacity: 0.65;
+}
+:root[data-ui-density="mobile"] .resource-ribbon.expanded .res-item .val { font-size: 14px; }
+/* Compact pace-ration-strip at mobile — single thin row */
+:root[data-ui-density="mobile"] .pace-ration-strip {
+  padding: 2px 8px;
+  gap: 6px;
+  font-size: 10px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+:root[data-ui-density="mobile"] .pace-ration-strip::-webkit-scrollbar { height: 0; display: none; }
+:root[data-ui-density="mobile"] .pr-badge {
+  padding: 2px 6px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+:root[data-ui-density="mobile"] .pr-badge .pr-label { font-size: 9px; opacity: 0.7; }
+:root[data-ui-density="mobile"] .pr-badge .pr-value { font-size: 11px; }
+/* v3.3.1 round 2 — audio toggles move to top-right at mobile so they
+   stop sitting on top of the drawer-map tab at bottom-right. */
+:root[data-ui-density="mobile"] #mute-toggle  { bottom: auto; right: 6px;  top: 6px; width: 32px; height: 32px; font-size: 12px; }
+:root[data-ui-density="mobile"] #music-toggle { bottom: auto; right: 44px; top: 6px; width: 32px; height: 32px; font-size: 12px; }
 /* v3.3.1 — when the callout routes into the mobile panel (below), the
    absolute-positioned variant in the scene overlay should not also
    render. Hide any leftover overlay copy at mobile density. */
@@ -13452,6 +13547,11 @@ function renderNarrativeCallout(html) {
     const c = el('div', { class: 'narrative-callout', html: html });
     host.appendChild(c);
     panel.classList.add('has-callout');
+    // v3.3.1 round 2 — flip #screen-game.callout-open so the scene
+    // canvas's min-height shrinks (38vh → 26vh) freeing room for the
+    // callout text. The wagon stays visible above the callout.
+    const sg = $('screen-game');
+    if (sg) sg.classList.add('callout-open');
     // Smooth-scroll the panel into view so the callout is immediately readable
     try { host.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
     return;
@@ -13472,11 +13572,27 @@ function clearNarrativeCallout() {
     if (host) host.innerHTML = '';
     panel.classList.remove('has-callout');
   }
+  const sg = $('screen-game');
+  if (sg) sg.classList.remove('callout-open');
   // Desktop path — clear the scene-overlay copy
   const overlay = $('scene-overlay');
   if (!overlay) return;
   const old = overlay.querySelector('.narrative-callout');
   if (old) old.remove();
+}
+
+// v3.3.1 round 2 — wire tap-to-expand on the resource ribbon at mobile
+// density. The ribbon defaults to a thin single-row glance view (icons
+// + numbers only); tap toggles `.expanded` to show labels + bigger
+// numbers (wraps to two rows). Uses a single delegated listener.
+function _wireResourceRibbonExpand() {
+  const ribbon = document.querySelector('.resource-ribbon');
+  if (!ribbon || ribbon._expandWired) return;
+  ribbon.addEventListener('click', () => {
+    if (document.documentElement.getAttribute('data-ui-density') !== 'mobile') return;
+    ribbon.classList.toggle('expanded');
+  });
+  ribbon._expandWired = true;
 }
 
 function showSettingPicker(kind) {
@@ -17637,6 +17753,7 @@ function init() {
   updateUIDensity();
   _syncMobileLayout();
   _wireDrawers();
+  _wireResourceRibbonExpand();
   // v3.0 Stage 1E — mobile behaviors. Audio gate fires for everyone (the
   // hint surfaces only on mobile); save notice + orientation hint
   // self-gate on density.
