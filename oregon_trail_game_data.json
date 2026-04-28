@@ -7258,6 +7258,53 @@
       }
     ]
   },
+  "cyoa_connections_v3_3": {
+    "philosophy": "Each game's story emerges from prior choices, current team state, and earned knowledge accumulating across the journey. Same trail run twice should produce different stories because earlier decisions shifted the deck for later ones. This is the choose-your-adventure deepening. Calibration goal: widen the strategy gap from 46pp (HD vs MA mean) to ~60-70pp by rewarding attention and punishing carelessness.",
+    "choice_echoes": {
+      "description": "After certain choice events, a 'choice_echo' tag is recorded on the wagon. Subsequent event resolvers consult these tags and apply modifiers.",
+      "echoes": [
+        { "trigger": "alternate_route_chose", "route_id": "sublette_cutoff", "branch": "primary", "tag": "took_sublette", "modifier": { "desert_hardiness": 1, "next_water_event_easier_pct": 15, "narrative_hint": "We have crossed the desert before. Less afraid this time." } },
+        { "trigger": "alternate_route_chose", "route_id": "barlow_road", "branch": "primary", "tag": "took_barlow", "modifier": { "wagon_morale": 1, "narrative_hint": "We are not on a Columbia raft. We are on land." } },
+        { "trigger": "alternate_route_chose", "route_id": "barlow_road", "branch": "alternate", "tag": "rafted_columbia", "modifier": { "river_caution_pct": -10, "narrative_hint": "We rode the Columbia. The next river feels small." } },
+        { "trigger": "alternate_route_chose", "route_id": "whitman_bypass", "branch": "alternate", "tag": "saw_whitman_ruins", "modifier": { "morale_floor": 4, "narrative_hint": "We saw the burned timbers. We do not forget." } },
+        { "trigger": "alternate_route_chose", "route_id": "whitman_bypass", "branch": "primary", "tag": "respected_whitman", "modifier": { "wagon_morale": 1 } },
+        { "trigger": "fort_action", "action": "Doctor", "tag": "used_fort_doctor", "modifier": { "cholera_resistance_pct": 10, "narrative_hint": "The fort doctor's tonic still helps." } },
+        { "trigger": "fort_skipped_with_sick_member", "tag": "skipped_fort_doctor", "modifier": { "cholera_resistance_pct": -10, "degrade_probability_boost": 0.05, "narrative_hint": "We should have stopped. We did not." } },
+        { "trigger": "intervention_chose", "choice_id": "race_to_fort", "tag": "raced_to_fort", "modifier": { "future_doctor_visit_discount_money": 1 } },
+        { "trigger": "river_chose", "method": "guide", "tag": "respected_guide", "modifier": { "native_trade_chance_pct": 50, "narrative_hint": "We listened to the guide. Word travels." } },
+        { "trigger": "river_chose", "method": "ford_unsafe", "tag": "fordered_dangerously", "modifier": { "river_drown_pct": 5, "narrative_hint": "We have grown reckless." } },
+        { "trigger": "bandit_quiz_score_4_or_5", "tag": "trail_savvy", "modifier": { "bandit_recognize_trick_chance_pct": 30, "narrative_hint": "We recognize the trick. We have read this story before." } }
+      ]
+    },
+    "intel_score_rules": {
+      "description": "Earned knowledge that pays out later. intel_score = dyk_cards_seen + bandit_quiz_correct * 3. Threshold gates unlock options at events.",
+      "thresholds": [
+        { "score_at_least": 5,  "unlocks": ["boil_water_at_river"], "narrative_hint": "We remember a Did You Know card about water." },
+        { "score_at_least": 10, "unlocks": ["recognize_bandit_trick", "spot_native_trade_opportunity"], "narrative_hint": "Our team has paid attention to the trail. We know things now." },
+        { "score_at_least": 18, "unlocks": ["historian_bonus"], "narrative_hint": "Sarah keeps a journal. The team has read it back." }
+      ]
+    },
+    "time_of_arrival_milestones": {
+      "description": "Cascade penalties/rewards based on when the wagon hits key historical waypoints. Soft nudges for slight delays; harder consequences for badly missed deadlines.",
+      "milestones": [
+        { "name": "Independence Rock", "trail_short_space": 12, "trail_extended_space": 22, "target_day": 90,
+          "early_threshold_day": 80,  "early_effect": { "morale": 2, "hunt_success_pct": 5, "narrative": "We reached Independence Rock by July 4th — early. The team is in good spirits." },
+          "ontime_threshold_day": 100, "ontime_effect": { "morale": 1, "narrative": "We reached Independence Rock by July 4th. On time, the wagon master says." },
+          "late_effect": { "morale": -1, "hunt_success_pct": -5, "narrative": "We are late at Independence Rock. The trail master shakes his head." } },
+        { "name": "Fort Hall", "trail_short_space": 17, "trail_extended_space": 33, "target_day": 130,
+          "ontime_threshold_day": 130, "ontime_effect": { "narrative": "We reached Fort Hall in time for the dry season." },
+          "late_effect": { "snake_river_drown_pct_increase": 0.50, "narrative": "It is late. The Snake River is faster now; the rains are coming." } },
+        { "name": "The Dalles", "trail_short_space": 23, "trail_extended_space": 48, "target_day": 145,
+          "ontime_threshold_day": 145, "ontime_effect": { "narrative": "We reached The Dalles before the autumn rains." },
+          "late_effect": { "force_columbia_rafting_disaster": true, "narrative": "It is too late to raft the Columbia — the rains have come. Barlow Road is the only safe choice now." } }
+      ]
+    },
+    "what_if_branch": {
+      "description": "Store the unchosen branch's narrative on the wagon for the What You Learned page (post-game) and an in-game 'remember' peek 5 turns after the choice.",
+      "in_game_peek_after_turns": 5,
+      "post_game_section": "What If — The Road Not Taken"
+    }
+  },
   "alternate_routes_v3_3": {
     "philosophy": "Real Oregon Trail emigrants faced genuine fork-in-the-road choices: the Sublette Cutoff (save a week or risk thirst), the Barlow Road (pay the toll or raft the Columbia), the Whitman bypass (after the 1847 destruction), the California cutoff (Oregon farms or California gold). Each was a real decision with real history and real outcomes. v3.3.x adds them as in-game choices that fire when the wagon lands on the trigger space. Risk indicators are qualitative — kids must read their own resource ribbon and team state to judge. No exact thresholds shown. Reward kids who pay attention.",
     "routes": [
