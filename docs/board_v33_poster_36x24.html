@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pink Oregon Trail — 36×24 Poster Map</title>
+<style>
+  @page { size: 36in 24in; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #F0DBA8; }
+  body { width: 36in; height: 24in; overflow: hidden; }
+  .poster-canvas {
+    width: 100%; height: 100%;
+    display: block;
+    background: #F0DBA8;
+  }
+  .poster-canvas svg {
+    width: 100%; height: 100%;
+    display: block;
+  }
+  /* Print preview hint — only visible on screen, hidden when printing. */
+  .screen-hint {
+    position: fixed; top: 12px; right: 12px;
+    background: #FBF6F0; color: #3D2817;
+    border: 1.5px solid #5C4A36; border-radius: 6px;
+    padding: 10px 14px;
+    font-family: Georgia, serif; font-size: 13px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    max-width: 260px;
+    z-index: 1000;
+  }
+  .screen-hint strong { color: #B85770; }
+  @media print {
+    .screen-hint { display: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="screen-hint">
+  <strong>To print:</strong> Ctrl+P → Paper: 36×24 in → Margins: None →
+  Background graphics: ON → Scale: 100%. Save as PDF, then upload to a
+  print service for an Engineer Print at 36"×24" landscape.
+</div>
+<div class="poster-canvas" id="poster"></div>
+
+<script src="board_v33_master_svg.js"></script>
+<script>
+(function () {
+  var host = document.getElementById('poster');
+  var result = window.PinkOregonTrailMap.buildMasterBoardSVG({
+    mode: 'poster',
+    viewBoxW: 3600,
+    viewBoxH: 2400
+  });
+  host.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3600 2400" preserveAspectRatio="xMidYMid meet">' + result.svg + '</svg>';
+  // Document any forced collisions for the build report
+  if (result.meta && result.meta.forced_collisions && result.meta.forced_collisions.length) {
+    console.log('[POSTER] Forced label collisions:', result.meta.forced_collisions);
+  }
+})();
+</script>
+</body>
+</html>
