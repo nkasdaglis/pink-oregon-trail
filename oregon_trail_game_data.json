@@ -7258,6 +7258,151 @@
       }
     ]
   },
+  "alternate_routes_v3_3": {
+    "philosophy": "Real Oregon Trail emigrants faced genuine fork-in-the-road choices: the Sublette Cutoff (save a week or risk thirst), the Barlow Road (pay the toll or raft the Columbia), the Whitman bypass (after the 1847 destruction), the California cutoff (Oregon farms or California gold). Each was a real decision with real history and real outcomes. v3.3.x adds them as in-game choices that fire when the wagon lands on the trigger space. Risk indicators are qualitative — kids must read their own resource ribbon and team state to judge. No exact thresholds shown. Reward kids who pay attention.",
+    "routes": [
+      {
+        "id": "sublette_cutoff",
+        "year_opened": 1844,
+        "trigger_space_short": 14,
+        "trigger_space_extended": 28,
+        "name": "The Sublette Cutoff",
+        "intro_text": "An old trapper at the Big Sandy crossroads draws a map in the dust. He calls himself Bill. \"You can go straight west across the desert and save seven days,\" he says, \"or swing south through Fort Bridger and take the easy road. The desert is fifty miles without water. The Bridger road is forty miles longer but reliable. Your call, wagon master.\"",
+        "decision_space_name": "Big Sandy crossroads",
+        "primary_label": "Take the Sublette Cutoff",
+        "primary_subtitle": "Save 7 days. 50 miles of desert.",
+        "primary_outcome": {
+          "days_change": -7,
+          "morale_change": 1,
+          "narrative_success": "Three days under a hot sky and then water glittered in a draw. The cutoff was the right call. We are seven days closer to Oregon than we would have been.",
+          "narrative_failure": "Water gone by the second day. We lost an ox to thirst and walked beside the wagon to spare the others. We made it through, but the desert took its price.",
+          "narrative_disaster": "We were too dry to start with. The desert took an ox and one of our own. We staggered into the next spring with the wagon half-empty and one less family at our fire.",
+          "trigger_failure_when": "water_below_threshold:15 OR any_member_sick",
+          "trigger_disaster_when": "water_below_threshold:8",
+          "fail_effects": { "wagon_hp": -10, "food": -25, "morale": -1 },
+          "disaster_effects": { "wagon_hp": -25, "food": -40, "morale": -3, "lose_member_chance": 0.40 }
+        },
+        "alternate_label": "Take the Fort Bridger road",
+        "alternate_subtitle": "Slower but reliable. Resupply at the fort.",
+        "alternate_outcome": {
+          "days_change": 0,
+          "morale_change": 0,
+          "narrative": "We swung south through Fort Bridger. The road was easy. We resupplied at the fort and slept indoors for the first time since Fort Laramie. The desert is for braver fools."
+        },
+        "risk_factors": [
+          { "condition": "resource_below", "resource": "water", "threshold_qualitative": "low", "warning": "Look at your barrels. Are they full enough for fifty waterless miles?" },
+          { "condition": "any_member_state", "states": ["sick","injured","weakened","dying"], "warning": "Some of our team is not at full strength. The desert will tax them." },
+          { "condition": "has_profession", "profession": "Scout", "encourage": "Our Scout knows where the desert springs hide. We are less alone out there." },
+          { "condition": "has_profession", "profession": "Native Guide", "encourage": "Our guide has crossed this country before with the Eastern Shoshone. He nods at the cutoff." },
+          { "condition": "has_profession", "profession": "Hunter", "encourage": "Our Hunter says antelope come to the desert seeps. We will not starve, at least." }
+        ],
+        "dyk_fact": "The Sublette Cutoff opened in 1844, blazed by fur trapper William Sublette who knew a shorter route west of South Pass. By 1849, about half of emigrants chose it. Those who guessed wrong on water — or arrived late in the season after springs dried up — sometimes lost oxen and family members to the desert. Pioneer journals call those fifty miles 'a wilderness of sage and sand.'",
+        "trail_news_hint": "At Fort Laramie, the trader said the Sublette Cutoff is dry but quick. He looked sober when he said it."
+      },
+      {
+        "id": "barlow_road",
+        "year_opened": 1846,
+        "trigger_space_short": 23,
+        "trigger_space_extended": 48,
+        "name": "The Barlow Road",
+        "intro_text": "At The Dalles, the wagon master gives you the choice. \"You can lash the wagons onto rafts and ride the Columbia rapids — every emigrant did until two years ago. Or you can take Sam Barlow's new road around Mount Hood for five dollars a wagon. The river is faster but it has killed many. The road is slower but it stays on land.\"",
+        "decision_space_name": "The Dalles fork",
+        "primary_label": "Take the Barlow Road",
+        "primary_subtitle": "Pay $5. Steep descent at Laurel Hill.",
+        "primary_outcome": {
+          "days_change": 1,
+          "morale_change": 1,
+          "money_change": -5,
+          "narrative_success": "Steep grades and a long, careful descent. We roped the wagon down Laurel Hill with a tree branch dragging behind for a brake. By dusk we were rolling on level ground in the Willamette Valley. Mount Hood lit up red behind us.",
+          "narrative_failure": "The descent at Laurel Hill broke a wheel. We lost a day patching it. But we made the valley alive.",
+          "trigger_failure_when": "wagon_hp_below_threshold:50 OR no_carpenter",
+          "fail_effects": { "wagon_hp": -20, "days_change": 1 }
+        },
+        "alternate_label": "Raft the Columbia River",
+        "alternate_subtitle": "Free, fast — but dangerous in fall.",
+        "alternate_outcome": {
+          "days_change": 0,
+          "morale_change": -1,
+          "narrative": "We lashed the wagon to a raft of cottonwood logs and pushed off. The Columbia was fast and the Cascades roared. By the third day we had crossed the worst of it.",
+          "trigger_failure_when": "late_season:after_day_140",
+          "narrative_failure": "Late-season rain swelled the river. The raft pitched at Cascade Locks and a barrel of flour went under. We pulled into Fort Vancouver wet and hungry.",
+          "fail_effects": { "food": -30, "supplies": -2, "morale": -2, "lose_member_chance": 0.15 }
+        },
+        "risk_factors": [
+          { "condition": "resource_below", "resource": "money", "threshold_qualitative": "below_5", "warning": "We have less than the toll. Barlow's gate will not open without coin." },
+          { "condition": "wagon_hp_below", "threshold_qualitative": "low", "warning": "Our wagon is in poor shape. The Laurel Hill descent has broken stronger ones." },
+          { "condition": "has_profession", "profession": "Carpenter", "encourage": "Our Carpenter says the wagon will hold. He has the tools for what Laurel Hill demands." },
+          { "condition": "late_season", "after_day": 140, "warning": "It is late in the season. The Columbia rapids are wilder when the rains come." }
+        ],
+        "dyk_fact": "Sam Barlow opened his road around Mount Hood in 1846. Before that, every Oregon emigrant had to raft the Columbia River through the Cascades, and many drowned at Cascade Locks and the Dalles rapids. Barlow charged $5 a wagon. By 1850 most pioneers chose the road. The descent at Laurel Hill was so steep wagons dragged trees behind as brakes — the trees were called 'rough lock' chains.",
+        "trail_news_hint": "At Fort Boise, a returning emigrant said the Barlow Road is slow but stays on land. He had buried a brother on the Columbia."
+      },
+      {
+        "id": "whitman_bypass",
+        "year_opened": 1848,
+        "trigger_space_short": 22,
+        "trigger_space_extended": 45,
+        "name": "Whitman Mission Decision",
+        "intro_text": "An eastbound mail rider at the trail fork has news. \"You haven't heard? The Whitman Mission was destroyed in November of forty-seven. The Cayuse killed Marcus and Narcissa and twelve others — measles brought by emigrants killed half their children, and the survivors took it as poison. The mission is ruins now. You can detour to it — sometimes there are caches at the ruins. Or you can press on. Most do.\"",
+        "decision_space_name": "Whitman Mission fork",
+        "primary_label": "Press on past the ruins",
+        "primary_subtitle": "Save a day. Honor the dead by passing.",
+        "primary_outcome": {
+          "days_change": 0,
+          "morale_change": 0,
+          "narrative": "We did not stop. The story will travel a long way. We pressed on toward Fort Walla Walla in silence."
+        },
+        "alternate_label": "Visit the mission ruins",
+        "alternate_subtitle": "+1 day. Look for caches. See the place.",
+        "alternate_outcome": {
+          "days_change": 1,
+          "morale_change": -2,
+          "narrative": "We found the burned timbers and the rough graves. There were a few abandoned barrels near the springhouse — flour, mostly spoiled. We dug through what we could and rode out at evening. No one spoke for the rest of the day.",
+          "food_gain": 12,
+          "moral_weight": "high"
+        },
+        "risk_factors": [
+          { "condition": "always", "info": "There is no good answer here. The Whitmans were killed; the Cayuse who killed them lost most of their children to a disease the missionaries' own travelers brought. Both stories are true." }
+        ],
+        "dyk_fact": "Marcus and Narcissa Whitman established a mission in 1836 near present-day Walla Walla. Narcissa was one of the first white American women to cross the Rockies. The mission helped many Oregon Trail emigrants — but in the spring of 1847, an emigrant party brought measles, and the disease killed roughly half of the Cayuse children. Some survivors believed the missionaries were poisoning their people; on November 29, 1847, a Cayuse party killed Marcus, Narcissa, and twelve others. The mission was burned. By 1848, emigrants knew to bypass it.",
+        "trail_news_hint": "At Fort Hall, a Cayuse trader spoke quietly of the Whitman ruins. He said his people are not at peace with what happened — on either side."
+      },
+      {
+        "id": "sutters_cutoff",
+        "year_opened": 1841,
+        "trigger_space_short": 17,
+        "trigger_space_extended": 33,
+        "name": "Hastings Cutoff to California",
+        "intro_text": "A bearded man at Fort Hall — he says his name is Hastings — pulls you aside. \"Forget Oregon,\" he says. \"California has gold and sunshine and free land you can plant oranges on. The cutoff to Sutter's Fort starts here. Two years ago a party called the Donners tried it and most of them froze in the Sierra. But the route is better now.\" He waits.",
+        "decision_space_name": "Fork at Fort Hall",
+        "primary_label": "Stay on the Oregon Trail",
+        "primary_subtitle": "The plan that brought us this far.",
+        "primary_outcome": {
+          "days_change": 0,
+          "morale_change": 0,
+          "narrative": "We thanked the man and stayed on the Oregon road. The Willamette Valley is what we left home for."
+        },
+        "alternate_label": "Take the cutoff to California",
+        "alternate_subtitle": "Alternate ending. Risk and possible gold.",
+        "alternate_outcome": {
+          "days_change": 5,
+          "morale_change": -2,
+          "narrative": "We turned south. Twenty days of desert and the Sierra Nevada ahead. Ahead lies Sutter's Fort — and whatever luck waits there.",
+          "ends_journey": true,
+          "ending_id": "california_alternate",
+          "ending_score_modifier": -120,
+          "narrative_finish": "We came down from the Sierra into the Sacramento Valley. Sutter's Fort was small and dusty; the gold rumors were just beginning. We found land but the Oregon dream — green hills, deep soil, the Willamette — was not what we got. The trail-master logbook will say we made California. Some of our number went on to the gold fields. The rest of us are starting over for the second time in a year."
+        },
+        "risk_factors": [
+          { "condition": "has_profession", "profession": "Native Guide", "encourage": "Our guide knows the southern route. He has been to Sutter's once." },
+          { "condition": "always", "warning": "The Donner Party tried this route in 1846 and most of them did not make the Sierra crossing. The mountains are merciless after October." },
+          { "condition": "late_season", "after_day": 100, "warning": "It is already late in the season. The Sierra crossing closes by November." }
+        ],
+        "dyk_fact": "The Hastings Cutoff was promoted by Lansford Hastings starting in 1845 as a faster route from Fort Bridger to California. The Donner-Reed Party tried it in 1846, got delayed in the Wasatch, lost weeks, and was caught by an early Sierra Nevada blizzard at what is now Donner Pass. About half of the 87-member party died, some from cold, some from starvation, and some — when the survivors had no other choice — were eaten by the others. After 1846 most California-bound emigrants avoided the cutoff and went via Fort Hall. The 1849 Gold Rush changed everything; thousands chose California despite the risks.",
+        "trail_news_hint": "At Fort Bridger, a freighter said the Hastings Cutoff has killed more than the Donners. He said it twice."
+      }
+    ]
+  },
   "personality_biases": {
     "philosophy": "Lightweight bridge toward agent-based architecture without rebuilding the engine. Each member gets 5 hidden traits at character creation. Traits modify that member's behavior in stochastic rolls. Players see traits as flavor descriptors on the character card.",
     "traits": {
