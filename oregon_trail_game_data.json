@@ -4675,6 +4675,70 @@
         ],
         "duration_seconds": 90,
         "bpm": 95
+      },
+      {
+        "id": "polly_wolly_doodle",
+        "title": "Polly Wolly Doodle",
+        "year": 1850,
+        "mood": ["hopeful"],
+        "duration_seconds": 70,
+        "bpm": 140
+      },
+      {
+        "id": "turkey_in_the_straw",
+        "title": "Turkey in the Straw",
+        "year": 1834,
+        "mood": ["hopeful", "neutral"],
+        "duration_seconds": 65,
+        "bpm": 150
+      },
+      {
+        "id": "wait_for_the_wagon",
+        "title": "Wait for the Wagon",
+        "year": 1851,
+        "mood": ["hopeful", "neutral"],
+        "duration_seconds": 80,
+        "bpm": 115
+      },
+      {
+        "id": "home_sweet_home",
+        "title": "Home, Sweet Home",
+        "year": 1823,
+        "mood": ["weary", "somber"],
+        "duration_seconds": 95,
+        "bpm": 75
+      },
+      {
+        "id": "long_long_ago",
+        "title": "Long, Long Ago",
+        "year": 1833,
+        "mood": ["neutral", "weary"],
+        "duration_seconds": 85,
+        "bpm": 85
+      },
+      {
+        "id": "wayfaring_stranger",
+        "title": "Wayfaring Stranger",
+        "year": 1850,
+        "mood": ["weary", "somber"],
+        "duration_seconds": 100,
+        "bpm": 70
+      },
+      {
+        "id": "old_folks_at_home",
+        "title": "Old Folks at Home (Swanee River)",
+        "year": 1851,
+        "mood": ["weary", "neutral"],
+        "duration_seconds": 90,
+        "bpm": 90
+      },
+      {
+        "id": "down_in_the_valley",
+        "title": "Down in the Valley",
+        "year": 1840,
+        "mood": ["neutral"],
+        "duration_seconds": 85,
+        "bpm": 95
       }
     ],
     "rotation_rules": [
