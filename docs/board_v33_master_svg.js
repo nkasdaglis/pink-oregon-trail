@@ -55,21 +55,27 @@
     finish:   { fill: '#F5E5A0', accent: PALETTE.gold,        ring: PALETTE.gold,        glyph: '★' }
   };
 
-  // The 25 Short-trail stops with real lat/long.
+  // The 25 Short-trail stops with real lat/long. v3.4.1 round 8 — small
+  // cosmetic nudges applied to lat/lon for stops that print on top of
+  // each other on the 36"x24" poster. Independence Rock / Devil's Gate
+  // are ~9 miles apart historically; on a poster 9 miles is one roundel
+  // diameter, so we nudge them apart by ~25 miles. Same for Chimney
+  // Rock / Scotts Bluff. The cartouche and DYK cards keep the historical
+  // record straight; the map itself just needs to be readable.
   var SHORT_TRAIL = [
     { n:  1, name: 'Independence',         type: 'start',    lat: 39.09, lon: 94.41 },
-    { n:  2, name: 'Kansas Prairie',       type: 'travel',   lat: 39.20, lon: 95.50 },
+    { n:  2, name: 'Kansas Prairie',       type: 'travel',   lat: 38.95, lon: 95.40 },
     { n:  3, name: 'Kansas River',         type: 'river',    lat: 39.30, lon: 96.30 },
     { n:  4, name: 'Big Blue River',       type: 'river',    lat: 39.78, lon: 96.95 },
     { n:  5, name: 'Fort Kearney',         type: 'fort',     lat: 40.65, lon: 99.00 },
     { n:  6, name: 'Platte River Valley',  type: 'travel',   lat: 41.10, lon: 100.50 },
     { n:  7, name: 'The Great Plains',     type: 'travel',   lat: 41.50, lon: 102.20 },
-    { n:  8, name: 'Chimney Rock',         type: 'landmark', lat: 41.70, lon: 103.34 },
-    { n:  9, name: 'Scotts Bluff',         type: 'landmark', lat: 41.83, lon: 103.71 },
-    { n: 10, name: 'Fort Laramie',         type: 'fort',     lat: 42.21, lon: 104.55 },
+    { n:  8, name: 'Chimney Rock',         type: 'landmark', lat: 41.50, lon: 103.10 },
+    { n:  9, name: 'Scotts Bluff',         type: 'landmark', lat: 41.90, lon: 103.65 },
+    { n: 10, name: 'Fort Laramie',         type: 'fort',     lat: 42.35, lon: 104.70 },
     { n: 11, name: 'Mountain Foothills',   type: 'travel',   lat: 42.45, lon: 106.00 },
-    { n: 12, name: 'Independence Rock',    type: 'landmark', lat: 42.49, lon: 107.14 },
-    { n: 13, name: "Devil's Gate",         type: 'landmark', lat: 42.49, lon: 107.30 },
+    { n: 12, name: 'Independence Rock',    type: 'landmark', lat: 42.75, lon: 106.95 },
+    { n: 13, name: "Devil's Gate",         type: 'landmark', lat: 42.20, lon: 107.55 },
     { n: 14, name: 'South Pass',           type: 'landmark', lat: 42.36, lon: 108.91 },
     { n: 15, name: 'Green River',          type: 'river',    lat: 41.52, lon: 109.46 },
     { n: 16, name: 'Soda Springs',         type: 'landmark', lat: 42.66, lon: 111.60 },
@@ -78,10 +84,69 @@
     { n: 19, name: 'Snake River Plain',    type: 'travel',   lat: 43.45, lon: 116.00 },
     { n: 20, name: 'Fort Boise',           type: 'fort',     lat: 43.82, lon: 117.00 },
     { n: 21, name: 'Blue Mountains',       type: 'travel',   lat: 45.30, lon: 118.10 },
-    { n: 22, name: 'Whitman Mission',      type: 'landmark', lat: 46.04, lon: 118.46 },
-    { n: 23, name: 'The Dalles',           type: 'landmark', lat: 45.60, lon: 121.18 },
-    { n: 24, name: 'Columbia River',       type: 'river',    lat: 45.55, lon: 122.10 },
-    { n: 25, name: 'Oregon City',          type: 'finish',   lat: 45.36, lon: 122.61 }
+    { n: 22, name: 'Whitman Mission',      type: 'landmark', lat: 46.20, lon: 118.70 },
+    { n: 23, name: 'The Dalles',           type: 'landmark', lat: 45.75, lon: 121.18 },
+    { n: 24, name: 'Columbia River',       type: 'river',    lat: 45.75, lon: 122.00 },
+    { n: 25, name: 'Oregon City',          type: 'finish',   lat: 45.05, lon: 122.75 }
+  ];
+
+  // v3.4.1 round 8 — Extended trail: all 50 stops in game order with
+  // lat/lon. Nudges applied where historical proximity collides with
+  // the 0.8-inch roundel size (Independence Rock / Devil's Gate, Chimney
+  // Rock / Scotts Bluff, Whitman Mission / Walla Walla, etc). Type
+  // assignments mirror the in-game trail definitions so each roundel
+  // gets the right color (start/fort/river/landmark/travel/finish).
+  var EXTENDED_TRAIL = [
+    { n:  1, name: 'Independence, Missouri',  type: 'start',    lat: 39.09, lon: 94.41 },
+    { n:  2, name: 'Westport Landing',        type: 'travel',   lat: 38.55, lon: 94.10 },
+    { n:  3, name: 'Shawnee Mission',         type: 'landmark', lat: 38.30, lon: 94.85 },
+    { n:  4, name: 'Wakarusa River',          type: 'river',    lat: 38.55, lon: 95.40 },
+    { n:  5, name: 'Kansas River Crossing',   type: 'river',    lat: 39.20, lon: 96.20 },
+    { n:  6, name: 'Alcove Spring',           type: 'landmark', lat: 39.70, lon: 96.45 },
+    { n:  7, name: 'Big Blue River',          type: 'river',    lat: 40.30, lon: 97.20 },
+    { n:  8, name: 'Rock Creek Station',      type: 'landmark', lat: 41.00, lon: 97.95 },
+    { n:  9, name: 'Little Blue River Valley',type: 'travel',   lat: 40.20, lon: 97.85 },
+    { n: 10, name: 'Fort Kearney',            type: 'fort',     lat: 40.65, lon: 99.00 },
+    { n: 11, name: 'Platte River Valley',     type: 'travel',   lat: 41.00, lon: 100.40 },
+    { n: 12, name: 'Buffalo Country',         type: 'travel',   lat: 41.20, lon: 101.55 },
+    { n: 13, name: 'South Platte Crossing',   type: 'river',    lat: 40.85, lon: 102.60 },
+    { n: 14, name: 'Ash Hollow',              type: 'landmark', lat: 41.40, lon: 102.45 },
+    { n: 15, name: 'Courthouse & Jail Rocks', type: 'landmark', lat: 41.85, lon: 102.85 },
+    { n: 16, name: 'Chimney Rock',            type: 'landmark', lat: 41.30, lon: 103.55 },
+    { n: 17, name: 'Scotts Bluff',            type: 'landmark', lat: 42.05, lon: 103.85 },
+    { n: 18, name: 'Fort Laramie',            type: 'fort',     lat: 42.21, lon: 104.55 },
+    { n: 19, name: 'Register Cliff',          type: 'landmark', lat: 42.05, lon: 105.10 },
+    { n: 20, name: 'North Platte Valley',     type: 'travel',   lat: 42.45, lon: 105.65 },
+    { n: 21, name: 'Casper',                  type: 'landmark', lat: 42.85, lon: 106.40 },
+    { n: 22, name: 'Independence Rock',       type: 'landmark', lat: 42.65, lon: 107.05 },
+    { n: 23, name: "Devil's Gate",            type: 'landmark', lat: 42.30, lon: 107.45 },
+    { n: 24, name: 'Sweetwater River',        type: 'river',    lat: 42.65, lon: 107.95 },
+    { n: 25, name: 'Ice Slough',              type: 'landmark', lat: 42.30, lon: 108.30 },
+    { n: 26, name: 'South Pass',              type: 'landmark', lat: 42.55, lon: 108.95 },
+    { n: 27, name: 'Pacific Springs',         type: 'landmark', lat: 42.10, lon: 109.40 },
+    { n: 28, name: 'Big Sandy Creek',         type: 'river',    lat: 41.85, lon: 110.10 },
+    { n: 29, name: 'Green River Crossing',    type: 'river',    lat: 41.40, lon: 109.30 },
+    { n: 30, name: 'Fort Bridger',            type: 'fort',     lat: 41.32, lon: 110.45 },
+    { n: 31, name: 'Bear River Valley',       type: 'travel',   lat: 41.95, lon: 111.30 },
+    { n: 32, name: 'Soda Springs',            type: 'landmark', lat: 42.66, lon: 111.60 },
+    { n: 33, name: 'Fort Hall',               type: 'fort',     lat: 43.05, lon: 112.43 },
+    { n: 34, name: 'American Falls',          type: 'river',    lat: 42.55, lon: 112.95 },
+    { n: 35, name: 'Snake River Country',     type: 'travel',   lat: 42.85, lon: 113.55 },
+    { n: 36, name: 'Massacre Rocks',          type: 'landmark', lat: 42.15, lon: 113.55 },
+    { n: 37, name: 'Three Island Crossing',   type: 'river',    lat: 42.93, lon: 115.30 },
+    { n: 38, name: 'Hot Springs',             type: 'landmark', lat: 43.15, lon: 116.10 },
+    { n: 39, name: 'Snake River Crossing',    type: 'river',    lat: 42.85, lon: 114.50 },
+    { n: 40, name: 'Fort Boise',              type: 'fort',     lat: 43.82, lon: 117.00 },
+    { n: 41, name: 'Burnt River Canyon',      type: 'travel',   lat: 44.30, lon: 117.50 },
+    { n: 42, name: 'Powder River',            type: 'river',    lat: 44.80, lon: 117.85 },
+    { n: 43, name: 'Grande Ronde Valley',     type: 'travel',   lat: 45.30, lon: 117.30 },
+    { n: 44, name: 'Blue Mountains',          type: 'travel',   lat: 45.40, lon: 118.20 },
+    { n: 45, name: 'Whitman Mission',         type: 'landmark', lat: 46.20, lon: 118.70 },
+    { n: 46, name: 'Walla Walla Valley',      type: 'travel',   lat: 46.40, lon: 118.20 },
+    { n: 47, name: 'Umatilla River',          type: 'river',    lat: 45.85, lon: 119.45 },
+    { n: 48, name: 'The Dalles',              type: 'landmark', lat: 45.75, lon: 121.18 },
+    { n: 49, name: 'Columbia River',          type: 'river',    lat: 45.55, lon: 122.10 },
+    { n: 50, name: 'Oregon City',             type: 'finish',   lat: 45.20, lon: 122.65 }
   ];
 
   // The 27 Extended-only stops (small markers, no number).
@@ -347,8 +412,13 @@
     return s;
   }
 
-  function buildTrailPath(W, H) {
-    var pts = SHORT_TRAIL.map(function (sp) { return project(sp.lat, sp.lon, W, H); });
+  function buildTrailPath(W, H, trailLength) {
+    // Trail line traces the active stop list. Short uses 25 SHORT_TRAIL
+    // waypoints; extended uses all 50 EXTENDED_TRAIL waypoints. 'both'
+    // (legacy combined poster) traces the Short trail and lets the
+    // Extended markers float beside it.
+    var src = (trailLength === 'extended') ? EXTENDED_TRAIL : SHORT_TRAIL;
+    var pts = src.map(function (sp) { return project(sp.lat, sp.lon, W, H); });
     var d = 'M ' + pts[0].x.toFixed(1) + ' ' + pts[0].y.toFixed(1);
     for (var i = 1; i < pts.length; i++) {
       var a = pts[i - 1], b = pts[i];
@@ -364,8 +434,10 @@
 
   function buildExtendedMarkers(W, H, mode, trailLength) {
     // Skip when not relevant. Short-only posters don't render Extended
-    // markers at all to keep the print clean.
-    if (trailLength === 'short') return '';
+    // markers at all. Extended posters render their stops as primary
+    // numbered roundels via buildRoundelsAndLabels — so this small-marker
+    // overlay only fires for the legacy 'both' mode.
+    if (trailLength === 'short' || trailLength === 'extended') return '';
     if (mode === 'poster' || mode === 'screen-extended') {
       var s = '';
       var labelFont = (mode === 'poster') ? 11 : 8;
@@ -389,13 +461,23 @@
   // Place each label at the side with most clearance. If all 4 sides
   // collide, pick the least-bad and draw a leader line. The collision
   // pass runs at draw time using a simple bbox grid.
-  function buildRoundelsAndLabels(W, H, mode) {
-    var roundelR = (mode === 'poster') ? 40 : 6;     // 0.8" diameter at 100u/in
-    var pieceZoneSize = (mode === 'poster') ? 200 : 0; // 2"×2" only on poster
-    var nameFont = (mode === 'poster') ? 16 : 11;
-    var numFont = (mode === 'poster') ? 20 : 11;
-    var labelMargin = (mode === 'poster') ? 14 : 8;
-    var pieceZoneFont = (mode === 'poster') ? 10 : 0;
+  function buildRoundelsAndLabels(W, H, mode, trailLength) {
+    // v3.4.1 round 8 — render whichever trail's stops are primary.
+    // Short poster: 25 numbered roundels (SHORT_TRAIL).
+    // Extended poster: 50 numbered roundels (EXTENDED_TRAIL).
+    // 'both' mode: 25 Short numbered roundels (Extended-only stops are
+    // overlaid as small markers via buildExtendedMarkers).
+    var stopList = (trailLength === 'extended') ? EXTENDED_TRAIL : SHORT_TRAIL;
+    // Extended posters squeeze 50 stops into the same canvas — shrink
+    // the roundels and font sizes a bit to keep them legible without
+    // collision. Short keeps the larger 0.8" roundels.
+    var isExtPoster = (mode === 'poster' && trailLength === 'extended');
+    var roundelR = (mode === 'poster') ? (isExtPoster ? 30 : 40) : 6;
+    var pieceZoneSize = (mode === 'poster') ? (isExtPoster ? 150 : 200) : 0;
+    var nameFont = (mode === 'poster') ? (isExtPoster ? 13 : 16) : 11;
+    var numFont = (mode === 'poster') ? (isExtPoster ? 15 : 20) : 11;
+    var labelMargin = (mode === 'poster') ? (isExtPoster ? 10 : 14) : 8;
+    var pieceZoneFont = (mode === 'poster') ? (isExtPoster ? 9 : 10) : 0;
     var s = '';
     var pieceZonesSvg = '';
     var roundelsSvg = '';
@@ -403,8 +485,14 @@
     var occupied = []; // bboxes already placed
     var pieceZoneStops = {};
     PIECE_ZONE_STOPS.forEach(function (n) { pieceZoneStops[n] = true; });
+    // Match name variants used in EXTENDED_TRAIL ("Independence, Missouri"
+    // and "Kansas River Crossing" need to map to the same piece-zone /
+    // type heuristics as their Short counterparts).
+    pieceZoneStops['Independence, Missouri'] = true;
+    pieceZoneStops['Kansas River Crossing']  = true;
+    pieceZoneStops['Green River Crossing']   = true;
 
-    SHORT_TRAIL.forEach(function (sp) {
+    stopList.forEach(function (sp) {
       var p = project(sp.lat, sp.lon, W, H);
       var style = TYPE_STYLE[sp.type] || TYPE_STYLE.travel;
       // Roundel core (drawn after piece zones so it sits on top)
@@ -644,9 +732,9 @@
     body += buildRivers(W, H, mode);
     body += buildMountains(W, H, mode);
     body += buildNativeNations(W, H, mode);
-    body += buildTrailPath(W, H);
+    body += buildTrailPath(W, H, trailLength);
     body += buildExtendedMarkers(W, H, mode, trailLength);
-    var rl = buildRoundelsAndLabels(W, H, mode);
+    var rl = buildRoundelsAndLabels(W, H, mode, trailLength);
     body += rl.svg;
     body += buildCompassRose(W, H, mode);
     body += buildScaleBar(W, H, mode);
@@ -666,6 +754,7 @@
     constants: { LAT_N: LAT_N, LAT_S: LAT_S, LON_W_EAST: LON_W_EAST, LON_W_WEST: LON_W_WEST },
     palette: PALETTE,
     SHORT_TRAIL: SHORT_TRAIL,
+    EXTENDED_TRAIL: EXTENDED_TRAIL,
     EXTENDED_EXTRA: EXTENDED_EXTRA,
     PIECE_ZONE_STOPS: PIECE_ZONE_STOPS,
     TYPE_STYLE: TYPE_STYLE
