@@ -7259,6 +7259,123 @@
       }
     ]
   },
+  "loadout_v3_3": {
+    "philosophy": "Pre-journey loadout — wagon, animal, cargo. The historical pioneer had to make every one of these decisions before leaving Independence. The game lets kids feel the weight of those choices through trade-offs: spending more on protection means less money for food at forts; bringing the family piano means joy on the trail and risk at river crossings. Risk indicators are qualitative — kids reason, they don't read percentages. Selection happens once, between Difficulty setup and Wagon Naming.",
+    "wagon_types": [
+      {
+        "id": "plain", "name": "Plain Farm Wagon", "cost": 0,
+        "description": "A cheap farm wagon. You spent everything on supplies. Cheap, light, but fragile.",
+        "starting_wagon_hp": 75,
+        "qualitative_cue": "Saves money for food and medicine, but breaks more often."
+      },
+      {
+        "id": "schooner", "name": "Prairie Schooner", "cost": 25,
+        "description": "The standard pioneer wagon. Hickory bows, canvas top, iron-tired wheels. Built for the trail.",
+        "starting_wagon_hp": 100,
+        "qualitative_cue": "The trusted choice. Most pioneers picked this."
+      },
+      {
+        "id": "reinforced", "name": "Reinforced Schooner", "cost": 50,
+        "description": "Double-strapped wheels, doubled canvas, iron-bound axle. Built to take a beating.",
+        "starting_wagon_hp": 100,
+        "wagon_damage_escape_bonus": 0.10,
+        "river_drown_reduction": 0.05,
+        "qualitative_cue": "Expensive but durable. Less to spend on food, but the wagon will hold."
+      }
+    ],
+    "animal_types": [
+      {
+        "id": "oxen", "name": "Four Oxen", "cost": 0,
+        "description": "Slow, strong, calm. Eat prairie grass. Two miles per hour. Most pioneers used oxen.",
+        "movement_bonus": 0,
+        "theft_chance_modifier": 0,
+        "qualitative_cue": "Tireless and reliable. The trusted choice."
+      },
+      {
+        "id": "mixed", "name": "Two Oxen + Two Mules", "cost": 30,
+        "description": "Faster than oxen alone, tougher than horses. Mules are stubborn but stout.",
+        "movement_bonus": 1,
+        "theft_chance_modifier": 0.05,
+        "qualitative_cue": "A bit faster, a bit more cash, a bit harder to feed in desert."
+      },
+      {
+        "id": "horses", "name": "Four Horses", "cost": 60,
+        "description": "Fastest team. But horses need grain, get sick easier, and are more often stolen.",
+        "movement_bonus": 2,
+        "sickness_chance_modifier": 0.05,
+        "theft_chance_modifier": 0.10,
+        "qualitative_cue": "Fastest if they survive. The trail is harder on horses than on oxen."
+      }
+    ],
+    "cargo_items": [
+      {
+        "id": "family_bible", "name": "Family Bible", "weight": "light",
+        "description": "A worn leather Bible from grandmother's hand. The pages are soft from use.",
+        "morale_floor": 1,
+        "qualitative_cue": "Light. No risk. A quiet comfort.",
+        "loss_risk": "none"
+      },
+      {
+        "id": "grandmothers_china", "name": "Grandmother's China", "weight": "fragile",
+        "description": "A set of blue-and-white plates passed down for three generations.",
+        "starting_morale_bonus": 1,
+        "river_loss_chance": 0.30,
+        "river_loss_effect": { "morale": -2, "narrative": "The blue-and-white was wrapped in feed sacks. The river took the trunk anyway. Mother stared at the bank for a long time." },
+        "qualitative_cue": "Fragile. River crossings are unkind to china."
+      },
+      {
+        "id": "fathers_tools", "name": "Father's Tools", "weight": "heavy",
+        "description": "A carpenter's chest — saw, hammer, plane, draw-knife. Father's hands had grown into them.",
+        "wagon_repair_per_day": 1,
+        "carpenter_action_bonus": true,
+        "river_loss_chance": 0.20,
+        "river_loss_effect": { "movement_permanent": -1, "narrative": "The toolbox went under at the ford. The wagon limps without them." },
+        "qualitative_cue": "Heavy. Useful for repairs. River crossings risk losing them."
+      },
+      {
+        "id": "books", "name": "A Trunk of Books", "weight": "light",
+        "description": "Children's primers, a Webster's, two novels, a history of the Republic.",
+        "scholar_score_bonus": 2,
+        "bandit_quiz_bonus_pct": 5,
+        "qualitative_cue": "Light. Read aloud at the campfire. The kids learn faster.",
+        "loss_risk": "none"
+      },
+      {
+        "id": "piano", "name": "The Family Piano", "weight": "very_heavy",
+        "description": "A small upright piano from the parlor. It barely fits in the wagon. Mother insisted.",
+        "morale_bonus_always": 2,
+        "dying_member_save_chance": 0.20,
+        "dying_member_save_narrative": "Mother sat at the piano and played 'Beautiful Dreamer' through the long night. By dawn, the fever had broken. We do not know why. Mother says music. Father says luck. Sarah says both.",
+        "river_failure_extra_damage": 30,
+        "qualitative_cue": "Very heavy. Joy in the camp. Disaster at the ford if the wagon tips."
+      },
+      {
+        "id": "photographs", "name": "Family Photographs", "weight": "light",
+        "description": "A small wooden box of daguerreotypes — wedding portraits, the children small, grandparents long gone.",
+        "morale_at_finish": 5,
+        "qualitative_cue": "Light. No risk. A treasure when you arrive.",
+        "loss_risk": "none"
+      },
+      {
+        "id": "seeds", "name": "A Bag of Seeds", "weight": "light",
+        "description": "Seeds saved from the farm — wheat, corn, beans, apple. Oregon is for planting.",
+        "morale_floor": 1,
+        "oregon_arrival_bonus_money": 30,
+        "qualitative_cue": "Light. The promise of a farm at the end of the trail.",
+        "loss_risk": "none"
+      },
+      {
+        "id": "silver", "name": "Wedding Silver", "weight": "heavy",
+        "description": "A silver tea service from the wedding. Heavy. Beautiful. Worth real money.",
+        "oregon_arrival_bonus_money": 50,
+        "fort_sellable_for": 20,
+        "bandit_theft_chance": 0.25,
+        "bandit_theft_narrative": "Bandits found the silver case in the wagon bed. They took it all. Mother did not weep until they had ridden out of sight.",
+        "qualitative_cue": "Heavy and valuable. Bandits notice silver."
+      }
+    ],
+    "max_cargo_picks": 2
+  },
   "cyoa_connections_v3_3": {
     "philosophy": "Each game's story emerges from prior choices, current team state, and earned knowledge accumulating across the journey. Same trail run twice should produce different stories because earlier decisions shifted the deck for later ones. This is the choose-your-adventure deepening. Calibration goal: widen the strategy gap from 46pp (HD vs MA mean) to ~60-70pp by rewarding attention and punishing carelessness.",
     "choice_echoes": {
